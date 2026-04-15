@@ -1,0 +1,57 @@
+<div class="pagination-wrapper">
+  <div class="pagination">
+    <div class="pagination-info">
+      <div class="info-item">
+        <span class="info-label">Page</span>
+        <span class="info-value">{{ internalPageNumber }} / {{ totalPages }}</span>
+      </div>
+      <div class="info-divider"></div>
+      <div class="info-item">
+        <span class="info-label">Showing</span>
+        <span class="info-value">{{ showingFrom }} - {{ showingTo }} of {{ totalCount }}</span>
+      </div>
+    </div>
+    
+    <div class="pagination-controls">
+      <button 
+        class="pagination-btn pagination-nav" 
+        (click)="previousPage()" 
+        [disabled]="internalPageNumber <= 1"
+        title="Previous Page">
+        <i class="fas fa-chevron-left"></i>
+      </button>
+
+      <div class="page-numbers" *ngIf="totalPages > 0">
+        <ng-container *ngFor="let p of visiblePages">
+          <button 
+            *ngIf="p !== 'ellipsis'" 
+            class="page-number-btn" 
+            [class.active]="internalPageNumber === p"
+            (click)="goToPage(p)">
+            {{ p }}
+          </button>
+          <span *ngIf="p === 'ellipsis'" class="page-ellipsis" aria-hidden="true">…</span>
+        </ng-container>
+      </div>
+
+      <button 
+        class="pagination-btn pagination-nav" 
+        (click)="nextPage()" 
+        [disabled]="internalPageNumber >= totalPages"
+        title="Next Page">
+        <i class="fas fa-chevron-right"></i>
+      </button>
+    </div>
+
+    <div *ngIf="showPageSize" class="page-size-selector">
+      <label class="page-size-label">
+        <i class="fas fa-list"></i>
+        <span>Per Page</span>
+      </label>
+      <select class="page-size-select" [(ngModel)]="internalPageSize" (change)="changePageSize()">
+        <option *ngFor="let size of pageSizeOptions" [value]="size">{{ size }}</option>
+      </select>
+    </div>
+  </div>
+</div>
+

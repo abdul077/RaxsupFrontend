@@ -1,0 +1,101 @@
+<div class="container-fluid">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+      <h4 class="mb-1">Owner Operator Settlements</h4>
+      <p class="text-muted mb-0">Manage owner operator settlements and payments</p>
+    </div>
+    <button class="btn btn-primary" (click)="navigateToCreate()">
+      <i class="fas fa-plus me-2"></i>Create Settlement
+    </button>
+  </div>
+
+  <!-- Filters -->
+  <div class="card mb-4">
+    <div class="card-body">
+      <div class="row g-3">
+        <div class="col-md-3">
+          <label class="form-label">Status</label>
+          <select class="form-select" [(ngModel)]="statusFilter">
+            <option value="">All Statuses</option>
+            @for (status of statusOptions; track status) {
+              <option [value]="status">{{ status }}</option>
+            }
+          </select>
+        </div>
+        <div class="col-md-3">
+          <label class="form-label">Owner Operator</label>
+          <select class="form-select" [(ngModel)]="driverFilter">
+            <option [ngValue]="null">All Owner Operators</option>
+            @for (driver of drivers; track driver.driverId) {
+              <option [ngValue]="driver.driverId">{{ driver.fullName }}</option>
+            }
+          </select>
+        </div>
+        <div class="col-md-3">
+          <label class="form-label">Search</label>
+          <input type="text" class="form-control" placeholder="Search by settlement number or owner operator..." 
+                 [(ngModel)]="searchTerm">
+        </div>
+        <div class="col-md-3 d-flex align-items-end gap-2">
+          <button class="btn btn-primary flex-fill" (click)="onApplyFilters()" title="Apply Filters">
+            <i class="fas fa-filter me-1"></i>Apply
+          </button>
+          <button class="btn btn-outline-secondary flex-fill" (click)="onClearFilters()" title="Clear Filters">
+            <i class="fas fa-times me-1"></i>Clear
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  @if (settlements) {
+    <div class="card">
+      <div class="card-body">
+        <div class="table-responsive">
+          <table class="table table-hover">
+            <thead>
+              <tr>
+                <th>Settlement #</th>
+                <th>Owner Operator</th>
+                <th>Period</th>
+                <th>Earnings</th>
+                <th>Deductions</th>
+                <th>Net Pay</th>
+                <th>Status</th>
+                <th>Created</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (settlement of filteredSettlements; track settlement.settlementId) {
+                <tr>
+                  <td>{{ settlement.settlementNumber }}</td>
+                  <td>{{ settlement.driverName }}</td>
+                  <td>{{ formatDate(settlement.periodStart) }} - {{ formatDate(settlement.periodEnd) }}</td>
+                  <td>{{ formatCurrency(settlement.totalEarnings) }}</td>
+                  <td>{{ formatCurrency(settlement.totalDeductions) }}</td>
+                  <td><strong>{{ formatCurrency(settlement.netPay) }}</strong></td>
+                  <td>
+                    <span [class]="getStatusBadgeClass(settlement.status)">{{ settlement.status }}</span>
+                  </td>
+                  <td>{{ formatDate(settlement.createdAt) }}</td>
+                  <td>
+                    <button class="btn btn-sm btn-outline-primary" (click)="viewSettlement(settlement.settlementId)" title="View Details">
+                      <i class="fas fa-eye"></i>
+                    </button>
+                  </td>
+                </tr>
+              }
+              @if (filteredSettlements.length === 0) {
+                <tr>
+                  <td colspan="9" class="text-center text-muted py-4">No settlements found</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  }
+</div>
+

@@ -1,0 +1,239 @@
+<div class="compliance-dashboard">
+  <!-- Page Header -->
+  <div class="compliance-header">
+    <div class="compliance-header-content">
+      <div class="compliance-header-icon">
+        <i class="fas fa-shield-halved"></i>
+      </div>
+      <div>
+        <h1 class="compliance-title">Compliance Dashboard</h1>
+        <p class="compliance-subtitle">Monitor and manage compliance metrics across your fleet</p>
+      </div>
+    </div>
+    <div class="compliance-header-actions">
+      <button class="btn btn-refresh" (click)="loadReports()" [disabled]="loading" title="Refresh">
+        <i class="fas" [ngClass]="loading ? 'fa-spinner fa-spin' : 'fa-arrows-rotate'"></i>
+        <span class="d-none d-md-inline ms-2">Refresh</span>
+      </button>
+      <a routerLink="/compliance/incidents/create" class="btn btn-report-incident">
+        <i class="fas fa-plus me-2"></i>Report Incident
+      </a>
+    </div>
+  </div>
+
+  <!-- Quick Actions -->
+  <div class="quick-actions">
+    <a routerLink="/compliance/incidents" class="action-card">
+      <i class="fas fa-list-check"></i>
+      <span>View Incidents</span>
+    </a>
+    <a routerLink="/compliance/incidents/create" class="action-card action-card-primary">
+      <i class="fas fa-plus-circle"></i>
+      <span>Report Incident</span>
+    </a>
+    <a routerLink="/compliance/calendar" class="action-card">
+      <i class="fas fa-calendar-alt"></i>
+      <span>Compliance Calendar</span>
+    </a>
+    <a routerLink="/compliance/inspections/create" class="action-card">
+      <i class="fas fa-clipboard-check"></i>
+      <span>Add Inspection</span>
+    </a>
+  </div>
+
+  <div *ngIf="loading" class="loading-state">
+    <div class="loading-spinner"></div>
+    <p class="loading-text">Loading compliance data...</p>
+  </div>
+
+  <div *ngIf="!loading && !reports" class="empty-state">
+    <i class="fas fa-chart-line empty-icon"></i>
+    <h3>No Data Available</h3>
+    <p>Unable to load compliance reports. Please try again.</p>
+    <button class="btn btn-outline-primary" (click)="loadReports()">Retry</button>
+  </div>
+
+  <div *ngIf="!loading && reports" class="dashboard-content">
+    <!-- Date Range Badge -->
+    <div class="date-range-badge">
+      <i class="fas fa-calendar-alt me-2"></i>
+      Last 12 months
+    </div>
+
+    <!-- Summary Cards -->
+    <div class="stats-grid">
+      <div class="stat-card stat-card-drivers">
+        <div class="stat-icon">
+          <i class="fas fa-users"></i>
+        </div>
+        <div class="stat-content">
+          <span class="stat-value">{{ reports.summary.totalDrivers }}</span>
+          <span class="stat-label">Total Owner Operators</span>
+        </div>
+      </div>
+      <div class="stat-card stat-card-compliant">
+        <div class="stat-icon">
+          <i class="fas fa-check-circle"></i>
+        </div>
+        <div class="stat-content">
+          <span class="stat-value">{{ reports.summary.compliantDrivers }}</span>
+          <span class="stat-label">Compliant</span>
+          <span class="stat-badge" [ngClass]="getCompliancePercentage(reports.summary) >= 90 ? 'badge-success' : getCompliancePercentage(reports.summary) >= 70 ? 'badge-warning' : 'badge-danger'">
+            {{ getCompliancePercentage(reports.summary) }}%
+          </span>
+        </div>
+      </div>
+      <div class="stat-card stat-card-overdue">
+        <div class="stat-icon">
+          <i class="fas fa-clock"></i>
+        </div>
+        <div class="stat-content">
+          <span class="stat-value">{{ reports.summary.overdueItems }}</span>
+          <span class="stat-label">Overdue Items</span>
+          <span class="stat-badge" *ngIf="reports.summary.pendingCalendarItems > 0">
+            {{ reports.summary.pendingCalendarItems }} pending
+          </span>
+        </div>
+      </div>
+      <div class="stat-card stat-card-inspections">
+        <div class="stat-icon">
+          <i class="fas fa-clipboard-check"></i>
+        </div>
+        <div class="stat-content">
+          <span class="stat-value">{{ reports.summary.totalInspections }}</span>
+          <span class="stat-label">Inspections</span>
+          <span class="stat-badge">{{ reports.summary.inspectionPassRate | number:'1.1-1' }}% pass</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Compliance Summary -->
+    <div class="dashboard-grid">
+      <div class="dashboard-section">
+        <div class="section-header">
+          <h2>Compliance Summary</h2>
+        </div>
+        <div class="section-content">
+          <div class="summary-item">
+            <span class="label">Compliant Owner Operators:</span>
+            <span class="value">{{ reports.summary.compliantDrivers }} / {{ reports.summary.totalDrivers }}</span>
+          </div>
+          <div class="summary-item">
+            <span class="label">Pending Calendar Items:</span>
+            <span class="value">
+              <a routerLink="/compliance/calendar" class="calendar-link">{{ reports.summary.pendingCalendarItems }}</a>
+              <span *ngIf="reports.summary.overdueItems > 0" class="text-danger ms-1">({{ reports.summary.overdueItems }} overdue)</span>
+            </span>
+          </div>
+          <div class="summary-item">
+            <span class="label">Expiring CDLs (30 days):</span>
+            <span class="value" [ngClass]="reports.summary.expiringCDLs > 0 ? 'text-warning' : 'text-success'">
+              {{ reports.summary.expiringCDLs }}
+            </span>
+          </div>
+          <div class="summary-item">
+            <span class="label">Expiring Medical Cards (30 days):</span>
+            <span class="value" [ngClass]="reports.summary.expiringMedicalCards > 0 ? 'text-warning' : 'text-success'">
+              {{ reports.summary.expiringMedicalCards }}
+            </span>
+          </div>
+          <div class="summary-item">
+            <span class="label">Inspection Pass Rate:</span>
+            <span class="value" [ngClass]="getScoreClass(reports.summary.inspectionPassRate)">
+              {{ reports.summary.inspectionPassRate | number:'1.1-1' }}%
+            </span>
+          </div>
+          <div class="summary-item">
+            <span class="label">Passed Inspections:</span>
+            <span class="value">{{ reports.summary.passedInspections }}</span>
+          </div>
+          <div class="summary-item">
+            <span class="label">Failed Inspections:</span>
+            <span class="value">{{ reports.summary.failedInspections }}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Audit Readiness -->
+      <div class="dashboard-section audit-section">
+        <div class="section-header">
+          <h2>Audit Readiness</h2>
+        </div>
+        <div class="section-content">
+          <div class="audit-score-wrapper">
+            <div class="audit-score-ring" [attr.data-score]="reports.auditReadiness.overallScore | number:'1.0-0'">
+              <svg viewBox="0 0 100 100">
+                <circle class="ring-bg" cx="50" cy="50" r="45"></circle>
+                <circle class="ring-progress" [ngClass]="getScoreClass(reports.auditReadiness.overallScore)" cx="50" cy="50" r="45"
+                  [style.stroke-dasharray]="(reports.auditReadiness.overallScore / 100) * 283 + ' 283'"></circle>
+              </svg>
+              <div class="audit-score-inner">
+                <span class="audit-score-value" [ngClass]="getScoreClass(reports.auditReadiness.overallScore)">
+                  {{ reports.auditReadiness.overallScore | number:'1.0-0' }}%
+                </span>
+                <span class="audit-status-badge" [ngClass]="reports.auditReadiness.isReady ? 'badge-success' : 'badge-warning'">
+                  {{ reports.auditReadiness.isReady ? 'Ready' : 'Not Ready' }}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <div *ngIf="reports.auditReadiness.missingItems.length > 0" class="alert-items">
+            <strong class="text-danger">Missing Items:</strong>
+            <ul>
+              <li *ngFor="let item of reports.auditReadiness.missingItems">{{ item }}</li>
+            </ul>
+          </div>
+
+          <div *ngIf="reports.auditReadiness.expiringItems.length > 0" class="alert-items">
+            <strong class="text-warning">Expiring Items:</strong>
+            <ul>
+              <li *ngFor="let item of reports.auditReadiness.expiringItems">{{ item }}</li>
+            </ul>
+          </div>
+
+          <div class="summary-item">
+            <span class="label">Total Violations:</span>
+            <span class="value">{{ reports.auditReadiness.totalViolations }}</span>
+          </div>
+          <div class="summary-item">
+            <span class="label">Open Incidents:</span>
+            <span class="value">{{ reports.auditReadiness.openIncidents }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Violation Trends -->
+    <div class="dashboard-section trends-section">
+      <div class="section-header">
+        <h2>Violation Trends</h2>
+      </div>
+      <div class="section-content">
+        <div *ngIf="reports.violationTrends.length > 0" class="trends-table-wrapper">
+          <table class="trends-table">
+            <thead>
+              <tr>
+                <th>Category</th>
+                <th>Month</th>
+                <th>Count</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let trend of reports.violationTrends">
+                <td>{{ trend.category }}</td>
+                <td>{{ trend.month }}</td>
+                <td><span class="trend-count">{{ trend.count }}</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div *ngIf="reports.violationTrends.length === 0" class="trends-empty">
+          <i class="fas fa-chart-line"></i>
+          <p>No violations recorded in the selected period</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+

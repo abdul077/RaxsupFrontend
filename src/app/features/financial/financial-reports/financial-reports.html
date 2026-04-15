@@ -1,0 +1,332 @@
+<div class="container-fluid">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+      <h4 class="mb-1">Financial Reports</h4>
+      <p class="text-muted mb-0">Comprehensive financial analytics and reports</p>
+    </div>
+  </div>
+
+  <!-- Filters -->
+  <div class="card mb-4">
+    <div class="card-body">
+      <div class="row g-3">
+        <div class="col-md-3">
+          <label class="form-label">Start Date</label>
+          <input type="date" class="form-control" [(ngModel)]="startDate" (ngModelChange)="loadReports()">
+        </div>
+        <div class="col-md-3">
+          <label class="form-label">End Date</label>
+          <input type="date" class="form-control" [(ngModel)]="endDate" (ngModelChange)="loadReports()">
+        </div>
+        <div class="col-md-3">
+          <label class="form-label">Customer</label>
+          <select class="form-select" [(ngModel)]="selectedCustomerId" (ngModelChange)="loadReports()">
+            <option [value]="undefined">All Customers</option>
+            @for (customer of customers; track customer.customerId) {
+              <option [value]="customer.customerId">{{ customer.name }}</option>
+            }
+          </select>
+        </div>
+        <div class="col-md-3">
+          <label class="form-label">Driver</label>
+          <select class="form-select" [(ngModel)]="selectedDriverId" (ngModelChange)="loadReports()">
+            <option [value]="undefined">All Drivers</option>
+            @for (driver of drivers; track driver.driverId) {
+              <option [value]="driver.driverId">{{ driver.fullName }}</option>
+            }
+          </select>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  @if (reports) {
+    <!-- Tabs -->
+    <ul class="nav nav-tabs mb-4">
+      <li class="nav-item">
+        <a class="nav-link" [class.active]="activeTab === 'overview'" (click)="setTab('overview')" href="javascript:void(0)">
+          <i class="fas fa-chart-pie me-2"></i>Overview
+        </a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" [class.active]="activeTab === 'aging'" (click)="setTab('aging')" href="javascript:void(0)">
+          <i class="fas fa-clock me-2"></i>Aging Report
+        </a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" [class.active]="activeTab === 'revenue'" (click)="setTab('revenue')" href="javascript:void(0)">
+          <i class="fas fa-dollar-sign me-2"></i>Revenue
+        </a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" [class.active]="activeTab === 'profitloss'" (click)="setTab('profitloss')" href="javascript:void(0)">
+          <i class="fas fa-chart-line me-2"></i>Profit & Loss
+        </a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" [class.active]="activeTab === 'settlements'" (click)="setTab('settlements')" href="javascript:void(0)">
+          <i class="fas fa-hand-holding-usd me-2"></i>Settlement History
+        </a>
+      </li>
+    </ul>
+
+    <!-- Overview Tab -->
+    @if (activeTab === 'overview') {
+      <div class="row">
+        <div class="col-md-3">
+          <div class="card bg-primary text-white mb-4">
+            <div class="card-body text-center">
+              <h3>{{ formatCurrency(reports.revenueReport.totalRevenue) }}</h3>
+              <p class="mb-0">Total Revenue</p>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-3">
+          <div class="card bg-success text-white mb-4">
+            <div class="card-body text-center">
+              <h3>{{ formatCurrency(reports.profitLoss.netProfit) }}</h3>
+              <p class="mb-0">Net Profit</p>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-3">
+          <div class="card bg-warning text-white mb-4">
+            <div class="card-body text-center">
+              <h3>{{ formatCurrency(reports.agingReport.grandTotal) }}</h3>
+              <p class="mb-0">Outstanding AR</p>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-3">
+          <div class="card bg-info text-white mb-4">
+            <div class="card-body text-center">
+              <h3>{{ formatCurrency(reports.settlementHistory.totalNetPay) }}</h3>
+              <p class="mb-0">Total Settlements</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    }
+
+    <!-- Aging Report Tab -->
+    @if (activeTab === 'aging') {
+      <div class="card">
+        <div class="card-header">
+          <h5 class="mb-0">Aging Report</h5>
+        </div>
+        <div class="card-body">
+          <div class="table-responsive">
+            <table class="table table-hover">
+              <thead>
+                <tr>
+                  <th>Customer</th>
+                  <th>Current</th>
+                  <th>1-30 Days</th>
+                  <th>31-60 Days</th>
+                  <th>61-90 Days</th>
+                  <th>Over 90 Days</th>
+                  <th>Total</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (item of reports.agingReport.items; track item.customerId) {
+                  <tr>
+                    <td>{{ item.customerName }}</td>
+                    <td>{{ formatCurrency(item.current) }}</td>
+                    <td>{{ formatCurrency(item.days1To30) }}</td>
+                    <td>{{ formatCurrency(item.days31To60) }}</td>
+                    <td>{{ formatCurrency(item.days61To90) }}</td>
+                    <td>{{ formatCurrency(item.over90Days) }}</td>
+                    <td><strong>{{ formatCurrency(item.total) }}</strong></td>
+                  </tr>
+                }
+              </tbody>
+              <tfoot>
+                <tr>
+                  <td><strong>Totals</strong></td>
+                  <td><strong>{{ formatCurrency(reports.agingReport.totalCurrent) }}</strong></td>
+                  <td><strong>{{ formatCurrency(reports.agingReport.total1To30Days) }}</strong></td>
+                  <td><strong>{{ formatCurrency(reports.agingReport.total31To60Days) }}</strong></td>
+                  <td><strong>{{ formatCurrency(reports.agingReport.total61To90Days) }}</strong></td>
+                  <td><strong>{{ formatCurrency(reports.agingReport.totalOver90Days) }}</strong></td>
+                  <td><strong>{{ formatCurrency(reports.agingReport.grandTotal) }}</strong></td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+        </div>
+      </div>
+    }
+
+    <!-- Revenue Tab -->
+    @if (activeTab === 'revenue') {
+      <div class="row">
+        <div class="col-md-6">
+          <div class="card mb-4">
+            <div class="card-header">
+              <h5 class="mb-0">Revenue by Customer</h5>
+            </div>
+            <div class="card-body">
+              <div class="table-responsive">
+                <table class="table">
+                  <thead>
+                    <tr>
+                      <th>Customer</th>
+                      <th>Invoices</th>
+                      <th>Revenue</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    @for (item of reports.revenueReport.byCustomer; track item.customerId) {
+                      <tr>
+                        <td>{{ item.customerName }}</td>
+                        <td>{{ item.invoiceCount }}</td>
+                        <td>{{ formatCurrency(item.totalRevenue) }}</td>
+                      </tr>
+                    }
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-6">
+          <div class="card mb-4">
+            <div class="card-header">
+              <h5 class="mb-0">Revenue by Driver</h5>
+            </div>
+            <div class="card-body">
+              <div class="table-responsive">
+                <table class="table">
+                  <thead>
+                    <tr>
+                      <th>Driver</th>
+                      <th>Loads</th>
+                      <th>Revenue</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    @for (item of reports.revenueReport.byDriver; track item.driverId) {
+                      <tr>
+                        <td>{{ item.driverName }}</td>
+                        <td>{{ item.loadCount }}</td>
+                        <td>{{ formatCurrency(item.totalRevenue) }}</td>
+                      </tr>
+                    }
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    }
+
+    <!-- Profit & Loss Tab -->
+    @if (activeTab === 'profitloss') {
+      <div class="card">
+        <div class="card-header">
+          <h5 class="mb-0">Profit & Loss Summary</h5>
+        </div>
+        <div class="card-body">
+          <div class="row mb-4">
+            <div class="col-md-6">
+              <table class="table table-borderless">
+                <tr>
+                  <td width="50%"><strong>Total Revenue:</strong></td>
+                  <td class="text-end">{{ formatCurrency(reports.profitLoss.totalRevenue) }}</td>
+                </tr>
+                <tr>
+                  <td><strong>Total Costs:</strong></td>
+                  <td class="text-end text-danger">-{{ formatCurrency(reports.profitLoss.totalCosts) }}</td>
+                </tr>
+                <tr>
+                  <td><strong>Gross Profit:</strong></td>
+                  <td class="text-end"><strong>{{ formatCurrency(reports.profitLoss.grossProfit) }}</strong></td>
+                </tr>
+                <tr>
+                  <td><strong>Operating Expenses:</strong></td>
+                  <td class="text-end text-danger">-{{ formatCurrency(reports.profitLoss.operatingExpenses) }}</td>
+                </tr>
+                <tr class="border-top">
+                  <td><strong>Net Profit:</strong></td>
+                  <td class="text-end"><strong [class.text-success]="reports.profitLoss.netProfit > 0" [class.text-danger]="reports.profitLoss.netProfit < 0">
+                    {{ formatCurrency(reports.profitLoss.netProfit) }}
+                  </strong></td>
+                </tr>
+              </table>
+            </div>
+            <div class="col-md-6">
+              <h6>Expense Categories</h6>
+              <table class="table">
+                <thead>
+                  <tr>
+                    <th>Category</th>
+                    <th>Amount</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (category of reports.profitLoss.expenseCategories; track category.category) {
+                    <tr>
+                      <td>{{ category.category }}</td>
+                      <td>{{ formatCurrency(category.amount) }}</td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    }
+
+    <!-- Settlement History Tab -->
+    @if (activeTab === 'settlements') {
+      <div class="card">
+        <div class="card-header">
+          <h5 class="mb-0">Settlement History</h5>
+        </div>
+        <div class="card-body">
+          <div class="table-responsive">
+            <table class="table table-hover">
+              <thead>
+                <tr>
+                  <th>Settlement #</th>
+                  <th>Driver</th>
+                  <th>Period</th>
+                  <th>Earnings</th>
+                  <th>Deductions</th>
+                  <th>Net Pay</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (settlement of reports.settlementHistory.settlements; track settlement.settlementId) {
+                  <tr>
+                    <td>{{ settlement.settlementNumber }}</td>
+                    <td>{{ settlement.driverName }}</td>
+                    <td>{{ formatDate(settlement.periodStart) }} - {{ formatDate(settlement.periodEnd) }}</td>
+                    <td>{{ formatCurrency(settlement.totalEarnings) }}</td>
+                    <td>{{ formatCurrency(settlement.totalDeductions) }}</td>
+                    <td><strong>{{ formatCurrency(settlement.netPay) }}</strong></td>
+                    <td>{{ settlement.status }}</td>
+                  </tr>
+                }
+              </tbody>
+              <tfoot>
+                <tr>
+                  <td colspan="3"><strong>Totals</strong></td>
+                  <td><strong>{{ formatCurrency(reports.settlementHistory.totalEarnings) }}</strong></td>
+                  <td><strong>{{ formatCurrency(reports.settlementHistory.totalDeductions) }}</strong></td>
+                  <td><strong>{{ formatCurrency(reports.settlementHistory.totalNetPay) }}</strong></td>
+                  <td></td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+        </div>
+      </div>
+    }
+  }
+</div>
+

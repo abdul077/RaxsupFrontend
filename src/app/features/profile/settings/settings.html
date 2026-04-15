@@ -1,0 +1,233 @@
+<div class="settings-container">
+  <div class="settings-header">
+    <h2>Settings</h2>
+    <p class="text-muted">Manage your account settings and preferences</p>
+  </div>
+
+  @if (loading) {
+    <div class="text-center py-5">
+      <div class="spinner-border text-primary" role="status">
+        <span class="visually-hidden">Loading...</span>
+      </div>
+    </div>
+  } @else {
+    <!-- Tabs -->
+    <ul class="nav nav-tabs mb-4">
+      <li class="nav-item">
+        <a class="nav-link" 
+           [class.active]="activeTab === 'account'"
+           (click)="setActiveTab('account')"
+           href="javascript:void(0)">
+          <i class="fas fa-user-cog me-2"></i>Account
+        </a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" 
+           [class.active]="activeTab === 'notifications'"
+           (click)="setActiveTab('notifications')"
+           href="javascript:void(0)">
+          <i class="fas fa-bell me-2"></i>Notifications
+        </a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" 
+           [class.active]="activeTab === 'preferences'"
+           (click)="setActiveTab('preferences')"
+           href="javascript:void(0)">
+          <i class="fas fa-cog me-2"></i>Preferences
+        </a>
+      </li>
+    </ul>
+
+    @if (error) {
+      <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        {{ error }}
+        <button type="button" class="btn-close" (click)="error = null"></button>
+      </div>
+    }
+    @if (success) {
+      <div class="alert alert-success alert-dismissible fade show" role="alert">
+        {{ success }}
+        <button type="button" class="btn-close" (click)="success = null"></button>
+      </div>
+    }
+
+    <!-- Account Tab -->
+    @if (activeTab === 'account') {
+      <div class="card">
+        <div class="card-header">
+          <h5 class="mb-0">Change Password</h5>
+        </div>
+        <div class="card-body">
+          <form [formGroup]="passwordForm" (ngSubmit)="changePassword()">
+            <div class="mb-3">
+              <label class="form-label">Current Password <span class="text-danger">*</span></label>
+              <input type="password" 
+                     class="form-control" 
+                     formControlName="currentPassword"
+                     [class.is-invalid]="passwordForm.get('currentPassword')?.invalid && passwordForm.get('currentPassword')?.touched">
+              @if (passwordForm.get('currentPassword')?.invalid && passwordForm.get('currentPassword')?.touched) {
+                <div class="invalid-feedback">
+                  Current password is required
+                </div>
+              }
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label">New Password <span class="text-danger">*</span></label>
+              <input type="password" 
+                     class="form-control" 
+                     formControlName="newPassword"
+                     [class.is-invalid]="passwordForm.get('newPassword')?.invalid && passwordForm.get('newPassword')?.touched">
+              @if (passwordForm.get('newPassword')?.invalid && passwordForm.get('newPassword')?.touched) {
+                <div class="invalid-feedback">
+                  Password must be at least 8 characters
+                </div>
+              }
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label">Confirm New Password <span class="text-danger">*</span></label>
+              <input type="password" 
+                     class="form-control" 
+                     formControlName="confirmPassword"
+                     [class.is-invalid]="passwordForm.get('confirmPassword')?.invalid && passwordForm.get('confirmPassword')?.touched || passwordForm.hasError('passwordMismatch')">
+              @if (passwordForm.get('confirmPassword')?.invalid && passwordForm.get('confirmPassword')?.touched) {
+                <div class="invalid-feedback">
+                  Please confirm your new password
+                </div>
+              }
+              @if (passwordForm.hasError('passwordMismatch') && passwordForm.get('confirmPassword')?.touched) {
+                <div class="invalid-feedback">
+                  Passwords do not match
+                </div>
+              }
+            </div>
+
+            <button type="submit" 
+                    class="btn btn-primary" 
+                    [disabled]="saving || passwordForm.invalid">
+              @if (saving) {
+                <span class="spinner-border spinner-border-sm me-1"></span>
+              } @else {
+                <i class="fas fa-key me-1"></i>
+              }
+              Change Password
+            </button>
+          </form>
+        </div>
+      </div>
+    }
+
+    <!-- Notifications Tab -->
+    @if (activeTab === 'notifications') {
+      <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+          <h5 class="mb-0">Notification Preferences</h5>
+          <button class="btn btn-primary btn-sm" 
+                  (click)="savePreferences()" 
+                  [disabled]="saving">
+            @if (saving) {
+              <span class="spinner-border spinner-border-sm me-1"></span>
+            } @else {
+              <i class="fas fa-save me-1"></i>
+            }
+            Save
+          </button>
+        </div>
+        <div class="card-body">
+          <form [formGroup]="preferencesForm">
+            <div class="mb-3">
+              <div class="form-check form-switch">
+                <input class="form-check-input" 
+                       type="checkbox" 
+                       id="emailNotifications"
+                       formControlName="emailNotifications">
+                <label class="form-check-label" for="emailNotifications">
+                  Email Notifications
+                </label>
+              </div>
+              <small class="text-muted">Receive notifications via email</small>
+            </div>
+
+            <div class="mb-3">
+              <div class="form-check form-switch">
+                <input class="form-check-input" 
+                       type="checkbox" 
+                       id="pushNotifications"
+                       formControlName="pushNotifications">
+                <label class="form-check-label" for="pushNotifications">
+                  Push Notifications
+                </label>
+              </div>
+              <small class="text-muted">Receive push notifications in your browser</small>
+            </div>
+
+            <div class="mb-3">
+              <div class="form-check form-switch">
+                <input class="form-check-input" 
+                       type="checkbox" 
+                       id="smsNotifications"
+                       formControlName="smsNotifications">
+                <label class="form-check-label" for="smsNotifications">
+                  SMS Notifications
+                </label>
+              </div>
+              <small class="text-muted">Receive notifications via SMS</small>
+            </div>
+          </form>
+        </div>
+      </div>
+    }
+
+    <!-- Preferences Tab -->
+    @if (activeTab === 'preferences') {
+      <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+          <h5 class="mb-0">Display Preferences</h5>
+          <button class="btn btn-primary btn-sm" 
+                  (click)="savePreferences()" 
+                  [disabled]="saving">
+            @if (saving) {
+              <span class="spinner-border spinner-border-sm me-1"></span>
+            } @else {
+              <i class="fas fa-save me-1"></i>
+            }
+            Save
+          </button>
+        </div>
+        <div class="card-body">
+          <form [formGroup]="preferencesForm">
+            <div class="mb-3">
+              <label class="form-label">Theme</label>
+              <select class="form-select" formControlName="theme">
+                <option value="light">Light</option>
+                <option value="dark">Dark</option>
+                <option value="auto">Auto (System Default)</option>
+              </select>
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label">Language</label>
+              <select class="form-select" formControlName="language">
+                <option value="en">English</option>
+                <option value="es">Spanish</option>
+                <option value="fr">French</option>
+              </select>
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label">Timezone</label>
+              <input type="text" 
+                     class="form-control" 
+                     formControlName="timezone"
+                     placeholder="America/New_York">
+              <small class="text-muted">Enter timezone in IANA format (e.g., America/New_York)</small>
+            </div>
+          </form>
+        </div>
+      </div>
+    }
+  }
+</div>
+

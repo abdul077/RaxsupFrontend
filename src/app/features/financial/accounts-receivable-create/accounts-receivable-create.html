@@ -1,0 +1,94 @@
+<div class="container-fluid">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+      <h4 class="mb-1">Create Accounts Receivable</h4>
+      <p class="text-muted mb-0">Add a new customer receivable</p>
+    </div>
+    <button class="btn btn-outline-secondary" (click)="cancel()">
+      <i class="fas fa-times me-2"></i>Cancel
+    </button>
+  </div>
+
+  <div class="card">
+    <div class="card-body">
+      <form (ngSubmit)="onSubmit()">
+        <div class="row">
+          <div class="col-md-6 mb-3">
+            <label class="form-label">Customer <span class="text-danger">*</span></label>
+            <select 
+              class="form-select" 
+              [(ngModel)]="form.customerId" 
+              name="customerId" 
+              (ngModelChange)="onCustomerChange()" 
+              [disabled]="loadingCustomers"
+              required>
+              <option [value]="0">Select Customer</option>
+              @if (loadingCustomers) {
+                <option disabled>Loading customers...</option>
+              } @else {
+                @for (customer of customers; track customer.customerId) {
+                  <option [value]="customer.customerId">{{ customer.name }}</option>
+                }
+              }
+            </select>
+          </div>
+          <div class="col-md-6 mb-3">
+            <label class="form-label">Invoice (Optional)</label>
+            <select 
+              class="form-select" 
+              [(ngModel)]="form.invoiceId" 
+              name="invoiceId"
+              (ngModelChange)="onInvoiceChange()"
+              [disabled]="loadingInvoices || !form.customerId || form.customerId === 0">
+              <option [value]="undefined">No Invoice</option>
+              @if (loadingInvoices) {
+                <option disabled>Loading invoices...</option>
+              } @else if (form.customerId && form.customerId > 0 && filteredInvoices.length === 0 && !loadingInvoices) {
+                <option disabled>No invoices found for this customer</option>
+              } @else {
+                @for (invoice of filteredInvoices; track invoice.invoiceId) {
+                  <option [value]="invoice.invoiceId">
+                    {{ invoice.invoiceNumber }} - {{ invoice.customerName || 'Customer' }} 
+                    @if (invoice.totalAmount) {
+                      ({{ formatCurrency(invoice.totalAmount) }})
+                    }
+                    @if (invoice.balance && invoice.balance > 0) {
+                      - Balance: {{ formatCurrency(invoice.balance) }}
+                    }
+                  </option>
+                }
+              }
+            </select>
+            @if (form.customerId && form.customerId > 0 && filteredInvoices.length === 0 && !loadingInvoices) {
+              <small class="text-muted d-block mt-1">
+                <i class="fas fa-info-circle me-1"></i>No invoices found for this customer
+              </small>
+            }
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="col-md-6 mb-3">
+            <label class="form-label">Amount <span class="text-danger">*</span></label>
+            <input type="number" step="0.01" class="form-control" [(ngModel)]="form.amount" name="amount" required>
+          </div>
+          <div class="col-md-6 mb-3">
+            <label class="form-label">Due Date <span class="text-danger">*</span></label>
+            <input type="date" class="form-control" [(ngModel)]="form.dueDate" name="dueDate" required>
+          </div>
+        </div>
+
+        <div class="d-flex justify-content-end gap-2">
+          <button type="button" class="btn btn-secondary" (click)="cancel()">Cancel</button>
+          <button type="submit" class="btn btn-primary" [disabled]="submitting">
+            @if (submitting) {
+              <span class="spinner-border spinner-border-sm me-2"></span>
+            }
+            Create Receivable
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+

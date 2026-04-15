@@ -1,0 +1,174 @@
+<div class="invoice-list-container">
+  <!-- Page Header - same style as /loads -->
+  <div class="tms-dashboard-header mb-4">
+    <div class="tms-header-left">
+      <div class="tms-header-icon">
+        <i class="fas fa-file-invoice-dollar"></i>
+      </div>
+      <div>
+        <h1 class="tms-title">Invoices</h1>
+        <p class="tms-subtitle mb-0">Manage customer invoices and payments</p>
+      </div>
+    </div>
+    <div class="tms-header-actions">
+      <button type="button" class="btn btn-tms-outline" (click)="showSettingsModal = true" title="Auto-Invoice Settings">
+        <i class="fas fa-cog me-2"></i>Settings
+      </button> &nbsp;
+      <button type="button" class="btn btn-tms-primary" (click)="navigateToCreate()">
+        <i class="fas fa-plus me-2"></i>Create Invoice
+      </button>
+    </div>
+  </div>
+
+  <!-- Summary: Total Invoices (server-side totalCount) -->
+  <div class="load-list-kpi-row mb-4">
+    <div class="load-list-kpi-card load-list-kpi-blue">
+      <i class="fas fa-file-invoice load-list-kpi-icon"></i>
+      <div class="load-list-kpi-content">
+        <span class="load-list-kpi-value">{{ totalCount }}</span>
+        <span class="load-list-kpi-label">Total Invoices</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Date Range Tabs - same pattern as status tabs on /loads -->
+  <div class="status-tabs-container mb-4">
+    <div class="status-tabs">
+      <button type="button" class="status-tab" [class.active]="dateRangeTab === 'all'" (click)="setDateRangeTab('all')">
+        <i class="fas fa-th-list me-1"></i>All
+      </button>
+      <button type="button" class="status-tab" [class.active]="dateRangeTab === 'today'" (click)="setDateRangeTab('today')">
+        Today
+      </button>
+      <button type="button" class="status-tab" [class.active]="dateRangeTab === 'week'" (click)="setDateRangeTab('week')">
+        This Week
+      </button>
+      <button type="button" class="status-tab" [class.active]="dateRangeTab === 'month'" (click)="setDateRangeTab('month')">
+        This Month
+      </button>
+      <button type="button" class="status-tab" [class.active]="dateRangeTab === 'year'" (click)="setDateRangeTab('year')">
+        This Year
+      </button>
+    </div>
+  </div>
+
+  <!-- Filters card -->
+  <div class="filters-card mb-4">
+    <div class="filters-header">
+      <h3><i class="fas fa-filter me-2"></i>Filters</h3>
+      @if (statusFilter || customerFilter !== null || dateFrom || dateTo) {
+        <button type="button" class="btn btn-sm btn-tms-outline" (click)="onClearFilters()" title="Clear all filters">
+          <i class="fas fa-times me-1"></i>Clear All
+        </button>
+      }
+    </div>
+    <div class="filters-body">
+      <div class="filters-grid">
+        <div class="form-group">
+          <label class="form-label"><i class="fas fa-check-circle me-1"></i>Status</label>
+          <select class="form-select" [(ngModel)]="statusFilter">
+            <option value="">All Statuses</option>
+            @for (status of statusOptions; track status) {
+              <option [value]="status">{{ status }}</option>
+            }
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label"><i class="fas fa-building me-1"></i>Customer</label>
+          <select class="form-select" [(ngModel)]="customerFilter">
+            <option [ngValue]="null">All Customers</option>
+            @for (customer of customers; track customer.customerId) {
+              <option [ngValue]="customer.customerId">{{ customer.name }}</option>
+            }
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label"><i class="fas fa-calendar-alt me-1"></i>Date From</label>
+          <input type="date" class="form-control" [(ngModel)]="dateFrom">
+        </div>
+        <div class="form-group">
+          <label class="form-label"><i class="fas fa-calendar-alt me-1"></i>Date To</label>
+          <input type="date" class="form-control" [(ngModel)]="dateTo">
+        </div>
+        <div class="form-group filter-actions">
+          <label class="form-label d-block">&nbsp;</label>
+          <div class="filter-buttons">
+            <button type="button" class="btn btn-tms-primary" (click)="onApplyFilters()" title="Apply Filters">
+              <i class="fas fa-filter me-1"></i>Apply
+            </button>
+            <button type="button" class="btn btn-tms-outline" (click)="onClearFilters()" title="Clear Filters">
+              <i class="fas fa-times me-1"></i>Clear
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Invoice actions cell template -->
+  <ng-template #invoiceActionsCell let-invoice>
+    <div class="dropdown" (click)="$event.stopPropagation()">
+      <button type="button" class="tms-actions-btn" data-bs-toggle="dropdown" aria-expanded="false" title="Actions">
+        <i class="fas fa-ellipsis-h tms-actions-dots"></i>
+      </button>
+      <ul class="dropdown-menu dropdown-menu-end tms-actions-dropdown">
+        <li><a class="dropdown-item" [routerLink]="['/financial/invoices', invoice.invoiceId]">View...</a></li>
+        <li><button type="button" class="dropdown-item" (click)="downloadInvoicePdf(invoice.invoiceId)">Download PDF...</button></li>
+        @if (invoice.status === 'Draft') {
+          <li><a class="dropdown-item" [routerLink]="['/financial/invoices', invoice.invoiceId, 'edit']">Edit...</a></li>
+        }
+      </ul>
+    </div>
+  </ng-template>
+
+  <!-- Card with shared table - same structure and classes as /loads -->
+  <div class="load-list-card load-list-card-with-sticky">
+    <div class="load-list-card-header">
+      <h5><i class="fas fa-list me-2"></i>Invoices</h5>
+      <div class="load-list-card-actions">
+        
+      </div>
+    </div>
+    <div class="load-list-card-body p-0">
+      <app-data-table
+        [config]="tableConfig"
+        [dataSource]="dataSource"
+        [emptyMessage]="'No invoices found. Try adjusting your filters or create a new invoice.'"
+        [refreshTrigger]="tableRefreshTrigger"
+        (rowClick)="navigateToDetail($event.invoiceId)"
+        (dataLoaded)="onTableDataLoaded($event)">
+      </app-data-table>
+    </div>
+  </div>
+</div>
+
+<!-- Auto-Invoice Settings Modal -->
+@if (showSettingsModal) {
+  <div class="modal-overlay" (click)="showSettingsModal = false">
+    <div class="modal-dialog" (click)="$event.stopPropagation()">
+      <div class="modal-content settings-modal">
+        <div class="modal-header">
+          <h5 class="modal-title"><i class="fas fa-cog me-2"></i>Invoice Settings</h5>
+          <button type="button" class="btn-close" (click)="showSettingsModal = false" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <div class="settings-toggle">
+            <div class="form-check form-switch form-switch-lg">
+              <input class="form-check-input" type="checkbox" id="autoInvoiceToggle"
+                     [checked]="autoInvoiceEnabled" (change)="toggleAutoInvoice()">
+              <label class="form-check-label" for="autoInvoiceToggle">
+                <strong>Auto-Generate Invoices</strong>
+              </label>
+            </div>
+            <p class="settings-description">
+              When enabled, invoices will be automatically created when loads are marked as "Delivered".
+            </p>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" (click)="showSettingsModal = false">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
+}

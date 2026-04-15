@@ -1,0 +1,113 @@
+<div class="modal fade" [class.show]="show" [style.display]="show ? 'block' : 'none'" style="background: rgba(0,0,0,0.5);" *ngIf="show">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">
+          <i class="bi bi-flag-fill me-2"></i>Update Incident Status
+        </h5>
+        <button type="button" class="btn-close" (click)="onClose()" [disabled]="saving"></button>
+      </div>
+      <div class="modal-body">
+        @if (errors['general']) {
+          <div class="alert alert-danger">
+            <i class="bi bi-exclamation-circle me-2"></i>{{ errors['general'] }}
+          </div>
+        }
+
+        <div class="mb-3">
+          <div class="form-check form-switch">
+            <input 
+              class="form-check-input" 
+              type="checkbox" 
+              id="resolved"
+              [(ngModel)]="formData.resolved"
+              (change)="validateForm()">
+            <label class="form-check-label" for="resolved">
+              <strong>Mark as Resolved</strong>
+            </label>
+          </div>
+          <small class="form-text text-muted">Check this box to mark the incident as resolved.</small>
+        </div>
+
+        @if (formData.resolved) {
+          <div class="mb-3">
+            <label class="form-label">Resolved Date <span class="text-danger">*</span></label>
+            <input 
+              type="date" 
+              class="form-control" 
+              [class.is-invalid]="hasError('resolvedDate')"
+              [(ngModel)]="formData.resolvedDate" 
+              name="resolvedDate"
+              [min]="incidentDate"
+              [max]="getMaxDate()"
+              (blur)="validateForm()">
+            @if (hasError('resolvedDate')) {
+              <div class="invalid-feedback">{{ getFieldError('resolvedDate') }}</div>
+            }
+            <small class="form-text text-muted">Date when the incident was resolved. Must be on or after the incident date.</small>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">Resolution Notes</label>
+            <textarea 
+              class="form-control" 
+              [class.is-invalid]="hasError('resolutionNotes')"
+              [(ngModel)]="formData.resolutionNotes" 
+              name="resolutionNotes" 
+              rows="3"
+              maxlength="5000"
+              (blur)="validateForm()"
+              placeholder="Enter details about how the incident was resolved..."></textarea>
+            @if (hasError('resolutionNotes')) {
+              <div class="invalid-feedback">{{ getFieldError('resolutionNotes') }}</div>
+            }
+            <small class="form-text text-muted">Up to 5000 characters. Describe the resolution steps taken and final outcome.</small>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">Root Cause</label>
+            <textarea 
+              class="form-control" 
+              [class.is-invalid]="hasError('rootCause')"
+              [(ngModel)]="formData.rootCause" 
+              name="rootCause" 
+              rows="3"
+              maxlength="2000"
+              (blur)="validateForm()"
+              placeholder="Enter the root cause analysis..."></textarea>
+            @if (hasError('rootCause')) {
+              <div class="invalid-feedback">{{ getFieldError('rootCause') }}</div>
+            }
+            <small class="form-text text-muted">Up to 2000 characters. Identify the underlying cause that led to this incident.</small>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">Corrective Action</label>
+            <textarea 
+              class="form-control" 
+              [class.is-invalid]="hasError('correctiveAction')"
+              [(ngModel)]="formData.correctiveAction" 
+              name="correctiveAction" 
+              rows="3"
+              maxlength="2000"
+              (blur)="validateForm()"
+              placeholder="Enter the corrective actions taken to prevent recurrence..."></textarea>
+            @if (hasError('correctiveAction')) {
+              <div class="invalid-feedback">{{ getFieldError('correctiveAction') }}</div>
+            }
+            <small class="form-text text-muted">Up to 2000 characters. Describe actions taken to prevent similar incidents in the future.</small>
+          </div>
+        }
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" (click)="onClose()" [disabled]="saving">Cancel</button>
+        <button type="button" class="btn btn-primary" (click)="onSave()" [disabled]="saving || (submitted && !isFormValid())">
+          @if (saving) {
+            <span class="spinner-border spinner-border-sm me-2"></span>
+          }
+          Update Status
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

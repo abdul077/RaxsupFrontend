@@ -1,0 +1,247 @@
+<div class="container-fluid">
+  <div class="page-header mb-4">
+    <div class="d-flex align-items-center gap-3">
+      <button class="btn btn-outline-secondary btn-back" (click)="navigateBack()">
+        <i class="fas fa-arrow-left me-2"></i>Back
+      </button>
+      <div class="header-content">
+        <h4 class="page-title mb-1">Receivable #{{ receivable?.receivableId || 'Loading...' }}</h4>
+        <p class="page-subtitle mb-0">Receivable Details</p>
+      </div>
+    </div>
+    <div class="header-actions">
+      @if (receivable && receivable.balance > 0 && receivable.status !== 'Paid') {
+        <button class="btn btn-success btn-action" (click)="openPaymentModal()">
+          <i class="fas fa-money-bill-wave me-2"></i>Record Payment
+        </button>
+      }
+    </div>
+  </div>
+
+  @if (loading) {
+    <div class="loading-container">
+      <div class="loading-content">
+        <div class="spinner-border text-primary" role="status">
+          <span class="visually-hidden">Loading...</span>
+        </div>
+        <p class="mt-3 text-muted">Loading receivable details...</p>
+      </div>
+    </div>
+  }
+
+  @if (!loading && receivable) {
+    <div class="row">
+      <div class="col-lg-8">
+        <!-- Receivable Information Card -->
+        <div class="receivable-info-card card mb-4">
+          <div class="card-header">
+            <h5 class="mb-0">
+              <i class="fas fa-receipt me-2 text-primary"></i>Receivable Information
+            </h5>
+          </div>
+          <div class="card-body">
+            <div class="info-grid">
+              <div class="info-item">
+                <div class="info-label">
+                  <i class="fas fa-hashtag me-2"></i>Receivable ID
+                </div>
+                <div class="info-value">#{{ receivable.receivableId }}</div>
+              </div>
+              
+              <div class="info-item">
+                <div class="info-label">
+                  <i class="fas fa-user me-2"></i>Customer
+                </div>
+                <div class="info-value">{{ receivable.customerName }}</div>
+              </div>
+              
+              @if (receivable.invoiceNumber) {
+                <div class="info-item">
+                  <div class="info-label">
+                    <i class="fas fa-file-alt me-2"></i>Invoice Number
+                  </div>
+                  <div class="info-value">{{ receivable.invoiceNumber }}</div>
+                </div>
+              }
+              
+              <div class="info-item">
+                <div class="info-label">
+                  <i class="fas fa-calendar-check me-2"></i>Due Date
+                </div>
+                <div class="info-value" [class.text-danger]="receivable.isOverdue">
+                  {{ formatDate(receivable.dueDate) }}
+                  @if (receivable.isOverdue) {
+                    <span class="badge bg-danger ms-2">{{ receivable.daysPastDue }} days overdue</span>
+                  }
+                </div>
+              </div>
+              
+              <div class="info-item">
+                <div class="info-label">
+                  <i class="fas fa-calendar-alt me-2"></i>Created Date
+                </div>
+                <div class="info-value">{{ formatDate(receivable.createdAt) }}</div>
+              </div>
+              
+              <div class="info-item">
+                <div class="info-label">
+                  <i class="fas fa-info-circle me-2"></i>Status
+                </div>
+                <div class="info-value">
+                  <span [class]="getStatusBadgeClass(receivable.status)">{{ receivable.status }}</span>
+                </div>
+              </div>
+              
+              @if (receivable.paidAt) {
+                <div class="info-item">
+                  <div class="info-label">
+                    <i class="fas fa-check-circle me-2"></i>Paid At
+                  </div>
+                  <div class="info-value text-success">{{ formatDate(receivable.paidAt) }}</div>
+                </div>
+              }
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Financial Summary Sidebar -->
+      <div class="col-lg-4">
+        <div class="financial-summary-card card mb-4">
+          <div class="card-header">
+            <h5 class="mb-0">
+              <i class="fas fa-calculator me-2"></i>Financial Summary
+            </h5>
+          </div>
+          <div class="card-body">
+            <!-- Total Amount -->
+            <div class="summary-item total-amount">
+              <div class="summary-label">
+                <i class="fas fa-receipt me-2"></i>Total Amount
+              </div>
+              <div class="summary-value">{{ formatCurrency(receivable.amount) }}</div>
+              <div class="progress-container">
+                <div class="progress" style="height: 10px; border-radius: 10px;">
+                  <div class="progress-bar bg-gradient-primary" role="progressbar" 
+                       [style.width.%]="receivable.amount > 0 ? (receivable.paidAmount / receivable.amount) * 100 : 0"
+                       [attr.aria-valuenow]="receivable.amount > 0 ? (receivable.paidAmount / receivable.amount) * 100 : 0"
+                       aria-valuemin="0" aria-valuemax="100">
+                  </div>
+                </div>
+                <div class="progress-text">
+                  {{ receivable.amount > 0 ? (((receivable.paidAmount / receivable.amount) * 100).toFixed(1)) : 0 }}% paid
+                </div>
+              </div>
+            </div>
+
+            <div class="summary-divider"></div>
+
+            <!-- Paid Amount -->
+            <div class="summary-item paid-amount">
+              <div class="summary-label">
+                <i class="fas fa-check-circle text-success me-2"></i>Paid Amount
+              </div>
+              <div class="summary-value text-success">{{ formatCurrency(receivable.paidAmount) }}</div>
+            </div>
+
+            <div class="summary-divider"></div>
+
+            <!-- Outstanding Balance -->
+            <div class="summary-item outstanding-balance">
+              <div class="summary-label">
+                <i class="fas fa-exclamation-circle me-2" 
+                   [class.text-danger]="receivable.balance > 0" 
+                   [class.text-success]="receivable.balance === 0"></i>Outstanding Balance
+              </div>
+              <div class="summary-value" 
+                   [class.text-danger]="receivable.balance > 0" 
+                   [class.text-success]="receivable.balance === 0">
+                {{ formatCurrency(receivable.balance) }}
+              </div>
+              @if (receivable.balance > 0) {
+                <div class="summary-note text-muted">
+                  <i class="fas fa-info-circle me-1"></i>
+                  {{ receivable.amount > 0 ? (((receivable.balance / receivable.amount) * 100).toFixed(1)) : 0 }}% remaining
+                </div>
+              } @else {
+                <div class="summary-note text-success">
+                  <i class="fas fa-check-circle me-1"></i>Fully Paid
+                </div>
+              }
+            </div>
+
+            <!-- Overdue Alert -->
+            @if (receivable.isOverdue) {
+              <div class="overdue-alert">
+                <i class="fas fa-exclamation-triangle me-2"></i>
+                <div>
+                  <strong>Overdue!</strong>
+                  <div class="small">This receivable is {{ receivable.daysPastDue }} days past due.</div>
+                </div>
+              </div>
+            }
+          </div>
+        </div>
+
+        <!-- Payment Status Card -->
+        @if (receivable.status === 'Paid' && receivable.paidAt) {
+          <div class="payment-status-card card mb-4">
+            <div class="card-body">
+              <div class="status-content">
+                <div class="status-icon">
+                  <i class="fas fa-check-circle"></i>
+                </div>
+                <div class="status-details">
+                  <h6 class="status-title">Payment Completed</h6>
+                  <div class="status-info">
+                    <div><i class="fas fa-calendar me-2"></i>Paid on {{ formatDate(receivable.paidAt) }}</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        }
+      </div>
+    </div>
+  }
+
+  <!-- Payment Modal -->
+  @if (showPaymentModal && receivable) {
+    <div class="modal fade show" style="display: block;" tabindex="-1" role="dialog">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content modern-modal">
+          <div class="modal-header">
+            <h5 class="modal-title">
+              <i class="fas fa-money-bill-wave me-2"></i>Record Payment
+            </h5>
+            <button type="button" class="btn-close" (click)="showPaymentModal = false" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <div class="form-group">
+              <label class="form-label">
+                <i class="fas fa-calendar me-2"></i>Payment Date
+              </label>
+              <input type="date" class="form-control form-control-modern" [(ngModel)]="paymentForm.paidAt" name="paidAt">
+            </div>
+            <div class="form-group">
+              <label class="form-label">
+                <i class="fas fa-dollar-sign me-2"></i>Payment Amount
+              </label>
+              <input type="number" step="0.01" class="form-control form-control-modern" [(ngModel)]="paymentForm.paymentAmount" name="paymentAmount" required>
+              <small class="text-muted">Maximum: {{ formatCurrency(receivable.balance) }}</small>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary btn-modern" (click)="showPaymentModal = false">
+              <i class="fas fa-times me-2"></i>Cancel
+            </button>
+            <button type="button" class="btn btn-primary btn-modern" (click)="recordPayment()">
+              <i class="fas fa-check me-2"></i>Record Payment
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-backdrop fade show"></div>
+  }
+</div>

@@ -1,0 +1,95 @@
+<div class="api-key-list">
+  <div class="page-header">
+    <h1>API Key Management</h1>
+    <button class="btn btn-primary" (click)="showCreateModal = true">
+      <i class="fas fa-plus"></i> Create API Key
+    </button>
+  </div>
+
+  <div *ngIf="createdKey" class="alert alert-success">
+    <strong>API Key Created!</strong> Copy this key now - it won't be shown again:<br>
+    <code>{{ createdKey }}</code>
+    <button class="btn btn-sm" (click)="createdKey = null">Close</button>
+  </div>
+
+  <div *ngIf="loading" class="loading">Loading...</div>
+
+  <div *ngIf="!loading" class="api-keys-table">
+    <table>
+      <thead>
+        <tr>
+          <th>Key Name</th>
+          <th>Integration Type</th>
+          <th>Created By</th>
+          <th>Created At</th>
+          <th>Last Used</th>
+          <th>Status</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let key of apiKeys">
+          <td>
+            <strong>{{ key.keyName }}</strong>
+            <div *ngIf="key.description" class="description">{{ key.description }}</div>
+          </td>
+          <td>{{ key.integrationType || '-' }}</td>
+          <td>{{ key.createdByUserName || '-' }}</td>
+          <td>{{ key.createdAt | date:'short' }}</td>
+          <td>{{ key.lastUsedAt ? (key.lastUsedAt | date:'short') : 'Never' }}</td>
+          <td>
+            <span class="badge" [ngClass]="{
+              'badge-success': key.isActive && !key.isExpired,
+              'badge-danger': !key.isActive || key.isExpired
+            }">
+              {{ key.isExpired ? 'Expired' : (key.isActive ? 'Active' : 'Inactive') }}
+            </span>
+          </td>
+          <td>
+            <button class="btn btn-sm" (click)="toggleActive(key)">
+              <i class="fas" [ngClass]="key.isActive ? 'fa-toggle-on' : 'fa-toggle-off'"></i>
+            </button>
+          </td>
+        </tr>
+        <tr *ngIf="apiKeys.length === 0">
+          <td colspan="7" class="empty-state">No API keys found</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Create Modal -->
+  <div *ngIf="showCreateModal" class="modal-overlay" (click)="showCreateModal = false">
+    <div class="modal-content" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h2>Create API Key</h2>
+        <button class="btn-close" (click)="showCreateModal = false">&times;</button>
+      </div>
+      <div class="modal-body">
+        <form (ngSubmit)="createApiKey()">
+          <div class="form-group">
+            <label>Key Name *</label>
+            <input type="text" [(ngModel)]="newApiKey.keyName" name="keyName" required>
+          </div>
+          <div class="form-group">
+            <label>Description</label>
+            <textarea [(ngModel)]="newApiKey.description" name="description" rows="3"></textarea>
+          </div>
+          <div class="form-group">
+            <label>Integration Type</label>
+            <input type="text" [(ngModel)]="newApiKey.integrationType" name="integrationType" placeholder="e.g., ELD, TMS, Accounting">
+          </div>
+          <div class="form-group">
+            <label>Expires At</label>
+            <input type="datetime-local" [(ngModel)]="newApiKey.expiresAt" name="expiresAt">
+          </div>
+          <div class="form-actions">
+            <button type="button" class="btn btn-secondary" (click)="showCreateModal = false">Cancel</button>
+            <button type="submit" class="btn btn-primary">Create</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+

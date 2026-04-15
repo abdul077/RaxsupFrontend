@@ -1,0 +1,186 @@
+// Driver Create/Edit Component Styles
+// Inherits from global styles
+
+.card {
+  border: none;
+  box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+}
+
+.card-header {
+  background-color: #f8f9fa;
+  border-bottom: 1px solid #dee2e6;
+  font-weight: 600;
+}
+
+.form-label {
+  font-weight: 500;
+  margin-bottom: 0.5rem;
+}
+
+.text-danger {
+  color: #e63757 !important;
+}
+
+.required {
+  color: #e63757;
+}
+
+.form-hint {
+  font-size: 0.75rem;
+  color: #6c757d;
+  margin: 0.25rem 0 0 0;
+  display: block;
+}
+
+.validation-alert {
+  border-radius: 0.5rem;
+  padding: 1rem 1.25rem;
+  box-shadow: 0 2px 8px rgba(230, 55, 87, 0.15);
+}
+
+// ----- Top horizontal progress bar (edit mode) -----
+.profile-completion-horizontal-card {
+  border: 1px solid #e9ecef;
+}
+
+.profile-completion-horizontal-body {
+  padding: 1rem 1.25rem;
+}
+
+.profile-completion-title {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: #495057;
+}
+
+.profile-completion-total {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--bs-primary);
+}
+
+.profile-completion-horizontal-track {
+  height: 12px;
+  background: #e9ecef;
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.profile-completion-horizontal-fill {
+  height: 100%;
+  background: var(--bs-primary);
+  border-radius: 999px;
+  transition: width 0.35s ease-out;
+}
+
+// ----- Edit layout: sidebar + main -----
+.driver-edit-layout {
+  align-items: flex-start;
+}
+
+.driver-edit-sidebar {
+  flex: 0 0 auto;
+  width: 240px;
+  position: sticky;
+  top: 1rem;
+}
+
+.profile-completion-vertical-card {
+  border: 1px solid #e9ecef;
+}
+
+.profile-completion-vertical-body {
+  padding: 1rem 1.25rem;
+}
+
+.profile-completion-sidebar-title {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: #495057;
+  margin: 0 0 1rem 0;
+}
+
+// ----- Vertical bar: one bar made of stacked segments -----
+.profile-completion-vertical {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.profile-completion-section {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  flex: none;
+  padding: 0.35rem 0;
+  border-radius: 0.375rem;
+  transition: background 0.15s ease;
+}
+
+.profile-completion-section:hover {
+  background: rgba(0, 0, 0, 0.02);
+}
+
+.profile-completion-section-label {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  color: #6c757d;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  flex: 0 0 58px;
+}
+
+.profile-completion-track {
+  flex: 1;
+  width: 18px;
+  min-width: 18px;
+  height: 4rem;
+  min-height: 4rem;
+  background: #e9ecef;
+  overflow: hidden;
+  display: flex;
+  align-items: flex-end;
+  border: 1px solid #dee2e6;
+}
+
+.profile-completion-section:first-child .profile-completion-track {
+  border-radius: 0.5rem 0.5rem 0 0;
+}
+
+.profile-completion-section:not(:first-child) .profile-completion-track {
+  border-top: none;
+}
+
+.profile-completion-section:last-child .profile-completion-track {
+  border-radius: 0 0 0.5rem 0.5rem;
+}
+
+.profile-completion-fill {
+  width: 100%;
+  min-height: 3px;
+  background: var(--bs-primary);
+  border-radius: 0;
+  transition: height 0.35s ease-out;
+}
+
+.profile-completion-section:first-child .profile-completion-fill {
+  border-radius: 0.4rem 0.4rem 0 0;
+}
+
+.profile-completion-section:last-child .profile-completion-fill {
+  border-radius: 0 0 0.4rem 0.4rem;
+}
+
+.profile-completion-section-pct {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: #212529;
+  flex: 0 0 2.5rem;
+  text-align: right;
+}
+
+.driver-edit-main {
+  flex: 1;
+  min-width: 0;
+}
+

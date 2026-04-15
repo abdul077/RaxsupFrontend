@@ -1,0 +1,109 @@
+<div class="topbar">
+  <div class="topbar-left">
+    <button class="sidebar-toggle d-md-none" type="button" (click)="toggleSidebar()" aria-label="Toggle sidebar">
+      <i class="fas fa-bars"></i>
+    </button>
+    <div class="topbar-brand">
+      <span class="brand-subtitle">{{ pageName }}</span>
+    </div>
+  </div>
+  
+  <div class="topbar-right">
+    <!-- Notifications Dropdown -->
+    <div class="notification-dropdown">
+      <button class="topbar-icon-btn" type="button" aria-label="Notifications" (click)="toggleNotificationDropdown()">
+        <i class="fas fa-bell"></i>
+        <span class="notification-badge" *ngIf="unreadCount > 0">{{ unreadCount > 99 ? '99+' : unreadCount }}</span>
+      </button>
+
+      <div class="notification-dropdown-menu" *ngIf="showNotificationDropdown">
+        <div class="notification-dropdown-header">
+          <h6>Notifications</h6>
+          <button class="btn-link" (click)="markAllAsRead()" *ngIf="unreadCount > 0">Mark all read</button>
+        </div>
+        <div class="notification-dropdown-body">
+          <div *ngIf="notifications.length === 0" class="notification-empty">
+            <i class="fas fa-bell-slash"></i>
+            <p>No notifications</p>
+          </div>
+          <div *ngFor="let notification of notifications" 
+               class="notification-item" 
+               [class.notification-unread]="!notification.isRead"
+               (click)="handleNotificationClick(notification)">
+            <div class="notification-icon">
+              <i class="fas" [ngClass]="getIconClass(notification)"></i>
+            </div>
+            <div class="notification-content">
+              <div class="notification-title">{{ notification.title || 'Notification' }}</div>
+              <div class="notification-message">{{ notification.message }}</div>
+              <div class="notification-time">{{ getTimeAgo(notification.createdAt) }}</div>
+            </div>
+            <button class="notification-mark-read" 
+                    *ngIf="!notification.isRead" 
+                    (click)="markAsRead(notification, $event)"
+                    title="Mark as read">
+              <i class="fas fa-check"></i>
+            </button>
+          </div>
+        </div>
+        <div class="notification-dropdown-footer">
+          <a routerLink="/admin/notifications" (click)="showNotificationDropdown = false">View All Notifications</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- User Profile Dropdown -->
+    <div class="user-dropdown">
+      <button class="user-profile-btn" type="button" id="userDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+        <div class="user-avatar">
+          <i class="fas fa-user"></i>
+        </div>
+        <div class="user-info">
+          <span class="user-name">{{ getCurrentUser()?.fullName || getCurrentUser()?.username }}</span>
+          <span class="user-role">{{ getRoleDisplayName(getCurrentUser()?.role) }}</span>
+        </div>
+        <i class="fas fa-chevron-down dropdown-arrow"></i>
+      </button>
+      <ul class="dropdown-menu dropdown-menu-end user-dropdown-menu" aria-labelledby="userDropdown" style="z-index: 1200;">
+        <li class="dropdown-header">
+          <div class="dropdown-user-info">
+            <div class="dropdown-avatar">
+              <i class="fas fa-user"></i>
+            </div>
+            <div>
+              <div class="dropdown-name">{{ getCurrentUser()?.fullName || getCurrentUser()?.username }}</div>
+              <div class="dropdown-email">{{ getCurrentUser()?.email || '' }}</div>
+            </div>
+          </div>
+        </li>
+        <li><hr class="dropdown-divider"></li>
+        <li>
+          <a class="dropdown-item" routerLink="/profile/my-profile">
+            <i class="fas fa-user"></i>
+            <span>My Profile</span>
+          </a>
+        </li>
+        <li>
+          <a class="dropdown-item" routerLink="/profile/settings">
+            <i class="fas fa-cog"></i>
+            <span>Settings</span>
+          </a>
+        </li>
+        <li>
+          <a class="dropdown-item" routerLink="/profile/help">
+            <i class="fas fa-question-circle"></i>
+            <span>Help & Support</span>
+          </a>
+        </li>
+        <li><hr class="dropdown-divider"></li>
+        <li>
+          <a class="dropdown-item dropdown-item-danger" (click)="logout()">
+            <i class="fas fa-sign-out-alt"></i>
+            <span>Logout</span>
+          </a>
+        </li>
+      </ul>
+    </div>
+  </div>
+</div>
+

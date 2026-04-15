@@ -1,0 +1,406 @@
+<div class="container-fluid">
+  <div class="page-header mb-4">
+    <div class="d-flex align-items-center gap-3">
+      <button class="btn btn-outline-secondary btn-back" (click)="navigateBack()">
+        <i class="fas fa-arrow-left me-2"></i>Back
+      </button>
+      <div class="header-content">
+        <h4 class="page-title mb-1">{{ payable?.payableNumber || 'Loading...' }}</h4>
+        <p class="page-subtitle mb-0">Payable Details</p>
+      </div>
+    </div>
+    <div class="header-actions">
+      @if (payable && payable.status === 'Pending') {
+        <button class="btn btn-info btn-action" (click)="approvePayable()">
+          <i class="fas fa-check me-2"></i>Approve
+        </button>
+      }
+      @if (payable && payable.status === 'Approved' && payable.balance > 0) {
+        <button class="btn btn-success btn-action" (click)="openPaymentModal()">
+          <i class="fas fa-money-bill-wave me-2"></i>Record Payment
+        </button>
+        <button class="btn btn-primary btn-action" (click)="openMarkPaidModal()">
+          <i class="fas fa-check-circle me-2"></i>Mark Paid
+        </button>
+      }
+    </div>
+  </div>
+
+  @if (loading) {
+    <div class="loading-container">
+      <div class="loading-content">
+        <div class="spinner-border text-primary" role="status">
+          <span class="visually-hidden">Loading...</span>
+        </div>
+        <p class="mt-3 text-muted">Loading payable details...</p>
+      </div>
+    </div>
+  }
+
+  @if (!loading && payable) {
+    <div class="row">
+      <div class="col-lg-8">
+        <!-- Payable Information Card -->
+        <div class="payable-info-card card mb-4">
+          <div class="card-header">
+            <h5 class="mb-0">
+              <i class="fas fa-file-invoice-dollar me-2 text-primary"></i>Payable Information
+            </h5>
+          </div>
+          <div class="card-body">
+            <div class="info-grid">
+              <div class="info-item">
+                <div class="info-label">
+                  <i class="fas fa-hashtag me-2"></i>Payable Number
+                </div>
+                <div class="info-value">{{ payable.payableNumber }}</div>
+              </div>
+              
+              <div class="info-item">
+                <div class="info-label">
+                  <i class="fas fa-building me-2"></i>Vendor
+                </div>
+                <div class="info-value">{{ payable.vendorName }}</div>
+              </div>
+              
+              @if (payable.vendorAddress) {
+                <div class="info-item">
+                  <div class="info-label">
+                    <i class="fas fa-map-marker-alt me-2"></i>Vendor Address
+                  </div>
+                  <div class="info-value">{{ payable.vendorAddress }}</div>
+                </div>
+              }
+              
+              <div class="info-item">
+                <div class="info-label">
+                  <i class="fas fa-file-alt me-2"></i>Invoice Number
+                </div>
+                <div class="info-value">
+                  @if (payable.invoiceNumber && payable.invoiceNumber.trim().length > 0) {
+                    {{ payable.invoiceNumber }}
+                  } @else {
+                    <span class="text-muted">-</span>
+                  }
+                </div>
+              </div>
+              
+              <div class="info-item">
+                <div class="info-label">
+                  <i class="fas fa-calendar-alt me-2"></i>Invoice Date
+                </div>
+                <div class="info-value">{{ formatDate(payable.invoiceDate) }}</div>
+              </div>
+              
+              <div class="info-item">
+                <div class="info-label">
+                  <i class="fas fa-calendar-check me-2"></i>Due Date
+                </div>
+                <div class="info-value" [class.text-danger]="payable.isOverdue">
+                  {{ formatDate(payable.dueDate) }}
+                  @if (payable.isOverdue) {
+                    <span class="badge bg-danger ms-2">{{ payable.daysPastDue }} days overdue</span>
+                  }
+                </div>
+              </div>
+              
+              <div class="info-item">
+                <div class="info-label">
+                  <i class="fas fa-tag me-2"></i>Category
+                </div>
+                <div class="info-value">
+                  <span class="category-badge">{{ payable.category || '-' }}</span>
+                </div>
+              </div>
+              
+              <div class="info-item">
+                <div class="info-label">
+                  <i class="fas fa-info-circle me-2"></i>Status
+                </div>
+                <div class="info-value">
+                  <span [class]="getStatusBadgeClass(payable.status)">{{ payable.status }}</span>
+                </div>
+              </div>
+              
+              @if (payable.notes) {
+                <div class="info-item info-item-full">
+                  <div class="info-label">
+                    <i class="fas fa-sticky-note me-2"></i>Notes
+                  </div>
+                  <div class="info-value">{{ payable.notes }}</div>
+                </div>
+              }
+            </div>
+          </div>
+        </div>
+
+        <!-- Payment History Card -->
+        @if (payable.payments && payable.payments.length > 0) {
+          <div class="payment-history-card card mb-4">
+            <div class="card-header">
+              <h5 class="mb-0">
+                <i class="fas fa-history me-2 text-primary"></i>Payment History
+              </h5>
+            </div>
+            <div class="card-body">
+              <div class="table-responsive">
+                <table class="table table-hover payment-table">
+                  <thead>
+                    <tr>
+                      <th><i class="fas fa-calendar me-2"></i>Payment Date</th>
+                      <th><i class="fas fa-dollar-sign me-2"></i>Amount</th>
+                      <th><i class="fas fa-credit-card me-2"></i>Method</th>
+                      <th><i class="fas fa-file-invoice me-2"></i>Check #</th>
+                      <th><i class="fas fa-barcode me-2"></i>Reference</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    @for (payment of payable.payments; track payment.paymentId) {
+                      <tr>
+                        <td>{{ formatDate(payment.paymentDate) }}</td>
+                        <td class="fw-bold text-success">{{ formatCurrency(payment.amount) }}</td>
+                        <td><span class="method-badge">{{ payment.method }}</span></td>
+                        <td>{{ payment.checkNumber || '-' }}</td>
+                        <td>{{ payment.reference || '-' }}</td>
+                      </tr>
+                    }
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        }
+      </div>
+
+      <!-- Financial Summary Sidebar -->
+      <div class="col-lg-4">
+        <div class="financial-summary-card card mb-4">
+          <div class="card-header">
+            <h5 class="mb-0">
+              <i class="fas fa-calculator me-2"></i>Financial Summary
+            </h5>
+          </div>
+          <div class="card-body">
+            <!-- Total Amount -->
+            <div class="summary-item total-amount">
+              <div class="summary-label">
+                <i class="fas fa-file-invoice-dollar me-2"></i>Total Amount
+              </div>
+              <div class="summary-value">{{ formatCurrency(payable.amount) }}</div>
+              <div class="progress-container">
+                <div class="progress" style="height: 10px; border-radius: 10px;">
+                  <div class="progress-bar bg-gradient-primary" role="progressbar" 
+                       [style.width.%]="(payable.paidAmount / payable.amount) * 100"
+                       [attr.aria-valuenow]="(payable.paidAmount / payable.amount) * 100"
+                       aria-valuemin="0" aria-valuemax="100">
+                  </div>
+                </div>
+                <div class="progress-text">
+                  {{ ((payable.paidAmount / payable.amount) * 100).toFixed(1) }}% paid
+                </div>
+              </div>
+            </div>
+
+            <div class="summary-divider"></div>
+
+            <!-- Paid Amount -->
+            <div class="summary-item paid-amount">
+              <div class="summary-label">
+                <i class="fas fa-check-circle text-success me-2"></i>Paid Amount
+              </div>
+              <div class="summary-value text-success">{{ formatCurrency(payable.paidAmount) }}</div>
+            </div>
+
+            <div class="summary-divider"></div>
+
+            <!-- Outstanding Balance -->
+            <div class="summary-item outstanding-balance">
+              <div class="summary-label">
+                <i class="fas fa-exclamation-circle me-2" 
+                   [class.text-danger]="payable.balance > 0" 
+                   [class.text-success]="payable.balance === 0"></i>Outstanding Balance
+              </div>
+              <div class="summary-value" 
+                   [class.text-danger]="payable.balance > 0" 
+                   [class.text-success]="payable.balance === 0">
+                {{ formatCurrency(payable.balance) }}
+              </div>
+              @if (payable.balance > 0) {
+                <div class="summary-note text-muted">
+                  <i class="fas fa-info-circle me-1"></i>
+                  {{ ((payable.balance / payable.amount) * 100).toFixed(1) }}% remaining
+                </div>
+              } @else {
+                <div class="summary-note text-success">
+                  <i class="fas fa-check-circle me-1"></i>Fully Paid
+                </div>
+              }
+            </div>
+
+            <!-- Overdue Alert -->
+            @if (payable.isOverdue) {
+              <div class="overdue-alert">
+                <i class="fas fa-exclamation-triangle me-2"></i>
+                <div>
+                  <strong>Overdue!</strong>
+                  <div class="small">This payable is {{ payable.daysPastDue }} days past due.</div>
+                </div>
+              </div>
+            }
+          </div>
+        </div>
+
+        <!-- Payment Status Card -->
+        @if (payable.status === 'Paid' && payable.paidAt) {
+          <div class="payment-status-card card mb-4">
+            <div class="card-body">
+              <div class="status-content">
+                <div class="status-icon">
+                  <i class="fas fa-check-circle"></i>
+                </div>
+                <div class="status-details">
+                  <h6 class="status-title">Payment Completed</h6>
+                  <div class="status-info">
+                    <div><i class="fas fa-calendar me-2"></i>Paid on {{ formatDate(payable.paidAt) }}</div>
+                    @if (payable.paymentMethod) {
+                      <div><i class="fas fa-credit-card me-2"></i>via {{ payable.paymentMethod }}</div>
+                    }
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        }
+      </div>
+    </div>
+  }
+
+  <!-- Payment Modal -->
+  @if (showPaymentModal && payable) {
+    <div class="modal fade show" style="display: block;" tabindex="-1" role="dialog">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content modern-modal">
+          <div class="modal-header">
+            <h5 class="modal-title">
+              <i class="fas fa-money-bill-wave me-2"></i>Record Payment
+            </h5>
+            <button type="button" class="btn-close" (click)="showPaymentModal = false" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <div class="form-group">
+              <label class="form-label">
+                <i class="fas fa-calendar me-2"></i>Payment Date
+              </label>
+              <input type="date" class="form-control form-control-modern" [(ngModel)]="paymentForm.paymentDate" name="paymentDate">
+            </div>
+            <div class="form-group">
+              <label class="form-label">
+                <i class="fas fa-dollar-sign me-2"></i>Amount
+              </label>
+              <input type="number" step="0.01" class="form-control form-control-modern" [(ngModel)]="paymentForm.amount" name="amount" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label">
+                <i class="fas fa-credit-card me-2"></i>Payment Method
+              </label>
+              <select class="form-select form-select-modern" [(ngModel)]="paymentForm.method" name="method">
+                <option value="Check">Check</option>
+                <option value="ACH">ACH</option>
+                <option value="Wire">Wire</option>
+                <option value="CreditCard">Credit Card</option>
+              </select>
+            </div>
+            @if (paymentForm.method === 'Check') {
+              <div class="form-group">
+                <label class="form-label">
+                  <i class="fas fa-file-invoice me-2"></i>Check Number <span class="text-danger">*</span>
+                </label>
+                <input type="text" class="form-control form-control-modern" [(ngModel)]="paymentForm.checkNumber" name="checkNumber" required>
+              </div>
+            }
+            @if (paymentForm.method === 'CreditCard') {
+              <div class="form-group">
+                <label class="form-label">
+                  <i class="fas fa-credit-card me-2"></i>Credit Card Number <span class="text-danger">*</span>
+                </label>
+                <input type="text" class="form-control form-control-modern" [(ngModel)]="paymentForm.creditCardNumber" name="creditCardNumber" placeholder="Last 4 digits or full card number" required>
+              </div>
+            }
+            <div class="form-group">
+              <label class="form-label">
+                <i class="fas fa-barcode me-2"></i>Reference
+              </label>
+              <input type="text" class="form-control form-control-modern" [(ngModel)]="paymentForm.reference" name="reference" placeholder="Optional payment reference">
+            </div>
+            <div class="form-group">
+              <label class="form-label">
+                <i class="fas fa-sticky-note me-2"></i>Notes
+              </label>
+              <textarea class="form-control form-control-modern" [(ngModel)]="paymentForm.notes" name="notes" rows="3"></textarea>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary btn-modern" (click)="showPaymentModal = false">
+              <i class="fas fa-times me-2"></i>Cancel
+            </button>
+            <button type="button" class="btn btn-primary btn-modern" (click)="recordPayment()">
+              <i class="fas fa-check me-2"></i>Record Payment
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-backdrop fade show"></div>
+  }
+
+  <!-- Mark Paid Modal -->
+  @if (showMarkPaidModal && payable) {
+    <div class="modal fade show" style="display: block;" tabindex="-1" role="dialog">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content modern-modal">
+          <div class="modal-header">
+            <h5 class="modal-title">
+              <i class="fas fa-check-circle me-2"></i>Mark as Paid
+            </h5>
+            <button type="button" class="btn-close" (click)="showMarkPaidModal = false" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <div class="form-group">
+              <label class="form-label">
+                <i class="fas fa-calendar me-2"></i>Paid Date
+              </label>
+              <input type="date" class="form-control form-control-modern" [(ngModel)]="markPaidForm.paidAt" name="paidAt">
+            </div>
+            <div class="form-group">
+              <label class="form-label">
+                <i class="fas fa-credit-card me-2"></i>Payment Method
+              </label>
+              <select class="form-select form-select-modern" [(ngModel)]="markPaidForm.paymentMethod" name="paymentMethod">
+                <option value="Check">Check</option>
+                <option value="ACH">ACH</option>
+                <option value="Wire">Wire</option>
+                <option value="CreditCard">Credit Card</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">
+                <i class="fas fa-barcode me-2"></i>Payment Reference
+              </label>
+              <input type="text" class="form-control form-control-modern" [(ngModel)]="markPaidForm.paymentReference" name="paymentReference">
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary btn-modern" (click)="showMarkPaidModal = false">
+              <i class="fas fa-times me-2"></i>Cancel
+            </button>
+            <button type="button" class="btn btn-primary btn-modern" (click)="markAsPaid()">
+              <i class="fas fa-check me-2"></i>Mark as Paid
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-backdrop fade show"></div>
+  }
+</div>
+

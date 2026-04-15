@@ -1,0 +1,186 @@
+<div class="data-table-wrapper">
+  <!-- Global Search -->
+  <div *ngIf="config?.enableGlobalSearch" class="global-search-container mb-3 d-flex justify-content-end">
+    <div class="input-group" style="max-width: 350px;">
+      <span class="input-group-text">
+        <i class="fas fa-search"></i>
+      </span>
+      <input
+        type="text"
+        class="form-control"
+        placeholder="Search..."
+        [(ngModel)]="globalSearchTerm"
+        (ngModelChange)="onGlobalSearchChange($event)"
+      />
+      <button
+        *ngIf="hasActiveFilters()"
+        class="btn btn-outline-secondary"
+        type="button"
+        (click)="clearFilters()"
+        title="Clear Filters">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+  </div>
+
+  <!-- Bulk Actions Bar -->
+  <div *ngIf="config?.enableBulkActions && config?.bulkActions && selectedRows.size > 0" class="bulk-actions-bar mb-3">
+    <div class="card">
+      <div class="card-body">
+        <div class="d-flex align-items-center gap-2">
+          <span class="selected-count">
+            <strong>{{ selectedRows.size }}</strong> item(s) selected
+          </span>
+          <div class="divider"></div>
+          <div class="bulk-actions">
+            <button
+              *ngFor="let action of config.bulkActions"
+              class="btn btn-sm"
+              [ngClass]="'btn-' + (action.variant || 'primary')"
+              [disabled]="isBulkActionDisabled(action)"
+              (click)="onBulkAction(action)">
+              <i *ngIf="action.icon" [class]="'fas ' + action.icon" class="me-1"></i>
+              {{ action.label }}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Loading State -->
+  <div *ngIf="loading && !suppressLoadingState" class="loading-state text-center py-5">
+    <div class="spinner-border text-primary" role="status">
+      <span class="visually-hidden">Loading...</span>
+    </div>
+    <p class="mt-2 text-muted">{{ config?.loadingMessage || 'Loading data...' }}</p>
+  </div>
+
+  <!-- Table -->
+  <div *ngIf="!loading || suppressLoadingState" class="data-table-container">
+    <div class="table-responsive">
+      <table class="table table-hover mb-0">
+        <thead>
+          <tr>
+            <!-- Selection Checkbox Column -->
+            <th *ngIf="config?.enableSelection" style="width: 40px;">
+              <input
+                type="checkbox"
+                [checked]="isAllSelected"
+                (change)="toggleSelectAll()"
+                title="Select All"
+              />
+            </th>
+            <!-- Data Columns -->
+            <th
+              *ngFor="let column of getVisibleColumns()"
+              [style.width]="column.width"
+              [style.text-align]="column.align || 'left'"
+              [class.sortable]="column.sortable"
+              [class.sorted]="currentSortColumn === column.key"
+              (click)="onSort(column)">
+              <div class="column-header">
+                <span>{{ column.label }}</span>
+                <i
+                  *ngIf="column.sortable"
+                  [class]="'fas ' + getSortIcon(column)"
+                  class="sort-icon ms-1"></i>
+              </div>
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr
+            *ngFor="let row of data; trackBy: trackByFn"
+            [class.clickable]="config?.rowClickable !== false"
+            [ngClass]="getRowClass(row)"
+            (click)="onRowClick(row)">
+            <!-- Selection Checkbox -->
+            <td *ngIf="config?.enableSelection">
+              <input
+                type="checkbox"
+                [checked]="isRowSelected(row)"
+                (click)="$event.stopPropagation()"
+                (change)="toggleRowSelection(row)"
+              />
+            </td>
+            <!-- Data Cells -->
+            <td
+              *ngFor="let column of getVisibleColumns()"
+              [style.text-align]="column.align || 'left'">
+              <!-- Template Type -->
+              <ng-container *ngIf="column.type === 'template' && column.cellTemplate">
+                <ng-container *ngTemplateOutlet="column.cellTemplate; context: { $implicit: row, row: row, column: column }"></ng-container>
+              </ng-container>
+              <!-- Text Type -->
+              <span *ngIf="!column.type || column.type === 'text'">
+                {{ getCellValue(row, column) || '-' }}
+              </span>
+              <!-- Badge Type -->
+              <span
+                *ngIf="column.type === 'badge'"
+                class="badge"
+                [ngClass]="getBadgeClass(row, column)">
+                {{ getCellValue(row, column) }}
+              </span>
+              <!-- Checkbox Type -->
+              <input
+                *ngIf="column.type === 'checkbox'"
+                type="checkbox"
+                [checked]="getCellValue(row, column)"
+                [disabled]="true"
+              />
+              <!-- Toggle Type -->
+              <div *ngIf="column.type === 'toggle'" class="form-check form-switch">
+                <input
+                  class="form-check-input"
+                  type="checkbox"
+                  [checked]="getCellValue(row, column)"
+                  [disabled]="true"
+                />
+              </div>
+              <!-- Actions Type -->
+              <div *ngIf="column.type === 'actions' && column.actions" class="action-buttons" (click)="$event.stopPropagation()">
+                <button
+                  *ngFor="let action of column.actions"
+                  class="btn btn-sm me-1"
+                  [ngClass]="'btn-' + (action.variant || 'outline-primary')"
+                  [title]="action.title || action.label"
+                  [disabled]="action.disabled && action.disabled(row)"
+                  (click)="onActionClick(action, row)">
+                  <i *ngIf="action.icon" [class]="'fas ' + action.icon" [ngClass]="getActionIconClass(action, row)"></i>
+                  <span *ngIf="action.label">{{ action.label }}</span>
+                </button>
+              </div>
+              <!-- Custom Render -->
+              <ng-container *ngIf="column.type === 'custom' && column.render">
+                {{ getCellValue(row, column) }}
+              </ng-container>
+            </td>
+          </tr>
+          <!-- Empty State -->
+          <tr *ngIf="data.length === 0 && !loading">
+            <td [attr.colspan]="getVisibleColumns().length + (config?.enableSelection ? 1 : 0)" class="empty-state text-center py-5">
+              <i class="fas fa-inbox fa-2x text-muted mb-2"></i>
+              <p class="text-muted mb-0">{{ emptyMessage }}</p>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Pagination -->
+    <div *ngIf="config?.enablePagination && totalPages > 0" class="pagination-container mt-3">
+      <app-pagination
+        [pageNumber]="filterState.pageNumber"
+        [pageSize]="filterState.pageSize"
+        [totalCount]="totalCount"
+        [totalPages]="totalPages"
+        [pageSizeOptions]="config?.pageSizeOptions || [25, 50, 100, 200]"
+        [showPageSize]="true"
+        (pageChange)="onPageChange($event)"
+        (pageSizeChange)="onPageSizeChange($event)">
+      </app-pagination>
+    </div>
+  </div>
+</div>

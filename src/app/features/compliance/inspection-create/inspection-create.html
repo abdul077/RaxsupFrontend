@@ -1,0 +1,145 @@
+<div class="inspection-create">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+      <h4 class="mb-1">Add Inspection Record</h4>
+      <p class="text-muted mb-0">Record a DOT or other inspection for equipment</p>
+    </div>
+    <button class="btn btn-outline-secondary" (click)="cancel()">
+      <i class="fas fa-times me-2"></i>Cancel
+    </button>
+  </div>
+
+  <form (ngSubmit)="onSubmit()">
+    @if (showErrors && validationErrors.length > 0) {
+      <div class="alert alert-danger validation-alert mb-4">
+        <i class="fas fa-exclamation-triangle me-2"></i>
+        <strong>Please correct the following errors:</strong>
+        <ul class="mb-0 mt-2">
+          @for (error of validationErrors; track $index) {
+            <li>{{ error }}</li>
+          }
+        </ul>
+      </div>
+    }
+
+    <div class="card mb-4">
+      <div class="card-header">
+        <h5 class="mb-0"><i class="fas fa-clipboard-check me-2"></i>Inspection Details</h5>
+      </div>
+      <div class="card-body">
+        <div class="row g-3">
+          <div class="col-md-6">
+            <label class="form-label">Equipment <span class="text-danger">*</span></label>
+            <select class="form-select"
+                    [class.is-invalid]="showErrors && (!form.equipmentId || form.equipmentId === 0)"
+                    [(ngModel)]="form.equipmentId" name="equipmentId" required
+                    (ngModelChange)="onEquipmentChange()"
+                    title="Select the equipment that was inspected">
+              <option [ngValue]="0">Select equipment</option>
+              <option *ngFor="let e of equipments" [ngValue]="e.equipmentId">
+                {{ e.equipmentType }} - {{ e.plateNumber || e.vin || e.equipmentId }}
+              </option>
+            </select>
+            <small class="form-hint text-muted">Select the vehicle or trailer that was inspected. Driver is auto-filled if equipment is assigned.</small>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">Driver</label>
+            <select class="form-select" [(ngModel)]="form.driverId" name="driverId"
+                    title="Optional: driver present during inspection">
+              <option [ngValue]="undefined">None</option>
+              <option *ngFor="let d of drivers" [ngValue]="d.driverId">{{ d.fullName }}</option>
+            </select>
+            <small class="form-hint text-muted">Optional: driver present during inspection</small>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">Inspection Number <span class="text-danger">*</span></label>
+            <input type="text" class="form-control"
+                   [class.is-invalid]="showErrors && !form.inspectionNumber?.trim()"
+                   [(ngModel)]="form.inspectionNumber" name="inspectionNumber" required
+                   placeholder="e.g., DOT-2024-001234"
+                   title="Official inspection number from the inspection report">
+            <small class="form-hint text-muted">Official number from the inspection report or citation</small>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">Inspection Date <span class="text-danger">*</span></label>
+            <input type="date" class="form-control"
+                   [class.is-invalid]="showErrors && !form.inspectionDate"
+                   [(ngModel)]="form.inspectionDate" name="inspectionDate" required
+                   title="Date the inspection was performed">
+            <small class="form-hint text-muted">Date the inspection was performed</small>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">Inspection Type</label>
+            <select class="form-select" [(ngModel)]="form.inspectionType" name="inspectionType"
+                    title="Type of inspection performed">
+              <option *ngFor="let t of inspectionTypes" [value]="t">{{ t }}</option>
+            </select>
+            <small class="form-hint text-muted">DOT, Level 1–3, Pre/Post trip, Annual, etc.</small>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">Result <span class="text-danger">*</span></label>
+            <select class="form-select"
+                    [class.is-invalid]="showErrors && !form.result"
+                    [(ngModel)]="form.result" name="result" required
+                    title="Inspection outcome">
+              <option *ngFor="let r of resultOptions" [value]="r">{{ r }}</option>
+            </select>
+            <small class="form-hint text-muted">Pass, Fail, or Out of Service</small>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">Inspector</label>
+            <input type="text" class="form-control" [(ngModel)]="form.inspector" name="inspector"
+                   placeholder="e.g., Officer Smith"
+                   title="Name of the inspecting officer">
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">Location</label>
+            <input type="text" class="form-control" [(ngModel)]="form.location" name="location"
+                   placeholder="e.g., I-80 weigh station, Mile 145"
+                   title="Where the inspection took place">
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">State</label>
+            <input type="text" class="form-control" [(ngModel)]="form.state" name="state" maxlength="2"
+                   placeholder="e.g., CA"
+                   title="Two-letter state code where inspection occurred">
+            <small class="form-hint text-muted">Two-letter state code</small>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">OOS Violations</label>
+            <input type="number" class="form-control" [(ngModel)]="form.oosViolations" name="oosViolations" min="0"
+                   placeholder="0"
+                   title="Number of out-of-service violations">
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">Total Violations</label>
+            <input type="number" class="form-control" [(ngModel)]="form.totalViolations" name="totalViolations" min="0"
+                   placeholder="0"
+                   title="Total number of violations cited">
+          </div>
+          <div class="col-12">
+            <div class="form-check">
+              <input class="form-check-input" type="checkbox" [(ngModel)]="form.isCritical" name="isCritical">
+              <label class="form-check-label">Critical / Out of Service</label>
+            </div>
+          </div>
+          <div class="col-12">
+            <label class="form-label">Remarks</label>
+            <textarea class="form-control" [(ngModel)]="form.remarks" name="remarks" rows="3"
+                      placeholder="Additional notes, defect details, or follow-up actions"
+                      title="Optional notes about the inspection"></textarea>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="d-flex justify-content-end gap-2">
+      <button type="button" class="btn btn-outline-secondary" (click)="cancel()" [disabled]="submitting">Cancel</button>
+      <button type="submit" class="btn btn-primary" [disabled]="submitting">
+        <span *ngIf="submitting" class="spinner-border spinner-border-sm me-2"></span>
+        <i *ngIf="!submitting" class="fas fa-save me-2"></i>
+        Save Inspection
+      </button>
+    </div>
+  </form>
+</div>

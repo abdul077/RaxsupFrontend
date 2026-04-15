@@ -1,0 +1,283 @@
+@if (driver) {
+  <!-- Quick Stats Cards -->
+  <div class="row g-4 mb-4">
+    <div class="col-md-3 col-sm-6">
+      <div class="card text-center quick-stat-card" style="cursor: pointer;">
+        <div class="card-body">
+          <i class="fas fa-dollar-sign fa-2x text-primary mb-2"></i>
+          <h4 class="mb-1">{{ formatCurrency(getTotalEarnings()) }}</h4>
+          <small class="text-muted">Total Earnings</small>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3 col-sm-6">
+      <div class="card text-center quick-stat-card" style="cursor: pointer;">
+        <div class="card-body">
+          <i class="fas fa-calendar-check fa-2x text-success mb-2"></i>
+          <h4 class="mb-1">{{ formatCurrency(getCurrentMonthEarnings()) }}</h4>
+          <small class="text-muted">This Month</small>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3 col-sm-6">
+      <div class="card text-center quick-stat-card" style="cursor: default;">
+        <div class="card-body">
+          <i class="fas fa-boxes fa-2x text-info mb-2"></i>
+          <h4 class="mb-1">{{ getCompletedLoadsCount() }}</h4>
+          <small class="text-muted">Completed Loads</small>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3 col-sm-6">
+      <div class="card text-center quick-stat-card" style="cursor: pointer;">
+        <div class="card-body">
+          <i class="fas fa-users fa-2x text-warning mb-2"></i>
+          <h4 class="mb-1">{{ driver.referralCount || 0 }}</h4>
+          <small class="text-muted">Referrals</small>
+          @if (driver.referralCount && driver.referralCount > 0) {
+            <div class="mt-1">
+              <small class="text-success">{{ formatCurrency(getReferralEarningsTotal()) }} earned</small>
+            </div>
+          }
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row g-4">
+    <div class="col-md-6">
+      <div class="card info-card">
+        <div class="card-header">
+          <h5 class="card-title">
+            <i class="fas fa-user me-2"></i>Basic Information
+          </h5>
+        </div>
+        <div class="card-body">
+          <div class="info-grid">
+            <div class="info-item">
+              <div class="info-label">Full Name</div>
+              <div class="info-value">{{ driver.fullName }}</div>
+            </div>
+            <div class="info-item">
+              <div class="info-label">Type</div>
+              <div class="info-value">
+                <span [class]="getStatusBadgeClass(driver.type)">{{ driver.type }}</span>
+              </div>
+            </div>
+            <div class="info-item">
+              <div class="info-label">Status</div>
+              <div class="info-value">
+                <span [class]="getStatusBadgeClass(driver.status)">{{ driver.status }}</span>
+              </div>
+            </div>
+            <div class="info-item">
+              <div class="info-label">Owner-Operator</div>
+              <div class="info-value">{{ driver.ownerOperatorName || '-' }}</div>
+            </div>
+            <div class="info-item">
+              <div class="info-label">Referred By</div>
+              <div class="info-value">
+                <span *ngIf="driver.referrerName" class="badge bg-info">{{ driver.referrerName }}</span>
+                <span *ngIf="!driver.referrerName" class="text-muted">-</span>
+              </div>
+            </div>
+            <div class="info-item">
+              <div class="info-label">Referral Count</div>
+              <div class="info-value">
+                <span class="badge bg-success">{{ driver.referralCount || 0 }} Referral(s)</span>
+              </div>
+            </div>
+            <div class="info-item">
+              <div class="info-label">Hire Date</div>
+              <div class="info-value">{{ formatDate(driver.hireDate) }}</div>
+            </div>
+            @if (driver.terminationDate) {
+              <div class="info-item">
+                <div class="info-label">Termination Date</div>
+                <div class="info-value">{{ formatDate(driver.terminationDate) }}</div>
+              </div>
+            }
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-6">
+      <div class="card info-card">
+        <div class="card-header">
+          <h5 class="card-title">
+            <i class="fas fa-address-card me-2"></i>Contact Information
+          </h5>
+        </div>
+        <div class="card-body">
+          <div class="info-grid">
+            <div class="info-item">
+              <div class="info-label">Mobile Phone</div>
+              <div class="info-value">{{ driver.mobilePhone || '-' }}</div>
+            </div>
+            <div class="info-item">
+              <div class="info-label">Email</div>
+              <div class="info-value">
+                @if (driver.email) {
+                  <a [href]="'mailto:' + driver.email" class="text-primary">{{ driver.email }}</a>
+                } @else {
+                  <span class="text-muted">-</span>
+                }
+              </div>
+            </div>
+            @if (driver.address) {
+              <div class="info-item">
+                <div class="info-label">Address</div>
+                <div class="info-value">{{ driver.address }}</div>
+              </div>
+            }
+            @if (driver.city || driver.state) {
+              <div class="info-item">
+                <div class="info-label">City/State</div>
+                <div class="info-value">{{ driver.city }}{{ driver.city && driver.state ? ', ' : '' }}{{ driver.state }} {{ driver.zipCode || '' }}</div>
+              </div>
+            }
+            @if (driver.emergencyContactName) {
+              <div class="info-item">
+                <div class="info-label">Emergency Contact</div>
+                <div class="info-value">{{ driver.emergencyContactName }} - {{ driver.emergencyContactPhone }}</div>
+              </div>
+            }
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-6">
+      <div class="card info-card">
+        <div class="card-header">
+          <h5 class="card-title">
+            <i class="fas fa-id-card me-2"></i>License Information
+          </h5>
+        </div>
+        <div class="card-body">
+          <div class="info-grid">
+            <div class="info-item">
+              <div class="info-label">License Number</div>
+              <div class="info-value">{{ driver.licenseNumber || '-' }}</div>
+            </div>
+            <div class="info-item">
+              <div class="info-label">License State</div>
+              <div class="info-value">{{ driver.licenseState || '-' }}</div>
+            </div>
+            <div class="info-item">
+              <div class="info-label">License Expiry</div>
+              <div class="info-value">
+                <span [class.text-danger]="driver.isLicenseExpired" [class.text-warning]="driver.isLicenseExpiringSoon">
+                  {{ formatDate(driver.licenseExpiry) }}
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-6">
+      <div class="card info-card">
+        <div class="card-header">
+          <h5 class="card-title">
+            <i class="fas fa-dollar-sign me-2"></i>Pay Structure
+          </h5>
+        </div>
+        <div class="card-body">
+          <div class="info-grid">
+            <div class="info-item">
+              <div class="info-label">Pay Structure</div>
+              <div class="info-value">{{ driver.payStructure || '-' }}</div>
+            </div>
+            <div class="info-item">
+              <div class="info-label">Pay Rate</div>
+              <div class="info-value">{{ formatCurrency(driver.payRate) }}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-12">
+      <div class="card referral-link-card">
+        <div class="card-header">
+          <h5 class="card-title">
+            <i class="fas fa-share-alt me-2"></i>My Referral Link
+          </h5>
+        </div>
+        <div class="card-body">
+          <p class="text-muted mb-4">
+            Share this link with other drivers to earn referral commissions. When they register using your link and complete loads, you'll earn:
+          </p>
+          <div class="commission-list mb-4">
+            <div class="commission-item">
+              <span class="commission-level">Level 2 (Direct Referrals)</span>
+              <span class="commission-rate">10% commission</span>
+            </div>
+            <div class="commission-item">
+              <span class="commission-level">Level 3</span>
+              <span class="commission-rate">8% commission</span>
+            </div>
+            <div class="commission-item">
+              <span class="commission-level">Level 4</span>
+              <span class="commission-rate">5% commission</span>
+            </div>
+            <div class="commission-item">
+              <span class="commission-level">Level 5</span>
+              <span class="commission-rate">2% commission</span>
+            </div>
+          </div>
+          <div class="referral-link-input-group">
+            <input 
+              type="text" 
+              class="form-control referral-link-input" 
+              [value]="getReferralLink()" 
+              readonly
+              id="referralLinkInput"
+            >
+            <button class="btn btn-primary btn-copy" type="button" (click)="copyReferralLink()">
+              <i class="fas fa-copy me-2"></i>Copy Link
+            </button>
+          </div>
+          <div class="referral-info mt-3">
+            <small class="text-muted">
+              <i class="fas fa-info-circle me-1"></i>
+              Your Referral Code: <strong>{{ driver.driverId }}</strong>
+            </small>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    @if (driver.insuranceCompany) {
+      <div class="col-md-12">
+        <div class="card info-card">
+          <div class="card-header">
+            <h5 class="card-title">
+              <i class="fas fa-shield-alt me-2"></i>Insurance
+            </h5>
+          </div>
+          <div class="card-body">
+            <div class="info-grid">
+              <div class="info-item">
+                <div class="info-label">Company</div>
+                <div class="info-value">{{ driver.insuranceCompany }}</div>
+              </div>
+              <div class="info-item">
+                <div class="info-label">Policy Number</div>
+                <div class="info-value">{{ driver.insurancePolicyNumber || '-' }}</div>
+              </div>
+              <div class="info-item">
+                <div class="info-label">Expiry</div>
+                <div class="info-value">{{ formatDate(driver.insuranceExpiry) }}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    }
+  </div>
+}
+

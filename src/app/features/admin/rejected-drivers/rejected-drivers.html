@@ -1,0 +1,340 @@
+<div class="rejected-drivers">
+  <div class="page-header">
+    <div class="header-content">
+      <div>
+        <h1>Rejected Drivers</h1>
+        <p class="page-subtitle">View drivers who were rejected during registration</p>
+      </div>
+      <div class="header-actions">
+        <div class="view-toggle btn-group" role="group">
+          <button 
+            type="button" 
+            class="btn btn-outline-primary"
+            [class.active]="viewMode === 'table'"
+            (click)="viewMode = 'table'"
+            title="Table View">
+            <i class="fas fa-table"></i>
+          </button>
+          <button 
+            type="button" 
+            class="btn btn-outline-primary"
+            [class.active]="viewMode === 'grid'"
+            (click)="viewMode = 'grid'"
+            title="Grid View">
+            <i class="fas fa-th"></i>
+          </button>
+        </div>
+        <button class="btn btn-primary" (click)="loadRejectedDrivers()" [disabled]="loading">
+          <i class="fas fa-sync-alt" [class.fa-spin]="loading"></i>
+          Refresh
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div class="alert alert-danger" *ngIf="errorMessage">
+    <i class="fas fa-exclamation-circle me-2"></i>
+    {{ errorMessage }}
+  </div>
+
+  <!-- Filters Section -->
+  <div class="filters-card">
+    <div class="filters-header">
+      <h3><i class="fas fa-filter me-2"></i>Filters</h3>
+      <button class="btn btn-sm btn-outline-secondary" (click)="clearFilters()" *ngIf="searchTerm || selectedReferrer || dateFrom || dateTo">
+        <i class="fas fa-times me-1"></i>Clear
+      </button>
+    </div>
+    <div class="filters-body">
+      <div class="row g-3">
+        <div class="col-md-4">
+          <label class="form-label">Search</label>
+          <div class="input-group">
+            <span class="input-group-text"><i class="fas fa-search"></i></span>
+            <input 
+              type="text" 
+              class="form-control" 
+              placeholder="Search by name, username, email, or phone..."
+              [(ngModel)]="searchTerm"
+              (ngModelChange)="applyFilters()">
+          </div>
+        </div>
+        <div class="col-md-3">
+          <label class="form-label">Referred By</label>
+          <select 
+            class="form-select" 
+            [(ngModel)]="selectedReferrer"
+            (ngModelChange)="applyFilters()">
+            <option value="">All Referrers</option>
+            <option *ngFor="let referrer of referrers" [value]="referrer">{{ referrer }}</option>
+          </select>
+        </div>
+        <div class="col-md-2">
+          <label class="form-label">Rejected From</label>
+          <input 
+            type="date" 
+            class="form-control" 
+            [(ngModel)]="dateFrom"
+            (ngModelChange)="applyFilters()">
+        </div>
+        <div class="col-md-2">
+          <label class="form-label">Rejected To</label>
+          <input 
+            type="date" 
+            class="form-control" 
+            [(ngModel)]="dateTo"
+            (ngModelChange)="applyFilters()">
+        </div>
+        <div class="col-md-1 d-flex align-items-end">
+          <div class="badge bg-danger fs-6 w-100 justify-content-center">
+            {{ filteredDrivers.length }}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Empty State -->
+  <div *ngIf="rejectedDrivers && filteredDrivers.length === 0" class="empty-state">
+    <i class="fas fa-check-circle fa-3x text-success mb-3"></i>
+    <h3>No Rejected Drivers</h3>
+    <p class="text-muted" *ngIf="rejectedDrivers.length === 0">
+      No drivers have been rejected yet.
+    </p>
+    <p class="text-muted" *ngIf="rejectedDrivers.length > 0">
+      No drivers match your current filters.
+    </p>
+  </div>
+
+  <!-- Table View -->
+  <div *ngIf="rejectedDrivers && filteredDrivers.length > 0 && viewMode === 'table'" class="table-view-container">
+    <div class="table-card">
+      <table class="table table-hover">
+        <thead>
+          <tr>
+            <th>Full Name</th>
+            <th>Username</th>
+            <th>Email</th>
+            <th>Phone</th>
+            <th>Referred By</th>
+            <th>Rejection Date</th>
+            <th>Rejected By</th>
+            <th class="text-end">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let driver of filteredDrivers" class="rejected-row">
+            <td>
+              <div class="driver-name-cell">
+                <div class="driver-avatar-small rejected">
+                  <i class="fas fa-user-times"></i>
+                </div>
+                <strong>{{ driver.fullName }}</strong>
+              </div>
+            </td>
+            <td>{{ driver.username }}</td>
+            <td>{{ driver.email }}</td>
+            <td>{{ driver.phoneNumber || '-' }}</td>
+            <td>
+              <span *ngIf="driver.referrerName" class="badge bg-info">
+                {{ driver.referrerName }}
+              </span>
+              <span *ngIf="!driver.referrerName" class="text-muted">-</span>
+            </td>
+            <td>{{ formatDate(driver.rejectedAt) }}</td>
+            <td>
+              <span *ngIf="driver.rejectedByName" class="badge bg-secondary">
+                {{ driver.rejectedByName }}
+              </span>
+              <span *ngIf="!driver.rejectedByName" class="text-muted">-</span>
+            </td>
+            <td class="text-end">
+              <div class="action-buttons">
+                <button 
+                  type="button"
+                  class="btn btn-sm btn-outline-primary" 
+                  (click)="openDetailModal(driver)"
+                  title="View Details">
+                  <i class="fas fa-eye"></i>
+                </button>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Grid Layout -->
+  <div *ngIf="rejectedDrivers && filteredDrivers.length > 0 && viewMode === 'grid'" class="drivers-grid">
+    <div class="driver-card rejected" *ngFor="let driver of filteredDrivers">
+      <div class="driver-card-header">
+        <div class="driver-avatar rejected">
+          <i class="fas fa-user-times"></i>
+        </div>
+        <div class="driver-name-section">
+          <h4>{{ driver.fullName }}</h4>
+          <span class="driver-username">@{{ driver.username }}</span>
+        </div>
+      </div>
+      
+      <div class="driver-card-body">
+        <div class="driver-info-item">
+          <i class="fas fa-envelope"></i>
+          <span>{{ driver.email }}</span>
+        </div>
+        <div class="driver-info-item" *ngIf="driver.phoneNumber">
+          <i class="fas fa-phone"></i>
+          <span>{{ driver.phoneNumber }}</span>
+        </div>
+        <div class="driver-info-item" *ngIf="driver.referrerName">
+          <i class="fas fa-user-friends"></i>
+          <span class="badge bg-info">{{ driver.referrerName }}</span>
+        </div>
+        <div class="driver-info-item">
+          <i class="fas fa-calendar-times"></i>
+          <span>{{ formatDate(driver.rejectedAt) }}</span>
+        </div>
+        <div class="driver-info-item" *ngIf="driver.rejectedByName">
+          <i class="fas fa-user-shield"></i>
+          <span class="badge bg-secondary">Rejected by: {{ driver.rejectedByName }}</span>
+        </div>
+        <div class="driver-info-item rejection-reason" *ngIf="driver.rejectionReason">
+          <i class="fas fa-comment-alt"></i>
+          <span>{{ driver.rejectionReason }}</span>
+        </div>
+      </div>
+
+      <div class="driver-card-footer">
+        <button 
+          class="btn btn-primary btn-sm w-100" 
+          (click)="openDetailModal(driver)"
+          title="View Details">
+          <i class="fas fa-eye me-1"></i>
+          View Details
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Driver Detail Modal -->
+<div *ngIf="showDetailModal && driverToView" class="detail-modal-overlay" (click)="closeDetailModal()">
+  <div class="detail-modal-content" (click)="$event.stopPropagation()">
+    <div class="detail-modal-header">
+      <div class="modal-icon-wrapper rejected">
+        <i class="fas fa-user-times"></i>
+      </div>
+      <h2>Rejected Driver Details</h2>
+      <button class="btn-close" (click)="closeDetailModal()">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+    <div class="detail-modal-body">
+      <div class="driver-detail-section">
+        <div class="detail-row">
+          <span class="detail-label">
+            <i class="fas fa-user"></i>
+            Full Name:
+          </span>
+          <span class="detail-value">{{ driverToView?.fullName }}</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">
+            <i class="fas fa-at"></i>
+            Username:
+          </span>
+          <span class="detail-value">{{ driverToView?.username }}</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">
+            <i class="fas fa-envelope"></i>
+            Email:
+          </span>
+          <span class="detail-value">
+            <a [href]="'mailto:' + driverToView?.email">{{ driverToView?.email }}</a>
+          </span>
+        </div>
+        <div class="detail-row" *ngIf="driverToView.phoneNumber">
+          <span class="detail-label">
+            <i class="fas fa-phone"></i>
+            Phone:
+          </span>
+          <span class="detail-value">
+            <a [href]="'tel:' + driverToView?.phoneNumber">{{ driverToView?.phoneNumber }}</a>
+          </span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">
+            <i class="fas fa-calendar"></i>
+            Registration Date:
+          </span>
+          <span class="detail-value">{{ formatDate(driverToView?.createdAt || '') }}</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">
+            <i class="fas fa-calendar-times"></i>
+            Rejection Date:
+          </span>
+          <span class="detail-value rejected-text">{{ formatDate(driverToView?.rejectedAt || '') }}</span>
+        </div>
+        <div class="detail-row" *ngIf="driverToView.rejectedByName">
+          <span class="detail-label">
+            <i class="fas fa-user-shield"></i>
+            Rejected By:
+          </span>
+          <span class="detail-value">
+            <span class="badge bg-secondary">{{ driverToView?.rejectedByName }}</span>
+          </span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">
+            <i class="fas fa-comment-alt"></i>
+            Rejection Reason:
+          </span>
+          <span class="detail-value rejection-reason-text">
+            <span *ngIf="driverToView?.rejectionReason">{{ driverToView.rejectionReason }}</span>
+            <span *ngIf="!driverToView?.rejectionReason" class="text-muted">No reason provided</span>
+          </span>
+        </div>
+        <div class="detail-row" *ngIf="driverToView.referrerName">
+          <span class="detail-label">
+            <i class="fas fa-user-friends"></i>
+            Referred By:
+          </span>
+          <span class="detail-value">
+            <span class="badge bg-info">{{ driverToView?.referrerName }}</span>
+          </span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">
+            <i class="fas fa-id-card"></i>
+            Driver ID:
+          </span>
+          <span class="detail-value">#{{ driverToView?.driverId }}</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">
+            <i class="fas fa-key"></i>
+            User ID:
+          </span>
+          <span class="detail-value">#{{ driverToView?.userId }}</span>
+        </div>
+      </div>
+    </div>
+    <div class="detail-modal-footer">
+      <button 
+        class="btn btn-secondary" 
+        (click)="closeDetailModal()">
+        Close
+      </button>
+      <button 
+        class="btn btn-primary" 
+        (click)="navigateToDetail(driverToView!.driverId)">
+        <i class="fas fa-external-link-alt me-1"></i>
+        View Full Profile
+      </button>
+    </div>
+  </div>
+</div>
+

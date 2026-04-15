@@ -1,0 +1,149 @@
+<div class="driver-list-container">
+  <!-- Page Header - same style as /loads -->
+  <div class="tms-dashboard-header mb-4">
+    <div class="tms-header-left">
+      <div class="tms-header-icon">
+        <i class="fa-solid fa-users"></i>
+      </div>
+      <div>
+        <h1 class="tms-title">{{ inactiveOnlyPage ? 'Inactive Owner Operators' : 'Owner Operator Management' }}</h1>
+        <p class="tms-subtitle mb-0">{{ inactiveOnlyPage ? 'View and manage inactive owner operators' : 'Manage owner operators' }}</p>
+      </div>
+    </div>
+    <div class="tms-header-actions">
+      <!-- Optional: Add driver button when needed -->
+    </div>
+  </div>
+
+  <!-- Status Filter Tabs - hidden on inactive-only page -->
+  <div class="status-tabs-container mb-4" *ngIf="!inactiveOnlyPage">
+    <div class="status-tabs">
+      <button
+        class="status-tab"
+        [class.active]="!statusFilter"
+        (click)="selectStatusTab('')">
+        <i class="fas fa-th-list me-1"></i>All
+      </button>
+      <button
+        *ngFor="let status of statusOptions"
+        class="status-tab"
+        [class.active]="statusFilter === status"
+        (click)="selectStatusTab(status)">
+        {{ status }}
+      </button>
+    </div>
+  </div>
+
+  <!-- Actions cell template -->
+  <ng-template #driverActionsCell let-driver>
+    <div class="dropdown" (click)="$event.stopPropagation()">
+      <button type="button" class="tms-actions-btn" data-bs-toggle="dropdown" aria-expanded="false" title="Actions">
+        <i class="fas fa-ellipsis-h tms-actions-dots"></i>
+      </button>
+      <ul class="dropdown-menu dropdown-menu-end tms-actions-dropdown">
+        <li><a class="dropdown-item" [routerLink]="['/drivers', driver.driverId]">View Details...</a></li>
+        <li><a class="dropdown-item" href="javascript:void(0)" (click)="quickAction(driver, 'documents')">Documents</a></li>
+        <li><a class="dropdown-item" href="javascript:void(0)" (click)="quickAction(driver, 'loads')">Loads</a></li>
+        <li><a class="dropdown-item" href="javascript:void(0)" (click)="quickAction(driver, 'settlements')">Settlements</a></li>
+        <li><a class="dropdown-item" href="javascript:void(0)" (click)="quickAction(driver, 'analytics')">Analytics</a></li>
+        <li *ngIf="canEditDriver()"><hr class="dropdown-divider"></li>
+        <li *ngIf="canEditDriver()"><a class="dropdown-item" [routerLink]="['/drivers', driver.driverId, 'edit']">Edit...</a></li>
+        <li *ngIf="canEditDriver()"><a class="dropdown-item" href="javascript:void(0)" (click)="openStatusModal(driver)">Update Status...</a></li>
+        <li *ngIf="canEditDriver()"><a class="dropdown-item" href="javascript:void(0)" (click)="deleteDriver(driver)">Delete</a></li>
+      </ul>
+    </div>
+  </ng-template>
+
+  <!-- Referrals cell with copy link button -->
+  <ng-template #referralsCell let-driver>
+    <span *ngIf="driver.referralCount != null && driver.referralCount > 0" class="badge bg-success me-1">{{ driver.referralCount }}</span>
+    <span *ngIf="!driver.referralCount || driver.referralCount === 0" class="text-muted">0</span>
+    <button type="button" class="btn btn-sm btn-link p-0 ms-1" (click)="copyReferralLink(driver); $event.stopPropagation()" title="Copy Referral Link">
+      <i class="fas fa-link text-primary"></i>
+    </button>
+  </ng-template>
+
+  <!-- Card with shared table - same structure and classes as /loads -->
+  <div class="load-list-card load-list-card-with-sticky">
+    <div class="load-list-card-header">
+      <h5><i class="fas fa-users me-2"></i>{{ inactiveOnlyPage ? 'Inactive Owner Operators' : 'Owner Operators' }}</h5>
+      <div class="load-list-card-actions">
+        <ng-container *ngIf="selectedDrivers.size > 0">
+          <button type="button" class="btn btn-sm btn-tms-outline" (click)="bulkUpdateStatus()" title="Bulk Update Status">
+            <i class="fas fa-sync-alt me-1"></i>Bulk Update ({{ selectedDrivers.size }})
+          </button>
+        </ng-container>
+        <button type="button" class="btn btn-sm btn-tms-outline" (click)="exportDrivers()" title="Export CSV">
+          <i class="fas fa-file-csv me-1"></i>CSV
+        </button>
+      </div>
+    </div>
+    <div class="load-list-card-body p-0">
+      <app-data-table
+        [config]="tableConfig"
+        [dataSource]="dataSource"
+        [emptyMessage]="inactiveOnlyPage ? 'No inactive owner operators found.' : 'No owner operators found. Try adjusting your filters.'"
+        [refreshTrigger]="tableRefreshTrigger"
+        (rowClick)="viewDriverDetails($event)"
+        (selectionChange)="onSelectionChange($event)">
+      </app-data-table>
+    </div>
+  </div>
+</div>
+
+<!-- Status Update Modal - same style as loads -->
+<div class="modal driver-list-modal" [class.show]="showStatusModal" *ngIf="showStatusModal">
+  <div class="modal-backdrop" (click)="showStatusModal = false"></div>
+  <div class="modal-dialog" (click)="$event.stopPropagation()">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Update Owner Operator Status</h5>
+        <button type="button" class="btn-close" (click)="showStatusModal = false"></button>
+      </div>
+      <div class="modal-body">
+        <div class="mb-3">
+          <label class="form-label">Owner Operator</label>
+          <input type="text" class="form-control" [value]="selectedDriver?.fullName" readonly>
+        </div>
+        <div class="mb-3">
+          <label class="form-label">New Status *</label>
+          <select class="form-select" [(ngModel)]="newStatus">
+            <option *ngFor="let status of statusOptions" [value]="status">{{ status }}</option>
+          </select>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-tms-secondary" (click)="showStatusModal = false">Cancel</button>
+        <button type="button" class="btn btn-tms-primary" (click)="updateStatus()">Update Status</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Bulk Status Update Modal - themed popup with dropdown -->
+<div class="modal driver-list-modal" [class.show]="showBulkStatusModal" *ngIf="showBulkStatusModal">
+  <div class="modal-backdrop" (click)="closeBulkStatusModal()"></div>
+  <div class="modal-dialog" (click)="$event.stopPropagation()">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Bulk Update Owner Operator Status</h5>
+        <button type="button" class="btn-close" (click)="closeBulkStatusModal()"></button>
+      </div>
+      <div class="modal-body">
+        <p class="bulk-status-count text-muted mb-3">
+          <i class="fas fa-users me-1"></i>{{ selectedDrivers.size }} owner operator(s) selected
+        </p>
+        <div class="mb-0">
+          <label class="form-label">New Status *</label>
+          <select class="form-select tms-form-select" [(ngModel)]="bulkNewStatus">
+            <option *ngFor="let status of statusOptions" [value]="status">{{ status }}</option>
+          </select>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-tms-secondary" (click)="closeBulkStatusModal()">Cancel</button>
+        <button type="button" class="btn btn-tms-primary" (click)="confirmBulkUpdateStatus()">Update Status</button>
+      </div>
+    </div>
+  </div>
+</div>

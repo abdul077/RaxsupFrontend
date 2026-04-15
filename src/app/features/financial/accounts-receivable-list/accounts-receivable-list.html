@@ -1,0 +1,121 @@
+<div class="container-fluid">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+      <h4 class="mb-1">Accounts Receivable</h4>
+      <p class="text-muted mb-0">Manage customer receivables and payments</p>
+    </div>
+    <div class="d-flex gap-2">
+      <button class="btn btn-outline-info" (click)="updateStatus()">
+        <i class="fas fa-sync me-2"></i>Update Status
+      </button>
+      <button class="btn btn-primary" (click)="navigateToCreate()">
+        <i class="fas fa-plus me-2"></i>Create Receivable
+      </button>
+    </div>
+  </div>
+
+  <!-- Filters -->
+  <div class="card mb-4">
+    <div class="card-body">
+      <div class="row g-3">
+        <div class="col-md-2">
+          <label class="form-label">Status</label>
+          <select class="form-select" [(ngModel)]="statusFilter">
+            <option value="">All Statuses</option>
+            @for (status of statusOptions; track status) {
+              <option [value]="status">{{ status }}</option>
+            }
+          </select>
+        </div>
+        <div class="col-md-2">
+          <label class="form-label">Customer</label>
+          <select class="form-select" [(ngModel)]="customerFilter">
+            <option [value]="null">All Customers</option>
+            @for (customer of customers; track customer.customerId) {
+              <option [value]="customer.customerId">{{ customer.name }}</option>
+            }
+          </select>
+        </div>
+        <div class="col-md-2">
+          <label class="form-label">Due Date From</label>
+          <input type="date" class="form-control" [(ngModel)]="dueDateFrom">
+        </div>
+        <div class="col-md-2">
+          <label class="form-label">Due Date To</label>
+          <input type="date" class="form-control" [(ngModel)]="dueDateTo">
+        </div>
+        <div class="col-md-2">
+          <label class="form-label">Search</label>
+          <input type="text" class="form-control" placeholder="Search by invoice # or customer..." 
+                 [(ngModel)]="searchTerm">
+        </div>
+        <div class="col-md-2 d-flex align-items-end gap-2">
+          <button class="btn btn-primary flex-fill" (click)="onApplyFilters()" title="Apply Filters">
+            <i class="fas fa-filter me-1"></i>Apply
+          </button>
+          <button class="btn btn-outline-secondary flex-fill" (click)="onClearFilters()" title="Clear Filters">
+            <i class="fas fa-times me-1"></i>Clear
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Receivables Table -->
+  @if (receivables) {
+    <div class="card">
+      <div class="card-body">
+        <div class="table-responsive">
+          <table class="table table-hover">
+            <thead>
+              <tr>
+                <th>Customer</th>
+                <th>Invoice #</th>
+                <th>Due Date</th>
+                <th>Amount</th>
+                <th>Paid</th>
+                <th>Balance</th>
+                <th>Days Past Due</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (receivable of filteredReceivables; track receivable.receivableId) {
+                <tr [class.table-danger]="receivable.isOverdue">
+                  <td>{{ receivable.customerName }}</td>
+                  <td>{{ receivable.invoiceNumber || '-' }}</td>
+                  <td>{{ formatDate(receivable.dueDate) }}</td>
+                  <td>{{ formatCurrency(receivable.amount) }}</td>
+                  <td>{{ formatCurrency(receivable.paidAmount) }}</td>
+                  <td><strong>{{ formatCurrency(receivable.balance) }}</strong></td>
+                  <td>
+                    @if (receivable.daysPastDue > 0) {
+                      <span class="badge bg-danger">{{ receivable.daysPastDue }}</span>
+                    } @else {
+                      <span>-</span>
+                    }
+                  </td>
+                  <td>
+                    <span [class]="getStatusBadgeClass(receivable.status)">{{ receivable.status }}</span>
+                  </td>
+                  <td>
+                    <button class="btn btn-sm btn-outline-primary" (click)="navigateToDetail(receivable.receivableId)">
+                      <i class="fas fa-eye"></i>
+                    </button>
+                  </td>
+                </tr>
+              }
+              @if (filteredReceivables.length === 0) {
+                <tr>
+                  <td colspan="9" class="text-center text-muted py-4">No receivables found</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  }
+</div>
+

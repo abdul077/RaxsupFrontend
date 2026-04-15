@@ -1,0 +1,146 @@
+<div class="container-fluid">
+  <!-- Header -->
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+      <h2 class="mb-1">My Incidents</h2>
+      <p class="text-muted mb-0">View and manage all incidents related to you</p>
+    </div>
+    <a routerLink="/dashboard" class="btn btn-outline-secondary">
+      <i class="fas fa-arrow-left me-2"></i>Back to Dashboard
+    </a>
+  </div>
+
+  <!-- Filters -->
+  <div class="card mb-4">
+    <div class="card-body">
+      <div class="row g-3">
+        <div class="col-md-4">
+          <label class="form-label">Search</label>
+          <input type="text" class="form-control" [(ngModel)]="searchTerm" (ngModelChange)="applyFilters()" placeholder="Search incidents...">
+        </div>
+        <div class="col-md-2">
+          <label class="form-label">Severity</label>
+          <select class="form-select" [(ngModel)]="severityFilter" (ngModelChange)="applyFilters()">
+            <option value="">All</option>
+            @for (severity of severityOptions; track severity) {
+              <option [value]="severity">{{ severity }}</option>
+            }
+          </select>
+        </div>
+        <div class="col-md-2">
+          <label class="form-label">Type</label>
+          <select class="form-select" [(ngModel)]="incidentTypeFilter" (ngModelChange)="applyFilters()">
+            <option value="">All</option>
+            @for (type of incidentTypeOptions; track type) {
+              <option [value]="type">{{ type }}</option>
+            }
+          </select>
+        </div>
+        <div class="col-md-2">
+          <label class="form-label">Status</label>
+          <select class="form-select" [(ngModel)]="resolvedFilter" (ngModelChange)="loadIncidents()">
+            <option [ngValue]="null">All</option>
+            <option [ngValue]="false">Open</option>
+            <option [ngValue]="true">Resolved</option>
+          </select>
+        </div>
+        <div class="col-md-2 d-flex align-items-end">
+          <button class="btn btn-outline-secondary w-100" (click)="clearFilters()">
+            <i class="fas fa-times me-1"></i>Clear
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Incidents Table -->
+  @if (loading) {
+    <div class="text-center py-5">
+      <div class="spinner-border text-primary" role="status">
+        <span class="visually-hidden">Loading...</span>
+      </div>
+    </div>
+  } @else {
+    <div class="card">
+      <div class="card-body">
+        <div class="table-responsive">
+          <table class="table table-hover">
+            <thead>
+              <tr>
+                <th>Incident #</th>
+                <th>Date</th>
+                <th>Type</th>
+                <th>Severity</th>
+                <th>Location</th>
+                <th>Description</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              @if (filteredIncidents.length === 0) {
+                <tr>
+                  <td colspan="8" class="text-center py-4">
+                    <i class="fas fa-inbox fa-2x text-muted mb-2 d-block"></i>
+                    <p class="text-muted mb-0">No incidents found</p>
+                  </td>
+                </tr>
+              } @else {
+                @for (incident of filteredIncidents; track incident.incidentId) {
+                  <tr>
+                    <td>
+                      <strong>{{ incident.incidentNumber }}</strong>
+                    </td>
+                    <td>{{ formatDate(incident.incidentDate) }}</td>
+                    <td>{{ incident.incidentType }}</td>
+                    <td>
+                      <span class="badge" [ngClass]="getSeverityBadgeClass(incident.severity)">
+                        {{ incident.severity }}
+                      </span>
+                    </td>
+                    <td>
+                      @if (incident.location) {
+                        <div>
+                          <i class="fas fa-map-marker-alt text-muted me-1"></i>
+                          {{ incident.location }}
+                          @if (incident.city || incident.state) {
+                            <small class="text-muted d-block">
+                              {{ incident.city }}{{ incident.city && incident.state ? ', ' : '' }}{{ incident.state }}
+                            </small>
+                          }
+                        </div>
+                      } @else {
+                        <span class="text-muted">-</span>
+                      }
+                    </td>
+                    <td>
+                      <div class="text-truncate" style="max-width: 300px;" [title]="incident.description">
+                        {{ incident.description }}
+                      </div>
+                    </td>
+                    <td>
+                      <span class="badge" [ngClass]="incident.resolved ? 'bg-success' : 'bg-warning'">
+                        {{ incident.resolved ? 'Resolved' : 'Open' }}
+                      </span>
+                      @if (incident.resolved && incident.resolvedDate) {
+                        <small class="text-muted d-block mt-1">
+                          {{ formatDate(incident.resolvedDate) }}
+                        </small>
+                      }
+                    </td>
+                    <td>
+                      <button class="btn btn-sm btn-outline-primary" (click)="viewIncident(incident.incidentId)">
+                        <i class="fas fa-eye me-1"></i>View
+                      </button>
+                    </td>
+                  </tr>
+                }
+              }
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  }
+</div>
+

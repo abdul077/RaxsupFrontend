@@ -1,0 +1,22 @@
+<div class="live-fleet-map">
+  <div *ngIf="error" class="live-map-error alert alert-warning">
+    <i class="fas fa-exclamation-triangle me-2"></i>{{ error }}
+  </div>
+  <div
+    [id]="mapElementId"
+    class="live-map-container"
+    [class.loading]="loading"
+  ></div>
+  <div *ngIf="loading" class="live-map-overlay">
+    <div class="spinner-border text-light" role="status"></div>
+    <span class="ms-2">Loading fleet locations...</span>
+  </div>
+  <div class="live-map-legend">
+    <span class="legend-item"><i class="fas fa-circle text-success"></i> Moving</span>
+    <span class="legend-item"><i class="fas fa-circle text-warning"></i> Idle</span>
+    <span class="legend-item"><i class="fas fa-circle text-danger"></i> Stopped</span>
+    <button type="button" class="btn btn-sm btn-tms-outline ms-auto" (click)="refresh()">
+      <i class="fas fa-sync-alt"></i> Refresh
+    </button>
+  </div>
+</div>

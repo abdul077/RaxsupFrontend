@@ -1,0 +1,24 @@
+@if (driver) {
+  <div class="driver-card" (click)="navigateToDetail()">
+    <div class="card-body">
+      <div class="d-flex align-items-center">
+        <div class="driver-avatar me-3">
+          <i class="fas fa-user"></i>
+        </div>
+        <div class="flex-grow-1">
+          <h5 class="mb-1">{{ driver.fullName }}</h5>
+          <p class="mb-1 text-muted small">ID: {{ driver.driverId }}</p>
+          <span [class]="getStatusBadgeClass(driver.status)">{{ driver.status }}</span>
+        </div>
+        @if (showActions) {
+          <div class="driver-actions">
+            <button class="btn btn-sm btn-outline-primary" (click)="navigateToDetail(); $event.stopPropagation()">
+              <i class="fas fa-eye"></i>
+            </button>
+          </div>
+        }
+      </div>
+    </div>
+  </div>
+}
+

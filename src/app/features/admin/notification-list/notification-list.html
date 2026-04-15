@@ -1,0 +1,224 @@
+<div class="notification-list">
+  <header class="page-header">
+    <div class="header-breadcrumb" *ngIf="isAdmin">
+      <a class="breadcrumb-link" routerLink="/admin">
+        <i class="fas fa-th-large"></i> Admin
+      </a>
+      <span class="breadcrumb-sep">/</span>
+      <span class="breadcrumb-current">Notifications</span>
+    </div>
+    <div class="header-row">
+      <div class="header-left">
+        <div class="title-block">
+          <div class="title-icon" aria-hidden="true">
+            <i class="fas fa-bell"></i>
+          </div>
+          <div class="title-text">
+            <h1>
+              {{ isAdmin ? 'Admin Notifications' : 'Notifications' }}
+              <span *ngIf="unreadCount > 0" class="unread-pill">{{ unreadCount }}</span>
+            </h1>
+            <p class="subtitle">
+              {{ isAdmin ? 'Manage and review your admin account notifications' : 'Your notifications and alerts' }}
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <div *ngIf="loading" class="loading">
+    <div class="loading-spinner"></div>
+    <span>Loading notifications…</span>
+  </div>
+
+  <div *ngIf="!loading" class="notifications-wrap">
+    <!-- Summary cards -->
+    <div class="summary-cards">
+      <div class="summary-card">
+        <div class="summary-icon total">
+          <i class="fas fa-bell"></i>
+        </div>
+        <div class="summary-content">
+          <span class="summary-value">{{ statsTotal }}</span>
+          <span class="summary-label">Total Notifications</span>
+        </div>
+      </div>
+      <div class="summary-card">
+        <div class="summary-icon unread">
+          <i class="fas fa-circle"></i>
+        </div>
+        <div class="summary-content">
+          <span class="summary-value">{{ statsUnread }}</span>
+          <span class="summary-label">Unread {{ statsUnread }}</span>
+        </div>
+      </div>
+      <div class="summary-card">
+        <div class="summary-icon messages">
+          <i class="fas fa-comment"></i>
+        </div>
+        <div class="summary-content">
+          <span class="summary-value">{{ statsMessages }}</span>
+          <span class="summary-label">Messages {{ statsMessages }}</span>
+        </div>
+      </div>
+      <div class="summary-card">
+        <div class="summary-icon alerts">
+          <i class="fas fa-exclamation-triangle"></i>
+        </div>
+        <div class="summary-content">
+          <span class="summary-value">{{ statsAlerts }}</span>
+          <span class="summary-label">Alerts {{ statsAlerts }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Toolbar: search, filters, actions -->
+    <div class="toolbar">
+      <div class="toolbar-search">
+        <i class="fas fa-search"></i>
+        <input
+          type="text"
+          class="search-input"
+          placeholder="Search notifications..."
+          [(ngModel)]="searchQuery"
+          (input)="onSearchOrFilter()">
+      </div>
+      <div class="toolbar-filters">
+        <label class="filter-label">Type:</label>
+        <select class="filter-select" [(ngModel)]="typeFilter" (ngModelChange)="onSearchOrFilter()">
+          <option value="all">All Notifications</option>
+          <option value="message">Messages</option>
+          <option value="alert">Alerts</option>
+        </select>
+      </div>
+      <div class="toolbar-filters">
+        <label class="filter-label">Sort:</label>
+        <select class="filter-select" [(ngModel)]="sortOrder" (ngModelChange)="onSearchOrFilter()">
+          <option value="unread-first">Unread first</option>
+          <option value="newest">Newest first</option>
+        </select>
+      </div>
+      <label class="filter-toggle">
+        <input type="checkbox" [(ngModel)]="filterUnread" (change)="loadNotifications(); onSearchOrFilter()">
+        <span class="toggle-label">Unread only</span>
+      </label>
+      <button type="button" class="btn btn-delete" (click)="deleteSelected()" title="Delete selected" [disabled]="!hasSelection">
+        <i class="fas fa-trash"></i> Delete
+      </button>
+    </div>
+
+    <!-- Bulk actions -->
+    <div class="bulk-bar" *ngIf="totalCount > 0">
+      <label class="bulk-select">
+        <input type="checkbox" [checked]="isAllOnPageSelected" (change)="isAllOnPageSelected ? clearSelection() : selectAllOnPage()">
+        <span>Select All</span>
+      </label>
+      <button
+        type="button"
+        class="btn btn-mark-all"
+        [disabled]="markingAllRead || statsUnread === 0"
+        (click)="markAllAsRead()">
+        <i class="fas" [ngClass]="markingAllRead ? 'fa-spinner fa-spin' : 'fa-bookmark'"></i>
+        Mark All as Read
+      </button>
+      <button
+        type="button"
+        class="btn btn-delete-selected"
+        [disabled]="!hasSelection"
+        (click)="deleteSelected()">
+        <i class="fas fa-trash"></i> Delete Selected
+      </button>
+    </div>
+
+    <!-- Grouped notification list -->
+    <div class="notifications" *ngIf="totalCount > 0">
+      <ng-container *ngFor="let group of notificationsByDate">
+        <h3 class="date-group-label">{{ group.label }}</h3>
+        <article
+          *ngFor="let notification of group.items"
+          class="notification-card"
+          [ngClass]="{'unread': !notification.isRead}">
+          <div class="card-accent" aria-hidden="true"></div>
+          <label class="card-checkbox">
+            <input type="checkbox" [checked]="isSelected(notification)" (change)="toggleSelection(notification)">
+          </label>
+          <div class="card-icon" [ngClass]="(notification.category || 'info').toLowerCase()">
+            <i class="fas" [ngClass]="{
+              'fa-comment': notification.category === 'Info' || !notification.category,
+              'fa-exclamation-triangle': notification.category === 'Warning',
+              'fa-times-circle': notification.category === 'Error',
+              'fa-check-circle': notification.category === 'Success'
+            }"></i>
+          </div>
+          <div class="card-body">
+            <h2 class="card-title">{{ notification.title || 'Notification' }}</h2>
+            <p class="card-message">{{ notification.message }}</p>
+            <div class="card-meta">
+              <span class="meta-item"><i class="fas fa-user"></i> {{ notification.userName || 'RaxUp Admin' }}</span>
+            </div>
+          </div>
+          <div class="card-time">{{ getTimeAgo(notification.createdAt) }}</div>
+          <div class="card-actions">
+            <div class="card-more-wrap">
+              <button
+                type="button"
+                class="btn btn-icon-more"
+                (click)="toggleMenu(notification); $event.stopPropagation()"
+                [class.active]="isMenuOpen(notification)"
+                [disabled]="deletingIds.has(notification.notificationId)"
+                title="More options"
+                aria-haspopup="true"
+                [attr.aria-expanded]="isMenuOpen(notification)">
+                <i class="fas fa-ellipsis-v"></i>
+              </button>
+              <div
+                *ngIf="isMenuOpen(notification)"
+                class="card-dropdown"
+                (click)="$event.stopPropagation()"
+                role="menu">
+                <button type="button" class="dropdown-item" role="menuitem" (click)="goToAction(notification); closeMenu()">
+                  <i class="fas fa-external-link-alt"></i> View
+                </button>
+                <button
+                  *ngIf="!notification.isRead"
+                  type="button"
+                  class="dropdown-item"
+                  role="menuitem"
+                  (click)="markAsRead(notification); closeMenu()">
+                  <i class="fas fa-bookmark"></i> Mark as Read
+                </button>
+                <button
+                  type="button"
+                  class="dropdown-item dropdown-item-danger"
+                  role="menuitem"
+                  (click)="deleteNotification(notification)">
+                  <i class="fas fa-trash"></i> Delete
+                </button>
+              </div>
+            </div>
+          </div>
+        </article>
+      </ng-container>
+    </div>
+
+    <app-pagination
+      *ngIf="totalCount > 0"
+      [pageNumber]="pageNumber"
+      [pageSize]="pageSize"
+      [totalCount]="totalCount"
+      [totalPages]="totalPages"
+      [pageSizeOptions]="[10, 25, 50]"
+      (pageChange)="onPageChange($event)"
+      (pageSizeChange)="onPageSizeChange($event)">
+    </app-pagination>
+
+    <div *ngIf="totalCount === 0" class="empty-state">
+      <div class="empty-icon" aria-hidden="true">
+        <i class="fas fa-inbox"></i>
+      </div>
+      <h3>No notifications</h3>
+      <p>{{ filterUnread ? 'You have no unread notifications.' : 'No notifications match your filters.' }}</p>
+    </div>
+  </div>
+</div>

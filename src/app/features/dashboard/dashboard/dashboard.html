@@ -1,0 +1,608 @@
+<div class="tms-dashboard-dark">
+  <!-- Header -->
+  <div class="tms-dashboard-header">
+    <div class="tms-header-left">
+      <div class="tms-header-icon">
+        <i class="fas fa-truck-moving"></i>
+      </div>
+      <div>
+        <h1 class="tms-title">RaxsUp TMS Dashboard</h1>
+        <p class="tms-subtitle">Welcome back, <strong>{{ authService.getCurrentUser()?.fullName }}</strong></p>
+      </div>
+    </div>
+    <div class="tms-header-actions">
+      <button *ngIf="canCreateLoad()" class="btn btn-tms-primary" routerLink="/loads/create">
+        <i class="fas fa-plus me-2"></i>Create New Load
+      </button>
+    </div>
+  </div>
+
+  <div *ngIf="stats">
+    <!-- KPI Cards (7 cards from reference) -->
+    <div class="tms-kpi-row" *ngIf="!authService.hasRole('Driver')">
+      <div class="tms-kpi-card tms-kpi-blue">
+        <i class="fas fa-truck tms-kpi-icon"></i>
+        <div class="tms-kpi-content">
+          <span class="tms-kpi-value">{{ stats.activeLoads ?? 0 }}</span>
+          <span class="tms-kpi-label">Active Trips</span>
+        </div>
+      </div>
+      <div class="tms-kpi-card tms-kpi-red">
+        <i class="fas fa-exclamation-circle tms-kpi-icon"></i>
+        <div class="tms-kpi-content">
+          <span class="tms-kpi-value">{{ stats.delayedTrips ?? 0 }}</span>
+          <span class="tms-kpi-label">Delayed Trips</span>
+        </div>
+      </div>
+      <div class="tms-kpi-card tms-kpi-green">
+        <i class="fas fa-truck tms-kpi-icon"></i>
+        <div class="tms-kpi-content">
+          <span class="tms-kpi-value">{{ stats.availableVehicles ?? 0 }}</span>
+          <span class="tms-kpi-label">Available Vehicles</span>
+        </div>
+      </div>
+      <div class="tms-kpi-card tms-kpi-yellow">
+        <i class="fas fa-wrench tms-kpi-icon"></i>
+        <div class="tms-kpi-content">
+          <span class="tms-kpi-value">{{ stats.inMaintenance ?? 0 }}</span>
+          <span class="tms-kpi-label">In Maintenance</span>
+        </div>
+      </div>
+      <div class="tms-kpi-card tms-kpi-orange">
+        <i class="fas fa-user-tie tms-kpi-icon"></i>
+        <div class="tms-kpi-content">
+          <span class="tms-kpi-value">{{ stats.driversOnDuty ?? 0 }}</span>
+          <span class="tms-kpi-label">Drivers On Duty</span>
+        </div>
+      </div>
+      <div class="tms-kpi-card tms-kpi-red">
+        <i class="fas fa-exclamation-triangle tms-kpi-icon"></i>
+        <div class="tms-kpi-content">
+          <span class="tms-kpi-value">{{ stats.driversNearHosLimit ?? 0 }}</span>
+          <span class="tms-kpi-label">HOS Warnings</span>
+        </div>
+      </div>
+      <div class="tms-kpi-card tms-kpi-gold">
+        <i class="fas fa-dollar-sign tms-kpi-icon"></i>
+        <div class="tms-kpi-content">
+          <span class="tms-kpi-value" [title]="formatCurrency(stats.pendingInvoicesTotal ?? 0)">{{ formatCurrencyCompact(stats.pendingInvoicesTotal ?? 0) }}</span>
+          <span class="tms-kpi-label">Pending Invoices</span>
+        </div>
+      </div>
+      <div class="tms-kpi-card tms-kpi-amber">
+        <i class="fas fa-coins tms-kpi-icon"></i>
+        <div class="tms-kpi-content">
+          <span class="tms-kpi-value" [title]="formatCurrency(totalGrossRevenue)">{{ formatCurrencyCompact(totalGrossRevenue) }}</span>
+          <span class="tms-kpi-label">Company Gross Revenue</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Driver KPI Row -->
+    <div class="tms-kpi-row" *ngIf="authService.hasRole('Driver')">
+      <div class="tms-kpi-card tms-kpi-blue">
+        <i class="fas fa-truck tms-kpi-icon"></i>
+        <div class="tms-kpi-content">
+          <span class="tms-kpi-value">{{ stats.activeLoads ?? 0 }}</span>
+          <span class="tms-kpi-label">My Active Loads</span>
+        </div>
+      </div>
+      <div class="tms-kpi-card tms-kpi-amber">
+        <i class="fas fa-dollar-sign tms-kpi-icon"></i>
+        <div class="tms-kpi-content">
+          <span class="tms-kpi-value" [title]="formatCurrency(stats.totalRevenue ?? 0)">{{ formatCurrencyCompact(stats.totalRevenue ?? 0) }}</span>
+          <span class="tms-kpi-label">Earnings</span>
+        </div>
+      </div>
+      <div class="tms-kpi-card tms-kpi-gold">
+        <i class="fas fa-file-invoice tms-kpi-icon"></i>
+        <div class="tms-kpi-content">
+          <span class="tms-kpi-value" [title]="formatCurrency(stats.pendingPaymentsTotal ?? 0)">{{ formatCurrencyCompact(stats.pendingPaymentsTotal ?? 0) }}</span>
+          <span class="tms-kpi-label">Pending</span>
+        </div>
+      </div>
+      <div class="tms-kpi-card tms-kpi-red" *ngIf="(stats.expiringDocumentsCount ?? 0) > 0">
+        <i class="fas fa-exclamation-triangle tms-kpi-icon"></i>
+        <div class="tms-kpi-content">
+          <span class="tms-kpi-value">{{ stats.expiringDocumentsCount ?? 0 }}</span>
+          <span class="tms-kpi-label">Docs Expiring</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Two-column layout for non-Driver -->
+    <div class="tms-dashboard-grid" *ngIf="!authService.hasRole('Driver')">
+      <!-- Left column -->
+      <div class="tms-left-col">
+        <!-- Live Fleet Map -->
+        <div class="tms-card tms-map-card" *ngIf="authService.hasAnyRole(['Admin','Dispatcher','FleetManager'])">
+          <div class="tms-card-header">
+            <h5><i class="fas fa-map-marked-alt me-2"></i>Live Fleet Map</h5>
+            <i class="fas fa-info-circle text-muted"></i>
+          </div>
+          <div class="tms-map-body">
+            <app-live-fleet-map [pollIntervalMs]="45000"></app-live-fleet-map>
+          </div>
+        </div>
+
+        <!-- Current Trips -->
+        <div class="tms-card" *ngIf="authService.hasAnyRole(['Admin','Dispatcher','FleetManager'])">
+            <div class="tms-card-header">
+              <h5><i class="fas fa-list me-2"></i>Current Trips</h5>
+              <a routerLink="/loads" class="btn btn-sm btn-tms-outline">View All</a>
+            </div>
+            <div class="tms-card-body p-0">
+              <div *ngIf="currentLoadsLoading" class="text-center py-4">
+                <div class="spinner-border spinner-border-sm text-primary"></div>
+              </div>
+              <div *ngIf="!currentLoadsLoading && currentLoads.length === 0" class="text-center py-4 text-muted">
+                <i class="fas fa-inbox fa-2x mb-2 d-block"></i>
+                No active trips
+              </div>
+              <div *ngIf="!currentLoadsLoading && currentLoads.length > 0" class="table-responsive">
+                <table class="table table-hover mb-0 tms-table-dark tms-current-trips-table">
+                  <thead>
+                    <tr>
+                      <th class="tms-trip-id">Trip ID</th>
+                      <th class="tms-trip-route">Route</th>
+                      <th class="tms-trip-vehicle">Vehicle</th>
+                      <th class="tms-trip-driver">Driver</th>
+                      <th class="tms-trip-status">Status</th>
+                      <th class="tms-trip-actions text-end"></th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr *ngFor="let load of currentLoads">
+                      <td class="tms-trip-id"><strong>{{ load.loadNumber }}</strong></td>
+                      <td class="tms-trip-route">
+                        <span class="tms-route-text">{{ load.origin }} → {{ load.destination }}</span>
+                      </td>
+                      <td class="tms-trip-vehicle">{{ load.equipmentPlateNumber || '-' }}</td>
+                      <td class="tms-trip-driver">{{ load.driverName || load.ownerOperatorName || '-' }}</td>
+                      <td class="tms-trip-status">
+                        <span class="badge" [ngClass]="getTripStatusBadgeClass(load)">
+                          {{ getTripDisplayStatus(load) }}
+                        </span>
+                      </td>
+                      <td class="tms-trip-actions text-end">
+                        <div class="dropdown">
+                          <button type="button" class="tms-actions-btn" data-bs-toggle="dropdown" aria-expanded="false" title="Actions">
+                            <i class="fas fa-ellipsis-h"></i>
+                          </button>
+                          <ul class="dropdown-menu dropdown-menu-end tms-actions-dropdown">
+                            <li><a class="dropdown-item" [routerLink]="['/loads', load.loadId]">View Trip Summary...</a></li>
+                            <li><a class="dropdown-item" [routerLink]="['/loads', load.loadId]" [queryParams]="{tab: 'route'}">Track Location...</a></li>
+                            <li *ngIf="canEditLoad()"><hr class="dropdown-divider"></li>
+                            <li *ngIf="canEditLoad()"><a class="dropdown-item" [routerLink]="['/loads', load.loadId]">Edit Trip...</a></li>
+                            <li *ngIf="canEditLoad()"><a class="dropdown-item" href="javascript:void(0)" (click)="openStatusModal(load)">Change Status...</a></li>
+                          </ul>
+                        </div>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+              <div *ngIf="!currentLoadsLoading && currentLoads.length > 0" class="tms-trips-footer">
+                <a routerLink="/loads" class="btn btn-sm btn-tms-outline">View</a>
+                <a routerLink="/loads" class="btn btn-sm btn-tms-outline">Track</a>
+              </div>
+            </div>
+          </div>
+
+        <!-- Dispatcher Loads Widget -->
+        <div class="tms-card" *ngIf="authService.hasAnyRole(['Admin','Dispatcher','FleetManager'])">
+          <div class="tms-card-header dispatcher-loads-header">
+            <h5><i class="fas fa-user-friends me-2"></i>Dispatcher Loads</h5>
+            <div class="dispatcher-loads-controls">
+              <div class="btn-group btn-group-sm">
+                <button type="button" class="btn btn-tms-outline" [class.active]="dispatcherWidgetView === 'list'" (click)="onDispatcherViewChange('list')">List</button>
+                <button type="button" class="btn btn-tms-outline" [class.active]="dispatcherWidgetView === 'chart'" (click)="onDispatcherViewChange('chart')">Chart</button>
+              </div>
+              <select class="form-select form-select-sm" [(ngModel)]="dispatcherDateRange" (ngModelChange)="onDispatcherDateRangeChange()">
+                <option value="today">Today</option>
+                <option value="this-week">This Week</option>
+                <option value="this-month">This Month</option>
+                <option value="custom">Custom</option>
+              </select>
+              <select class="form-select form-select-sm" [(ngModel)]="dispatcherStatusFilter" (ngModelChange)="onDispatcherStatusChange()">
+                <option value="all">All</option>
+                <option value="active">Active</option>
+                <option value="completed">Completed</option>
+                <option value="cancelled">Cancelled</option>
+              </select>
+              <select class="form-select form-select-sm" [(ngModel)]="dispatcherSortDirection" (ngModelChange)="onDispatcherSortChange()">
+                <option value="desc">High → Low</option>
+                <option value="asc">Low → High</option>
+              </select>
+              <button type="button" class="btn btn-sm btn-tms-outline" (click)="refreshDispatcherWidget()" title="Refresh">
+                <i class="fas fa-sync-alt"></i>
+              </button>
+            </div>
+          </div>
+          <div class="tms-card-body">
+            <div *ngIf="dispatcherDateRange === 'custom'" class="dispatcher-custom-range">
+              <input type="date" class="form-control form-control-sm" [(ngModel)]="dispatcherCustomStartDate">
+              <input type="date" class="form-control form-control-sm" [(ngModel)]="dispatcherCustomEndDate">
+              <button type="button" class="btn btn-sm btn-tms-primary" (click)="onDispatcherCustomDateApply()">Apply</button>
+            </div>
+
+            <div *ngIf="dispatcherLoadsLoading" class="text-center py-4">
+              <div class="spinner-border spinner-border-sm text-primary"></div>
+            </div>
+
+            <div *ngIf="!dispatcherLoadsLoading && dispatcherLoads.length === 0" class="chart-empty">
+              <i class="fas fa-user-friends fa-2x mb-2"></i>
+              <p class="mb-0">No dispatcher load data available</p>
+            </div>
+
+            <div *ngIf="!dispatcherLoadsLoading && dispatcherWidgetView === 'list' && dispatcherLoads.length > 0" class="dispatcher-loads-list">
+              <button
+                type="button"
+                class="dispatcher-load-row"
+                *ngFor="let item of dispatcherLoads"
+                (click)="drillDownDispatcherLoads(item)"
+                [title]="getDispatcherTooltip(item)">
+                <div class="dispatcher-meta">
+                  <div class="dispatcher-avatar" *ngIf="!item.avatarUrl">{{ getDispatcherInitial(item.dispatcherName) }}</div>
+                  <img *ngIf="item.avatarUrl" [src]="item.avatarUrl" [alt]="item.dispatcherName" class="dispatcher-avatar-img">
+                  <div>
+                    <div class="dispatcher-name">{{ item.dispatcherName }}</div>
+                    <small class="text-muted">{{ item.percentageShare | number:'1.0-2' }}% of total loads</small>
+                  </div>
+                </div>
+                <div class="dispatcher-stats">
+                  <span class="badge" [ngClass]="getWorkloadBadgeClass(item.totalLoads)">{{ getWorkloadLabel(item.totalLoads) }}</span>
+                  <strong>{{ item.totalLoads }}</strong>
+                </div>
+                <div class="progress dispatcher-progress">
+                  <div class="progress-bar" [style.width.%]="getDispatcherProgress(item.totalLoads)" [style.background]="getWorkloadColor(item.totalLoads)"></div>
+                </div>
+              </button>
+            </div>
+
+            <div *ngIf="!dispatcherLoadsLoading && dispatcherWidgetView === 'chart' && dispatcherLoads.length > 0" class="chart-container-sm">
+              <canvas baseChart type="bar" [data]="dispatcherLoadsChartData" [options]="dispatcherLoadsChartOptions"></canvas>
+            </div>
+            <small *ngIf="!dispatcherLoadsLoading && dispatcherWidgetView === 'chart' && dispatcherLoads.length > 0" class="text-muted d-block mt-2">
+              Click a bar to drill down into dispatcher loads.
+            </small>
+          </div>
+        </div>
+
+        <!-- Revenue & Expenses Chart -->
+        <div class="tms-card" *ngIf="authService.hasAnyRole(['Admin','Accountant'])">
+          <div class="tms-card-header">
+            <h5><i class="fas fa-chart-bar me-2"></i>Revenue & Expenses</h5>
+          </div>
+          <div class="tms-card-body">
+            <div *ngIf="hasChartData(revenueExpenseChartData)" class="chart-container-sm">
+              <canvas baseChart type="bar" [data]="revenueExpenseChartData" [options]="revenueExpenseChartOptions"></canvas>
+            </div>
+            <div *ngIf="!hasChartData(revenueExpenseChartData)" class="chart-empty">
+              <i class="fas fa-chart-bar fa-2x mb-2"></i>
+              <p class="mb-0">No data available</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Gross Revenue by Truck -->
+        <div class="tms-card" *ngIf="authService.hasAnyRole(['Admin','Dispatcher','FleetManager','Accountant'])">
+          <div class="tms-card-header">
+            <h5><i class="fas fa-truck me-2"></i>Gross Revenue by Truck</h5>
+            <select
+              class="form-select form-select-sm w-auto"
+              [ngModel]="revenueByTruckPeriod"
+              (ngModelChange)="onRevenueByTruckPeriodChange($event)">
+              <option value="today">Today</option>
+              <option value="weekly">Weekly</option>
+              <option value="monthly">Monthly</option>
+              <option value="3-months">3 Months</option>
+            </select>
+          </div>
+          <div class="tms-card-body">
+            <div *ngIf="revenueByTruckLoading" class="text-center py-4">
+              <div class="spinner-border spinner-border-sm text-primary"></div>
+            </div>
+            <div *ngIf="!revenueByTruckLoading && hasChartData(grossRevenueByTruckChartData)" class="chart-container-sm">
+              <canvas baseChart type="bar" [data]="grossRevenueByTruckChartData" [options]="grossRevenueByTruckChartOptions"></canvas>
+            </div>
+            <div *ngIf="!revenueByTruckLoading && revenueByTruck.length > 0" class="table-responsive mt-3">
+              <table class="table table-hover mb-0 tms-table-dark">
+                <thead>
+                  <tr>
+                    <th>Truck</th>
+                    <th class="text-end">Loads</th>
+                    <th class="text-end">Gross Revenue</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr *ngFor="let row of revenueByTruck">
+                    <td>{{ row.truckLabel }}</td>
+                    <td class="text-end">{{ row.loadCount }}</td>
+                    <td class="text-end">{{ formatCurrency(row.grossRevenue) }}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <div *ngIf="!revenueByTruckLoading && !hasChartData(grossRevenueByTruckChartData)" class="chart-empty">
+              <i class="fas fa-truck fa-2x mb-2"></i>
+              <p class="mb-0">No truck revenue data available</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right column -->
+      <div class="tms-right-col">
+        <!-- Trip Status Chart -->
+        <div class="tms-card tms-chart-card" *ngIf="authService.hasAnyRole(['Admin','Dispatcher','FleetManager'])">
+          <div class="tms-card-header">
+            <h5><i class="fas fa-chart-pie me-2"></i>Trip Status</h5>
+          </div>
+          <div class="tms-card-body">
+            <div *ngIf="hasChartData(tripStatusChartData)" class="chart-container-sm">
+              <canvas baseChart type="pie" [data]="tripStatusChartData" [options]="tripStatusChartOptions"></canvas>
+            </div>
+            <div *ngIf="!hasChartData(tripStatusChartData)" class="chart-empty">
+              <i class="fas fa-chart-pie fa-2x mb-2"></i>
+              <p class="mb-0">No data</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Top 10 Brokers Widget -->
+        <div class="tms-card" *ngIf="authService.hasAnyRole(['Admin','Dispatcher','FleetManager'])">
+          <div class="tms-card-header">
+            <h5><i class="fas fa-handshake me-2"></i>Top 10 Brokers</h5>
+            <select
+              class="form-select form-select-sm w-auto"
+              [ngModel]="topBrokersPeriod"
+              (ngModelChange)="onTopBrokersPeriodChange($event)">
+              <option value="daily">Daily</option>
+              <option value="weekly">Weekly</option>
+              <option value="monthly">Monthly</option>
+              <option value="all-time">All Time</option>
+            </select>
+          </div>
+          <div class="tms-card-body p-0">
+            <div *ngIf="topBrokersLoading" class="text-center py-4">
+              <div class="spinner-border spinner-border-sm text-primary"></div>
+            </div>
+            <div *ngIf="!topBrokersLoading && topBrokers.length === 0" class="text-center py-4 text-muted">
+              <i class="fas fa-handshake fa-2x mb-2 d-block"></i>
+              No broker load volume data
+            </div>
+            <div *ngIf="!topBrokersLoading && topBrokers.length > 0" class="table-responsive">
+              <table class="table table-hover mb-0 tms-table-dark">
+                <thead>
+                  <tr>
+                    <th>#</th>
+                    <th>Broker</th>
+                    <th class="text-end">Loads</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr *ngFor="let broker of topBrokers; index as i">
+                    <td><strong>{{ i + 1 }}</strong></td>
+                    <td>{{ broker.customerName }}</td>
+                    <td class="text-end">{{ broker.loadCount }}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- Alerts & Notifications -->
+        <div class="tms-card tms-alerts-card">
+          <div class="tms-card-header">
+            <h5><i class="fas fa-bell me-2"></i>Alerts & Notifications</h5>
+            <a routerLink="/admin/notifications" class="btn btn-sm btn-tms-outline">View All</a>
+          </div>
+          <div class="tms-card-body p-0">
+            <div *ngIf="dashboardAlerts.length === 0" class="text-center py-4 text-muted">
+              <i class="fas fa-check-circle fa-2x mb-2 d-block text-success"></i>
+              No new alerts
+            </div>
+            <a *ngFor="let alert of dashboardAlerts" class="tms-alert-item"
+              [routerLink]="alert.actionRoute || [alert.actionUrl || '/admin/notifications']"
+              [queryParams]="alert.actionQueryParams || {}">
+              <i class="fas me-2" [ngClass]="{
+                'fa-exclamation-circle text-danger': alert.category === 'Error',
+                'fa-exclamation-triangle text-warning': alert.category === 'Warning',
+                'fa-check-circle text-success': alert.category === 'Success',
+                'fa-info-circle text-info': !alert.category || alert.category === 'Info'
+              }"></i>
+              <span class="tms-alert-text flex-grow-1">{{ alert.title || alert.message }}</span>
+              <i class="fas fa-arrow-right text-muted"></i>
+            </a>
+          </div>
+        </div>
+
+        <!-- Driver HOS Widget -->
+        <div class="tms-card" *ngIf="authService.hasAnyRole(['Admin','Dispatcher','FleetManager'])">
+          <div class="tms-card-header">
+            <h5><i class="fas fa-clock me-2"></i>Driver HOS (ELD)</h5>
+          </div>
+          <div class="tms-card-body">
+            <div class="tms-hos-row">
+              <span>Driving Hours:</span>
+              <span>{{ stats.drivingHoursToday ?? 0 }} hrs</span>
+              <a routerLink="/compliance" class="btn btn-sm btn-success">View</a>
+            </div>
+            <div class="tms-hos-row">
+              <span>HOS Remaining:</span>
+              <span>{{ stats.hosRemaining ?? 11 }} hrs</span>
+              <a routerLink="/compliance" class="btn btn-sm btn-danger">View</a>
+            </div>
+            <div class="tms-hos-row tms-hos-violations" *ngIf="(stats.violationsCount ?? 0) > 0">
+              <span>Violations:</span>
+              <span class="text-danger">{{ stats.violationsCount ?? 0 }} Alerts</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Vehicle Maintenance Widget -->
+        <div class="tms-card" *ngIf="authService.hasAnyRole(['Admin','FleetManager'])">
+          <div class="tms-card-header">
+            <h5><i class="fas fa-wrench me-2"></i>Vehicle Maintenance</h5>
+          </div>
+          <div class="tms-card-body">
+            <div class="tms-maint-row">
+              <span>Due for Service:</span>
+              <span>{{ stats.dueForService ?? 0 }}</span>
+            </div>
+            <div class="tms-maint-row">
+              <span>Engine Alerts:</span>
+              <span>{{ stats.engineAlerts ?? 0 }}</span>
+            </div>
+            <div class="tms-maint-row">
+              <span>Low Fuel Warnings:</span>
+              <span>{{ stats.lowFuelWarnings ?? 0 }}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Latest 5 Audit Logs -->
+        <div class="tms-card" *ngIf="authService.hasAnyRole(['Admin','Dispatcher','FleetManager','Accountant'])">
+          <div class="tms-card-header">
+            <h5><i class="fas fa-history me-2"></i>Latest Audit Logs</h5>
+            <a routerLink="/admin/audit-logs" class="btn btn-sm btn-tms-outline">View All</a>
+          </div>
+          <div class="tms-card-body p-0">
+            <div *ngIf="auditLogsLoading" class="text-center py-4">
+              <div class="spinner-border spinner-border-sm text-primary"></div>
+            </div>
+            <div *ngIf="!auditLogsLoading && recentAuditLogs.length === 0" class="text-center py-4 text-muted">
+              <i class="fas fa-clipboard-list fa-2x mb-2 d-block"></i>
+              No audit logs
+            </div>
+            <div *ngIf="!auditLogsLoading && recentAuditLogs.length > 0" class="tms-audit-logs-list">
+              <div *ngFor="let log of recentAuditLogs" class="tms-audit-log-item">
+                <span class="tms-audit-log-row">
+                  <strong>{{ log.userName || 'System' }}</strong>
+                  {{ formatAuditAction(log.action) }}
+                  <span *ngIf="log.entityName">{{ log.entityName }}</span>
+                  {{ getAuditRelativeTimeShort(log.timestamp) }}
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Driver-specific content -->
+    <div *ngIf="authService.hasRole('Driver')" class="tms-driver-content">
+      <div class="row g-4">
+        <div class="col-xl-8">
+          <div class="tms-card">
+            <div class="tms-card-header d-flex justify-content-between align-items-center">
+              <h5><i class="fas fa-boxes me-2"></i>My Loads</h5>
+              <a routerLink="/loads" class="btn btn-sm btn-tms-outline">View All</a>
+            </div>
+            <div class="tms-card-body">
+              <div *ngIf="loadsLoading" class="text-center py-4"><div class="spinner-border spinner-border-sm text-primary"></div></div>
+              <div *ngIf="!loadsLoading && recentLoads.length === 0" class="text-center py-4 text-muted">No loads found</div>
+              <div *ngIf="!loadsLoading && recentLoads.length > 0" class="table-responsive">
+                <table class="table table-hover mb-0 tms-table-dark">
+                  <thead>
+                    <tr>
+                      <th>Load #</th>
+                      <th>Route</th>
+                      <th>Status</th>
+                      <th>Rate</th>
+                      <th class="text-end">Action</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr *ngFor="let load of recentLoads">
+                      <td><strong>{{ load.loadNumber }}</strong></td>
+                      <td>{{ load.origin }} → {{ load.destination }}</td>
+                      <td><span class="badge" [ngClass]="getStatusBadgeClass(load.status)">{{ load.status }}</span></td>
+                      <td>{{ formatCurrency(load.totalRate, load.currency) }}</td>
+                      <td class="text-end"><a [routerLink]="['/loads', load.loadId]" class="btn btn-sm btn-tms-outline">View</a></td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="col-xl-4">
+          <!-- Alerts & Notifications (Driver) -->
+          <div class="tms-card tms-alerts-card mb-4">
+            <div class="tms-card-header">
+              <h5><i class="fas fa-bell me-2"></i>Alerts & Notifications</h5>
+              <a routerLink="/admin/notifications" class="btn btn-sm btn-tms-outline">View All</a>
+            </div>
+            <div class="tms-card-body p-0">
+              <div *ngIf="dashboardAlerts.length === 0" class="text-center py-4 text-muted">
+                <i class="fas fa-check-circle fa-2x mb-2 d-block text-success"></i>
+                No new alerts
+              </div>
+              <a *ngFor="let alert of dashboardAlerts" class="tms-alert-item"
+                [routerLink]="alert.actionRoute || [alert.actionUrl || '/admin/notifications']"
+                [queryParams]="alert.actionQueryParams || {}">
+                <i class="fas me-2" [ngClass]="{
+                  'fa-exclamation-circle text-danger': alert.category === 'Error',
+                  'fa-exclamation-triangle text-warning': alert.category === 'Warning',
+                  'fa-check-circle text-success': alert.category === 'Success',
+                  'fa-info-circle text-info': !alert.category || alert.category === 'Info'
+                }"></i>
+                <span class="tms-alert-text flex-grow-1">{{ alert.title || alert.message }}</span>
+                <i class="fas fa-arrow-right text-muted"></i>
+              </a>
+            </div>
+          </div>
+          <div class="tms-card">
+            <div class="tms-card-header"><h5><i class="fas fa-calendar-alt me-2"></i>Upcoming Loads</h5></div>
+            <div class="tms-card-body">
+              <div *ngIf="upcomingLoadsLoading" class="text-center py-3"><div class="spinner-border spinner-border-sm text-primary"></div></div>
+              <div *ngIf="!upcomingLoadsLoading && upcomingLoads.length === 0" class="text-center py-3 text-muted">No upcoming loads</div>
+              <div *ngIf="!upcomingLoadsLoading && upcomingLoads.length > 0" class="tms-list">
+                <div *ngFor="let load of upcomingLoads" class="tms-list-item">
+                  <a [routerLink]="['/loads', load.loadId]">{{ load.loadNumber }}</a>
+                  <small class="d-block text-muted">{{ load.origin }} → {{ load.destination }}</small>
+                  <small *ngIf="load.pickupDateTime">Pickup: {{ formatDate(load.pickupDateTime) }}</small>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Status Update Modal (from loads grid) -->
+<div class="modal fade" [class.show]="showStatusModal" [style.display]="showStatusModal ? 'block' : 'none'" style="background: rgba(0,0,0,0.5);" *ngIf="showStatusModal">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Update Load Status</h5>
+        <button type="button" class="btn-close" (click)="closeStatusModal()"></button>
+      </div>
+      <div class="modal-body">
+        <div class="mb-3">
+          <label class="form-label">Load Number</label>
+          <input type="text" class="form-control" [value]="selectedLoad?.loadNumber" disabled>
+        </div>
+        <div class="mb-3">
+          <label class="form-label">Current Status</label>
+          <input type="text" class="form-control" [value]="selectedLoad?.status" disabled>
+        </div>
+        <div class="mb-3">
+          <label class="form-label">New Status *</label>
+          <select class="form-select" [(ngModel)]="newStatus">
+            <option *ngFor="let status of statusOptions" [value]="status">{{ getStatusDisplayLabel(status) }}</option>
+          </select>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" (click)="closeStatusModal()">Cancel</button>
+        <button type="button" class="btn btn-warning" (click)="updateLoadStatus()">Update Status</button>
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,197 @@
+<div class="container-fluid py-4" *ngIf="ownerOperator">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+      <button class="btn btn-link mb-2" (click)="goBack()">
+        <i class="fas fa-arrow-left me-2"></i>
+        Back to Owner Operators
+      </button>
+      <h2>{{ ownerOperator.companyName }}</h2>
+    </div>
+    <div *ngIf="authService.hasAnyRole(['Admin', 'FleetManager'])">
+      <button class="btn btn-primary" (click)="edit()">
+        <i class="fas fa-edit me-2"></i>
+        Edit
+      </button>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="col-md-8">
+      <!-- Company Information -->
+      <div class="card mb-4">
+        <div class="card-header">
+          <h5 class="mb-0">Company Information</h5>
+        </div>
+        <div class="card-body">
+          <div class="row mb-3">
+            <div class="col-md-6">
+              <strong>Company Name:</strong>
+              <p>{{ ownerOperator.companyName }}</p>
+            </div>
+            <div class="col-md-6">
+              <strong>Contact Name:</strong>
+              <p>{{ ownerOperator.contactName || '-' }}</p>
+            </div>
+          </div>
+          <div class="row mb-3">
+            <div class="col-md-6">
+              <strong>Email:</strong>
+              <p>{{ ownerOperator.email || '-' }}</p>
+            </div>
+            <div class="col-md-6">
+              <strong>Phone:</strong>
+              <p>{{ ownerOperator.phone || '-' }}</p>
+            </div>
+          </div>
+          <div class="row mb-3">
+            <div class="col-12">
+              <strong>Address:</strong>
+              <p>
+                <span *ngIf="ownerOperator.address">{{ ownerOperator.address }}, </span>
+                <span *ngIf="ownerOperator.city">{{ ownerOperator.city }}, </span>
+                <span *ngIf="ownerOperator.state">{{ ownerOperator.state }} </span>
+                <span *ngIf="ownerOperator.zipCode">{{ ownerOperator.zipCode }}</span>
+                <span *ngIf="!ownerOperator.address && !ownerOperator.city">-</span>
+              </p>
+            </div>
+          </div>
+          <div class="row">
+            <div class="col-md-6">
+              <strong>Tax ID / EIN:</strong>
+              <p>{{ ownerOperator.taxId || '-' }}</p>
+            </div>
+            <div class="col-md-6">
+              <strong>Status:</strong>
+              <p>
+                <span class="badge" [class.bg-success]="ownerOperator.isActive" [class.bg-secondary]="!ownerOperator.isActive">
+                  {{ ownerOperator.isActive ? 'Active' : 'Inactive' }}
+                </span>
+              </p>
+            </div>
+          </div>
+          <div class="row" *ngIf="ownerOperator.referrerCompanyName">
+            <div class="col-12">
+              <strong>Referred By:</strong>
+              <p>
+                <span class="badge bg-info">{{ ownerOperator.referrerCompanyName }}</span>
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Contract & Rates -->
+      <div class="card mb-4">
+        <div class="card-header">
+          <h5 class="mb-0">Contract & Rates</h5>
+        </div>
+        <div class="card-body">
+          <div class="row mb-3">
+            <div class="col-md-6">
+              <strong>Default Rate:</strong>
+              <p>{{ ownerOperator.defaultRate ? '$' + ownerOperator.defaultRate.toFixed(2) : '-' }}</p>
+            </div>
+            <div class="col-md-6">
+              <strong>Rate Type:</strong>
+              <p>{{ ownerOperator.rateType || '-' }}</p>
+            </div>
+          </div>
+          <div class="row mb-3">
+            <div class="col-md-6">
+              <strong>Contract Start Date:</strong>
+              <p>{{ ownerOperator.contractStartDate ? (ownerOperator.contractStartDate | date:'short') : '-' }}</p>
+            </div>
+            <div class="col-md-6">
+              <strong>Contract End Date:</strong>
+              <p>{{ ownerOperator.contractEndDate ? (ownerOperator.contractEndDate | date:'short') : '-' }}</p>
+            </div>
+          </div>
+          <div class="row" *ngIf="ownerOperator.contractTerms">
+            <div class="col-12">
+              <strong>Contract Terms:</strong>
+              <p class="text-muted">{{ ownerOperator.contractTerms }}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Associated Drivers -->
+      <div class="card mb-4">
+        <div class="card-header d-flex justify-content-between align-items-center">
+          <h5 class="mb-0">Associated Drivers ({{ ownerOperator.drivers.length }})</h5>
+        </div>
+        <div class="card-body">
+          <div class="table-responsive" *ngIf="ownerOperator.drivers.length > 0">
+            <table class="table table-hover">
+              <thead>
+                <tr>
+                  <th>Name</th>
+                  <th>Email</th>
+                  <th>Phone</th>
+                  <th>Status</th>
+                  <th>Type</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let driver of ownerOperator.drivers">
+                  <td>{{ driver.fullName }}</td>
+                  <td>{{ driver.email || '-' }}</td>
+                  <td>{{ driver.mobilePhone || '-' }}</td>
+                  <td>
+                    <span class="badge bg-secondary">{{ driver.status }}</span>
+                  </td>
+                  <td>
+                    <span class="badge bg-info">{{ driver.type }}</span>
+                  </td>
+                  <td>
+                    <button class="btn btn-sm btn-outline-primary" (click)="viewDriver(driver.driverId)">
+                      <i class="fas fa-eye"></i>
+                    </button>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <p class="text-muted mb-0" *ngIf="ownerOperator.drivers.length === 0">
+            No drivers associated with this owner operator.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-4">
+      <!-- Summary -->
+      <div class="card mb-4">
+        <div class="card-header">
+          <h5 class="mb-0">Summary</h5>
+        </div>
+        <div class="card-body">
+          <div class="mb-3">
+            <strong>Total Drivers:</strong>
+            <p class="h4">{{ ownerOperator.driverCount || 0 }}</p>
+          </div>
+          <div class="mb-3">
+            <strong>Created:</strong>
+            <p>{{ ownerOperator.createdAt | date:'short' }}</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="container-fluid py-4" *ngIf="!ownerOperator && !loading">
+  <div class="alert alert-warning">
+    Owner operator not found.
+  </div>
+</div>
+
+<div class="container-fluid py-4" *ngIf="loading">
+  <div class="text-center py-5">
+    <div class="spinner-border" role="status">
+      <span class="visually-hidden">Loading...</span>
+    </div>
+  </div>
+</div>
+

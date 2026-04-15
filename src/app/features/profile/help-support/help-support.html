@@ -1,0 +1,144 @@
+<div class="help-support-container">
+  <div class="help-support-header">
+    <h2>Help & Support</h2>
+    <p class="text-muted">Find answers to common questions and get in touch with our support team</p>
+  </div>
+
+  <div class="row">
+    <!-- Contact Support Section -->
+    <div class="col-md-4 mb-4">
+      <div class="card">
+        <div class="card-body text-center">
+          <div class="support-icon mb-3">
+            <i class="fas fa-headset fa-3x text-primary"></i>
+          </div>
+          <h5 class="mb-3">Contact Support</h5>
+          <div class="support-info">
+            <p class="mb-2">
+              <i class="fas fa-envelope me-2 text-muted"></i>
+              <a [href]="'mailto:' + supportEmail">{{ supportEmail }}</a>
+            </p>
+            <p class="mb-2">
+              <i class="fas fa-phone me-2 text-muted"></i>
+              <a [href]="'tel:' + supportPhone">{{ supportPhone }}</a>
+            </p>
+            <p class="text-muted small mb-0">
+              <i class="fas fa-clock me-2"></i>
+              {{ supportHours }}
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div class="card mt-3">
+        <div class="card-body">
+          <h6 class="mb-3">Quick Links</h6>
+          <ul class="list-unstyled mb-0">
+            <li class="mb-2">
+              <a routerLink="/profile/my-profile" class="text-decoration-none">
+                <i class="fas fa-user me-2"></i>My Profile
+              </a>
+            </li>
+            <li class="mb-2">
+              <a routerLink="/profile/settings" class="text-decoration-none">
+                <i class="fas fa-cog me-2"></i>Settings
+              </a>
+            </li>
+            <li class="mb-2">
+              <a routerLink="/dashboard" class="text-decoration-none">
+                <i class="fas fa-home me-2"></i>Dashboard
+              </a>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- FAQ Section -->
+    <div class="col-md-8">
+      <div class="card">
+        <div class="card-header">
+          <h5 class="mb-0">
+            <i class="fas fa-question-circle me-2"></i>Frequently Asked Questions
+          </h5>
+        </div>
+        <div class="card-body">
+          <div class="accordion" id="faqAccordion">
+            @for (faq of faqs; track $index) {
+              <div class="accordion-item">
+                <h2 class="accordion-header">
+                  <button class="accordion-button" 
+                          [class.collapsed]="expandedFaq !== $index"
+                          type="button"
+                          (click)="toggleFaq($index)">
+                    {{ faq.question }}
+                  </button>
+                </h2>
+                <div [class.show]="expandedFaq === $index" 
+                     class="accordion-collapse collapse">
+                  <div class="accordion-body">
+                    {{ faq.answer }}
+                  </div>
+                </div>
+              </div>
+            }
+          </div>
+        </div>
+      </div>
+
+      <!-- Documentation Section -->
+      <div class="card mt-4">
+        <div class="card-header">
+          <h5 class="mb-0">
+            <i class="fas fa-book me-2"></i>Documentation
+          </h5>
+        </div>
+        <div class="card-body">
+          <div class="row">
+            <div class="col-md-6 mb-3">
+              <div class="d-flex align-items-start">
+                <i class="fas fa-file-alt fa-2x text-primary me-3"></i>
+                <div>
+                  <h6>User Guide</h6>
+                  <p class="text-muted small mb-0">Complete guide to using RaxsUp Logistics platform</p>
+                  <a href="#" class="btn btn-sm btn-outline-primary mt-2">View Guide</a>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-6 mb-3">
+              <div class="d-flex align-items-start">
+                <i class="fas fa-video fa-2x text-primary me-3"></i>
+                <div>
+                  <h6>Video Tutorials</h6>
+                  <p class="text-muted small mb-0">Step-by-step video tutorials for common tasks</p>
+                  <a href="#" class="btn btn-sm btn-outline-primary mt-2">Watch Videos</a>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-6 mb-3">
+              <div class="d-flex align-items-start">
+                <i class="fas fa-download fa-2x text-primary me-3"></i>
+                <div>
+                  <h6>API Documentation</h6>
+                  <p class="text-muted small mb-0">Technical documentation for API integration</p>
+                  <a href="#" class="btn btn-sm btn-outline-primary mt-2">View Docs</a>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-6 mb-3">
+              <div class="d-flex align-items-start">
+                <i class="fas fa-shield-alt fa-2x text-primary me-3"></i>
+                <div>
+                  <h6>Security & Privacy</h6>
+                  <p class="text-muted small mb-0">Learn about our security practices and privacy policy</p>
+                  <a href="#" class="btn btn-sm btn-outline-primary mt-2">Learn More</a>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+

@@ -1,0 +1,437 @@
+// Dashboard style palette (same as load-list)
+$navy: #1a365d;
+$gray-light: #f8f9fa;
+$gray-border: #e9ecef;
+$gray-muted: #6c757d;
+$gray-dark: #212529;
+$white: #ffffff;
+
+.accessorial-type-list-container {
+  padding: 0.5rem 1.5rem 1.5rem 1.5rem;
+  background: $gray-light;
+  min-height: calc(100vh - 60px);
+}
+
+// Page Header - dashboard style (same as load-list)
+.tms-dashboard-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1rem;
+  padding: 1rem 1.5rem;
+  background: $white;
+  border-radius: 12px;
+  border: 1px solid $gray-border;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+
+  .tms-header-left {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+  }
+
+  .tms-header-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 10px;
+    background: rgba($navy, 0.1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    color: $navy;
+  }
+
+  .tms-title {
+    font-weight: 700;
+    font-size: 1.5rem;
+    margin: 0;
+    color: $gray-dark;
+  }
+
+  .tms-subtitle {
+    margin: 0.25rem 0 0 0;
+    color: $gray-muted;
+    font-size: 0.9rem;
+  }
+}
+
+.btn-tms-primary {
+  background: $navy;
+  border: none;
+  color: $white;
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  font-weight: 600;
+  transition: all 0.2s;
+  cursor: pointer;
+
+  &:hover {
+    background: darken($navy, 8%);
+    color: $white;
+    transform: translateY(-1px);
+  }
+}
+
+// Card Styling (same as load-list-card)
+.accessorial-types-card {
+  background: $white;
+  border-radius: 12px;
+  border: 1px solid $gray-border;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+  transition: box-shadow 0.2s;
+
+  &:hover {
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+  }
+
+  .accessorial-types-card-header {
+    padding: 1rem 1.25rem;
+    background: $gray-light;
+    border-bottom: 1px solid $gray-border;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    h5 {
+      margin: 0;
+      font-size: 1rem;
+      font-weight: 600;
+      color: $gray-dark;
+
+      i {
+        color: $navy;
+      }
+    }
+  }
+
+  .accessorial-types-card-body {
+    &.p-0 {
+      padding: 0;
+    }
+  }
+}
+
+// Data table overrides (same as load-list-card ::ng-deep)
+.accessorial-types-card ::ng-deep .data-table-container {
+  background: $white;
+  box-shadow: none;
+  border: none;
+  border-radius: 0;
+
+  .table-responsive table {
+    thead {
+      background: $white;
+
+      th {
+        font-weight: 600;
+        font-size: 0.7rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        color: $gray-muted;
+        border-bottom: 1px solid $gray-border;
+        border-top: none;
+        padding: 0.75rem 1rem;
+      }
+    }
+
+    tbody {
+      tr {
+        transition: background 0.15s;
+
+        &:hover {
+          background: rgba($navy, 0.02);
+        }
+
+        td {
+          padding: 0.75rem 1rem;
+          font-size: 0.9rem;
+          color: $gray-dark;
+          vertical-align: middle;
+          border-bottom: 1px solid $gray-border;
+        }
+      }
+    }
+  }
+}
+
+.accessorial-types-card ::ng-deep .badge {
+  padding: 0.35em 0.65em;
+  font-weight: 500;
+  font-size: 0.7rem;
+  border-radius: 6px;
+  background: $gray-border !important;
+  color: $gray-dark !important;
+}
+
+// Actions column - three-dots button (same as load-list)
+.tms-actions-btn {
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: $white;
+  border: 1px solid $gray-border;
+  border-radius: 6px;
+  color: $gray-muted;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+
+  &:hover {
+    background: $gray-light;
+    border-color: $gray-muted;
+    color: $gray-dark;
+
+    .tms-actions-dots {
+      color: $gray-dark;
+    }
+  }
+
+  &:focus {
+    outline: none;
+    border-color: $gray-border;
+    box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.04);
+  }
+
+  .tms-actions-dots {
+    font-size: 0.875rem;
+    font-weight: 700;
+    line-height: 1;
+    display: block;
+    color: $gray-muted;
+  }
+}
+
+.tms-actions-dropdown {
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  padding: 0.55rem 0.25rem;
+  border: 1px solid $gray-border;
+
+  .dropdown-item {
+    padding: 0.4rem 0.75rem;
+    font-size: 0.875rem;
+    border-radius: 4px;
+    transition: background 0.15s;
+
+    &:hover {
+      background: $gray-light;
+    }
+
+    &.text-danger {
+      color: #dc3545;
+
+      &:hover {
+        background: rgba(#dc3545, 0.08);
+        color: #dc3545;
+      }
+    }
+
+    i {
+      width: 16px;
+      text-align: center;
+    }
+  }
+
+  .dropdown-divider {
+    margin: 0.2rem 0;
+  }
+}
+
+// Modals
+.modal {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 1100;
+  overflow-x: hidden;
+  overflow-y: auto;
+  outline: 0;
+
+  &.show {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+  }
+
+  &.accessorial-modal {
+    &.show {
+      .modal-dialog {
+        transform: scale(1);
+        opacity: 1;
+      }
+    }
+  }
+
+  .modal-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: -1;
+  }
+
+  .modal-dialog {
+    position: relative;
+    width: 100%;
+    max-width: 500px;
+    max-height: 90vh;
+    overflow-y: auto;
+    transform: scale(0.95);
+    opacity: 0;
+    transition: transform 0.2s ease, opacity 0.2s ease;
+    z-index: 1;
+  }
+
+  .modal-content {
+    background: $white;
+    border-radius: 12px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+    border: none;
+  }
+
+  .modal-header {
+    padding: 1.25rem 1.5rem;
+    border-bottom: 1px solid $gray-border;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    .modal-title {
+      margin: 0;
+      font-size: 1.15rem;
+      font-weight: 600;
+      color: $gray-dark;
+    }
+
+    .btn-close {
+      background: none;
+      border: none;
+      font-size: 1.25rem;
+      color: $gray-muted;
+      cursor: pointer;
+      padding: 0;
+      width: 2rem;
+      height: 2rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 4px;
+      transition: all 0.2s ease;
+
+      &:hover {
+        background: $gray-light;
+        color: $gray-dark;
+      }
+    }
+  }
+
+  .modal-body {
+    padding: 1.5rem;
+
+    .form-group {
+      margin-bottom: 1.25rem;
+
+      label {
+        display: block;
+        margin-bottom: 0.5rem;
+        font-weight: 500;
+        color: $gray-dark;
+        font-size: 0.875rem;
+      }
+
+      .form-control {
+        width: 100%;
+        padding: 0.625rem 0.75rem;
+        border: 1px solid $gray-border;
+        border-radius: 6px;
+        font-size: 0.9rem;
+        font-family: inherit;
+        transition: all 0.2s ease;
+
+        &:focus {
+          outline: none;
+          border-color: $navy;
+          box-shadow: 0 0 0 3px rgba($navy, 0.1);
+        }
+      }
+
+      textarea.form-control {
+        resize: vertical;
+        min-height: 80px;
+      }
+    }
+
+    .form-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 0.75rem;
+      margin-top: 1.5rem;
+      padding-top: 1.25rem;
+      border-top: 1px solid $gray-border;
+    }
+  }
+}
+
+// Button Styling
+.btn {
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-family: inherit;
+
+  &.btn-primary {
+    background: $navy;
+    color: $white;
+    border: none;
+
+    &:hover:not(:disabled) {
+      background: darken($navy, 8%);
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba($navy, 0.3);
+    }
+
+    &:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+  }
+
+  &.btn-secondary {
+    background: $gray-muted;
+    color: $white;
+    border: none;
+
+    &:hover:not(:disabled) {
+      background: darken($gray-muted, 10%);
+    }
+  }
+}
+
+// Utility Classes
+.mb-4 {
+  margin-bottom: 1.5rem;
+}
+
+.mb-0 {
+  margin-bottom: 0;
+}
+
+.me-2 {
+  margin-right: 0.5rem;
+}
+
+.p-0 {
+  padding: 0;
+}

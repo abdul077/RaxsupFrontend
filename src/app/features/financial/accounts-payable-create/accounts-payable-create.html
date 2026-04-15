@@ -1,0 +1,141 @@
+<div class="container-fluid">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+      <h4 class="mb-1">Create Accounts Payable</h4>
+      <p class="text-muted mb-0">Add a new vendor invoice</p>
+    </div>
+    <button class="btn btn-outline-secondary" (click)="cancel()">
+      <i class="fas fa-times me-2"></i>Cancel
+    </button>
+  </div>
+
+  <div class="card">
+    <div class="card-body">
+      <form (ngSubmit)="onSubmit()">
+        @if (showErrors && validationErrors.length > 0) {
+          <div class="alert alert-danger mb-4">
+            <i class="fas fa-exclamation-triangle me-2"></i>
+            <strong>Please correct the following errors:</strong>
+            <ul class="mb-0 mt-2">
+              @for (error of validationErrors; track $index) {
+                <li>{{ error }}</li>
+              }
+            </ul>
+          </div>
+        }
+        <div class="alert alert-info mb-4">
+          <i class="fas fa-info-circle me-2"></i>
+          <strong>Payable Number:</strong> Will be automatically generated (Format: AP-YYYY-XXXXXX)
+        </div>
+
+        <div class="row">
+          <div class="col-md-6 mb-3">
+            <label class="form-label">Link to Invoice (Optional)</label>
+            <select class="form-select" [(ngModel)]="selectedInvoiceId" (ngModelChange)="onInvoiceChange()" name="selectedInvoiceId"
+                    title="Optionally select an existing invoice to link this payable">
+              <option [value]="null">Select Invoice (Optional)</option>
+              @if (loadingInvoices) {
+                <option disabled>Loading invoices...</option>
+              }
+              @for (invoice of invoices; track invoice.invoiceId) {
+                <option [value]="invoice.invoiceId">{{ invoice.invoiceNumber }} - {{ invoice.customerName || 'N/A' }}</option>
+              }
+            </select>
+            <small class="form-text text-muted">Optionally link this payable to an existing invoice</small>
+          </div>
+          <div class="col-md-6 mb-3">
+            <label class="form-label">Invoice Number (Optional)</label>
+            <input type="text" class="form-control" [(ngModel)]="form.invoiceNumber" name="invoiceNumber"
+                   placeholder="Enter invoice number"
+                   title="Enter the invoice number from the vendor">
+            <small class="form-text text-muted">Invoice number from the vendor (optional)</small>
+          </div>
+        </div>
+        <div class="row">
+          <div class="col-md-6 mb-3">
+            <label class="form-label">Category</label>
+            <select class="form-select" [(ngModel)]="form.category" name="category"
+                    title="Select the category for this payable">
+              <option value="">Select Category</option>
+              @for (category of categoryOptions; track category) {
+                <option [value]="category">{{ category }}</option>
+              }
+            </select>
+            <small class="form-text text-muted">Categorize this payable for reporting purposes</small>
+          </div>
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label">Vendor Name <span class="text-danger">*</span></label>
+          <input type="text" class="form-control" 
+                 [class.is-invalid]="showErrors && (!form.vendorName || form.vendorName.trim() === '')"
+                 [(ngModel)]="form.vendorName" name="vendorName" required
+                 placeholder="Enter vendor or supplier name"
+                 title="Enter the name of the vendor or supplier">
+          <small class="form-text text-muted">Name of the vendor or supplier who issued this invoice</small>
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label">Vendor Address</label>
+          <textarea class="form-control" [(ngModel)]="form.vendorAddress" name="vendorAddress" rows="2"
+                    placeholder="Enter vendor address (optional)"
+                    title="Optional vendor address information"></textarea>
+          <small class="form-text text-muted">Vendor or supplier address (optional)</small>
+        </div>
+
+        <div class="row">
+          <div class="col-md-4 mb-3">
+            <label class="form-label">Invoice Date <span class="text-danger">*</span></label>
+            <input type="date" class="form-control" 
+                   [class.is-invalid]="showErrors && !form.invoiceDate"
+                   [(ngModel)]="form.invoiceDate" name="invoiceDate" required
+                   (ngModelChange)="onInvoiceDateChange()"
+                   title="Date when the invoice was issued">
+            <small class="form-text text-muted">Date the invoice was issued by the vendor</small>
+          </div>
+          <div class="col-md-4 mb-3">
+            <label class="form-label">Due Date <span class="text-danger">*</span></label>
+            <input type="date" class="form-control" 
+                   [class.is-invalid]="showErrors && isDueDateInvalid()"
+                   [(ngModel)]="form.dueDate" name="dueDate" required
+                   [min]="form.invoiceDate"
+                   title="Date when payment is due (must be on or after invoice date)">
+            <small class="form-text text-muted">Date when payment is due (must be on or after invoice date)</small>
+          </div>
+          <div class="col-md-4 mb-3">
+            <label class="form-label">Amount <span class="text-danger">*</span></label>
+            <div class="input-group">
+              <span class="input-group-text">$</span>
+              <input type="number" step="0.01" min="0.01" class="form-control" 
+                     [class.is-invalid]="showErrors && (!form.amount || form.amount <= 0)"
+                     [(ngModel)]="form.amount" name="amount" required
+                     (ngModelChange)="onAmountChange()"
+                     placeholder="0.00"
+                     title="Invoice amount (must be greater than 0)">
+            </div>
+            <small class="form-text text-muted">Total invoice amount (must be greater than 0)</small>
+          </div>
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label">Notes</label>
+          <textarea class="form-control" [(ngModel)]="form.notes" name="notes" rows="3"
+                    placeholder="Additional notes or comments (optional)"
+                    title="Optional notes or comments about this payable"></textarea>
+          <small class="form-text text-muted">Additional notes or comments about this payable (optional)</small>
+        </div>
+
+        <div class="d-flex justify-content-end gap-2">
+          <button type="button" class="btn btn-secondary" (click)="cancel()">Cancel</button>
+          <button type="submit" class="btn btn-primary" [disabled]="submitting">
+            @if (submitting) {
+              <span class="spinner-border spinner-border-sm me-2"></span>
+            }
+            Create Payable
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+

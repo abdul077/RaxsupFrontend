@@ -1,0 +1,11 @@
+@if (loadingService.loading$ | async) {
+  <div class="global-loader-overlay">
+    <div class="loader-spinner">
+      <div class="spinner-ring"></div>
+      <div class="spinner-ring"></div>
+      <div class="spinner-ring"></div>
+    </div>
+    <p class="loader-text">Loading...</p>
+  </div>
+}
+

@@ -1,0 +1,161 @@
+<div class="compliance-calendar">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="page-header mb-0">Compliance Calendar</h1>
+    <button class="btn btn-primary" (click)="openCreateModal()">
+      <i class="fas fa-plus me-2"></i>Add Item
+    </button>
+  </div>
+
+  <!-- Filters -->
+  <div class="filters">
+    <div class="form-group">
+      <label>Item Type</label>
+      <select [(ngModel)]="itemTypeFilter" (ngModelChange)="applyFilters()">
+        <option value="">All</option>
+        <option *ngFor="let type of itemTypeOptions" [value]="type">{{ type }}</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label>Status</label>
+      <select [(ngModel)]="isCompletedFilter" (ngModelChange)="applyFilters()">
+        <option [ngValue]="null">All</option>
+        <option [ngValue]="false">Pending</option>
+        <option [ngValue]="true">Completed</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label>Overdue</label>
+      <select [(ngModel)]="isOverdueFilter" (ngModelChange)="applyFilters()">
+        <option [ngValue]="null">All</option>
+        <option [ngValue]="true">Overdue</option>
+        <option [ngValue]="false">Not Overdue</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label>Start Date</label>
+      <input type="date" [(ngModel)]="startDate" (ngModelChange)="applyFilters()">
+    </div>
+    <div class="form-group">
+      <label>End Date</label>
+      <input type="date" [(ngModel)]="endDate" (ngModelChange)="applyFilters()">
+    </div>
+    <button class="btn btn-secondary" (click)="clearFilters()">Clear</button>
+  </div>
+
+  <!-- Calendar Items -->
+  <div *ngIf="loading" class="loading">Loading...</div>
+
+  <div *ngIf="!loading" class="calendar-table">
+    <table>
+      <thead>
+        <tr>
+          <th>Due Date</th>
+          <th>Type</th>
+          <th>Title</th>
+          <th>Driver/Equipment</th>
+          <th>Priority</th>
+          <th>Days Until Due</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let item of filteredItems" [class.overdue-row]="item.isOverdue && !item.isCompleted">
+          <td>{{ item.dueDate | date:'shortDate' }}</td>
+          <td>{{ item.itemType }}</td>
+          <td>{{ item.title }}</td>
+          <td>{{ item.driverName || item.equipmentType || 'N/A' }}</td>
+          <td>
+            <span class="badge" [ngClass]="getPriorityClass(item.priority)">
+              {{ item.priority }}
+            </span>
+          </td>
+          <td>
+            <span *ngIf="item.isOverdue" class="text-danger">
+              Overdue {{ Math.abs(item.daysUntilDue) }} days
+            </span>
+            <span *ngIf="!item.isOverdue">{{ item.daysUntilDue }} days</span>
+          </td>
+          <td>
+            <span class="badge" [ngClass]="item.isCompleted ? 'badge-success' : 'badge-warning'">
+              {{ item.isCompleted ? 'Completed' : 'Pending' }}
+            </span>
+          </td>
+        </tr>
+        <tr *ngIf="filteredItems.length === 0">
+          <td colspan="7" class="empty-state">No compliance items found</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Create Item Modal -->
+<div class="modal fade" [class.show]="showCreateModal" [style.display]="showCreateModal ? 'block' : 'none'" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Add Compliance Item</h5>
+        <button type="button" class="btn-close" (click)="closeCreateModal()"></button>
+      </div>
+      <form (ngSubmit)="createItem()">
+        <div class="modal-body">
+          <div class="mb-3">
+            <label class="form-label">Item Type <span class="text-danger">*</span></label>
+            <select class="form-select" [(ngModel)]="createForm.itemType" name="itemType" required>
+              <option value="">Select type</option>
+              <option *ngFor="let type of itemTypeOptions" [value]="type">{{ type }}</option>
+            </select>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Title <span class="text-danger">*</span></label>
+            <input type="text" class="form-control" [(ngModel)]="createForm.title" name="title" required>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Description</label>
+            <textarea class="form-control" [(ngModel)]="createForm.description" name="description" rows="2"></textarea>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Due Date <span class="text-danger">*</span></label>
+            <input type="date" class="form-control" [(ngModel)]="createForm.dueDate" name="dueDate" required>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Priority</label>
+            <select class="form-select" [(ngModel)]="createForm.priority" name="priority">
+              <option value="Low">Low</option>
+              <option value="Medium">Medium</option>
+              <option value="High">High</option>
+              <option value="Critical">Critical</option>
+            </select>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Driver</label>
+            <select class="form-select" [(ngModel)]="createForm.driverId" name="driverId">
+              <option [ngValue]="undefined">None</option>
+              <option *ngFor="let d of drivers" [ngValue]="d.driverId">{{ d.fullName }}</option>
+            </select>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Equipment</label>
+            <select class="form-select" [(ngModel)]="createForm.equipmentId" name="equipmentId">
+              <option [ngValue]="undefined">None</option>
+              <option *ngFor="let e of equipments" [ngValue]="e.equipmentId">{{ e.equipmentType }} - {{ e.plateNumber || e.vin }}</option>
+            </select>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Notes</label>
+            <textarea class="form-control" [(ngModel)]="createForm.notes" name="notes" rows="2"></textarea>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" (click)="closeCreateModal()">Cancel</button>
+          <button type="submit" class="btn btn-primary" [disabled]="creating">
+            <span *ngIf="creating" class="spinner-border spinner-border-sm me-2"></span>
+            Add Item
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+  <div class="modal-backdrop fade" [class.show]="showCreateModal"></div>
+</div>
+

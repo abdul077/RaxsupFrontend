@@ -1,0 +1,344 @@
+<div class="chat-window-container" *ngIf="chat">
+  <div class="chat-header">
+    <button class="btn btn-link back-btn" (click)="router.navigate(['/messaging']); $event.preventDefault()">
+      <i class="fas fa-arrow-left"></i>
+    </button>
+    <div class="chat-info">
+      <h3>{{ getChatDisplayName() }}</h3>
+      <div class="chat-meta" *ngIf="chat.chatType === 'Group'">
+        <span class="chat-type">Group Chat</span>
+        <span class="member-count-badge" *ngIf="chat.participants && chat.participants.length > 0">
+          <i class="fas fa-users"></i> {{ chat.participants.length }} member{{ chat.participants.length !== 1 ? 's' : '' }}
+        </span>
+      </div>
+    </div>
+    <div class="chat-actions">
+      <button class="btn btn-sm btn-outline-info" type="button" (click)="toggleMembersPanel(); $event.preventDefault()" title="Group Members" *ngIf="chat.chatType === 'Group'">
+        <i class="fas fa-users"></i>
+        <span class="member-count" *ngIf="chat.participants?.length">{{ chat.participants.length }}</span>
+      </button>
+      <button 
+        class="btn btn-sm btn-outline-danger" 
+        type="button" 
+        *ngIf="chat.chatType === 'Group'"
+        (click)="leaveGroup(); $event.preventDefault()" 
+        [disabled]="leavingGroup"
+        title="Leave group chat">
+        <i class="fas fa-sign-out-alt" [class.fa-spinner]="leavingGroup" [class.fa-spin]="leavingGroup"></i>
+      </button>
+      <button class="btn btn-sm btn-outline-primary" type="button" (click)="startCall('Video'); $event.preventDefault()" title="Video Call">
+        <i class="fas fa-video"></i>
+      </button>
+      <button class="btn btn-sm btn-outline-primary" type="button" (click)="startCall('Voice'); $event.preventDefault()" title="Voice Call">
+        <i class="fas fa-phone"></i>
+      </button>
+    </div>
+  </div>
+
+  <!-- Group Members Panel -->
+  <div class="members-panel" *ngIf="chat.chatType === 'Group' && showMembersPanel">
+    <div class="members-panel-header">
+      <h4>Group Members</h4>
+      <button class="btn btn-sm btn-link" type="button" (click)="toggleMembersPanel(); $event.preventDefault()">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+    <div class="members-list">
+      <div class="member-item" *ngFor="let participant of chat.participants">
+        <div class="member-avatar">
+          {{ getInitials(participant.fullName || participant.userName || 'U') }}
+        </div>
+        <div class="member-info">
+          <div class="member-name">
+            {{ participant.fullName || participant.userName || 'Unknown User' }}
+            <span class="member-role" *ngIf="participant.role === 'Admin'" [style.background-color]="getRoleColor(participant.role)">
+              Admin
+            </span>
+          </div>
+          <div class="member-meta">
+            Joined {{ formatDateSeparator(participant.joinedAt) }}
+          </div>
+        </div>
+      </div>
+      <div class="no-members" *ngIf="!chat.participants || chat.participants.length === 0">
+        <p>No members found</p>
+      </div>
+    </div>
+    <div class="members-panel-footer" *ngIf="isGroupAdmin()">
+      <button class="btn btn-primary btn-sm" type="button" (click)="showAddMemberModal = true; $event.preventDefault()">
+        <i class="fas fa-user-plus"></i> Add Member
+      </button>
+    </div>
+  </div>
+
+  <!-- Add Member Modal -->
+  <div class="modal-overlay" *ngIf="showAddMemberModal" (click)="showAddMemberModal = false">
+    <div class="modal-content" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h4>Add Member to Group</h4>
+        <button class="btn btn-sm btn-link" type="button" (click)="showAddMemberModal = false">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label>Search Users</label>
+          <input 
+            type="text" 
+            class="form-control" 
+            placeholder="Search users..."
+            [(ngModel)]="memberSearchTerm"
+            (input)="searchUsersForGroup()">
+        </div>
+        <div class="user-list">
+          <div 
+            *ngFor="let user of availableUsers"
+            class="user-item"
+            (click)="addMemberToGroup(user.userId)"
+            [class.disabled]="isUserAlreadyMember(user.userId)">
+            <div class="user-avatar-small">
+              {{ getInitials(user.fullName || user.username || 'U') }}
+            </div>
+            <div class="user-info">
+              <div class="user-name">{{ user.fullName || user.username }}</div>
+              <div class="user-email">{{ user.email }}</div>
+            </div>
+            <i class="fas fa-check" *ngIf="isUserAlreadyMember(user.userId)"></i>
+          </div>
+          <div *ngIf="availableUsers.length === 0" class="no-users">
+            No users found
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="messages-container" #messagesContainer>
+    <div class="load-more" *ngIf="hasMoreMessages" (click)="loadMoreMessages()">
+      <button class="btn btn-sm btn-link">
+        <i class="fas fa-chevron-up"></i>
+        <span>Load older messages</span>
+      </button>
+    </div>
+
+    <ng-container *ngFor="let message of messages; let i = index; trackBy: trackByMessageId">
+      <!-- Date separator -->
+      <div class="date-separator" *ngIf="i === 0 || isNewDay(messages[i-1].sentAt, message.sentAt)">
+        <span class="date-text">{{ formatDateSeparator(message.sentAt) }}</span>
+      </div>
+
+      <div class="message" 
+           [class.my-message]="isMyMessage(message)"
+           [class.deleted]="message.isDeleted"
+           [class.consecutive]="i > 0 && isSameSender(messages[i-1], message) && !isNewDay(messages[i-1].sentAt, message.sentAt)"
+           >
+        <div class="message-avatar" *ngIf="!isMyMessage(message)">
+          <div class="avatar-circle" *ngIf="!(i > 0 && isSameSender(messages[i-1], message) && !isNewDay(messages[i-1].sentAt, message.sentAt))">
+            {{ getInitials(message.senderName || 'U') }}
+          </div>
+        </div>
+        <div class="message-wrapper">
+          <div class="message-content-wrapper">
+            <div class="message-content">
+              <div class="message-header" *ngIf="!isMyMessage(message) && !(i > 0 && isSameSender(messages[i-1], message) && !isNewDay(messages[i-1].sentAt, message.sentAt))">
+                <div class="sender-info">
+                  <span class="sender-name">{{ message.senderName }}</span>
+                  <span class="sender-role" *ngIf="message.senderRole && chat?.chatType === 'Group'" 
+                        [style.background-color]="getRoleColor(message.senderRole)">
+                    {{ message.senderRole }}
+                  </span>
+                </div>
+              </div>
+              <div class="message-body">
+                <div>
+                  <!-- File attachment display -->
+                  <div *ngIf="message.fileUrl && !message.isDeleted" class="file-attachment">
+                    <div *ngIf="message.messageType === 'Image'" class="image-attachment">
+                      <img [src]="getImageUrl(message)" [alt]="message.fileName || 'Image'" (click)="viewImage(message)" (error)="onImageError($event, message)" class="message-image">
+                      <div class="image-overlay">
+                        <button class="btn btn-sm btn-light download-btn" type="button" (click)="downloadFile(message); $event.preventDefault()" title="Download">
+                          <i class="fas fa-download"></i>
+                        </button>
+                      </div>
+                    </div>
+                    <div *ngIf="message.messageType === 'File'" class="file-attachment-item">
+                      <div class="file-icon">
+                        <i class="fas" [ngClass]="getFileIcon(message.fileName)"></i>
+                      </div>
+                      <div class="file-info">
+                        <div class="file-name" (click)="downloadFile(message)">{{ message.fileName }}</div>
+                        <div class="file-size" *ngIf="message.fileSize">{{ formatFileSize(message.fileSize) }}</div>
+                      </div>
+                      <button class="btn btn-sm btn-link download-btn" type="button" (click)="downloadFile(message); $event.preventDefault()" title="Download">
+                        <i class="fas fa-download"></i>
+                      </button>
+                    </div>
+                  </div>
+                  <p *ngIf="message.content && !message.isDeleted" [class.deleted-text]="message.isDeleted">
+                    {{ message.content }}
+                  </p>
+                  <p *ngIf="message.isDeleted" class="deleted-text">
+                    <i class="fas fa-ban"></i> This message was deleted
+                  </p>
+                </div>
+              </div>
+            </div>
+            <div class="message-footer">
+              <span class="message-time">{{ formatMessageTime(message.sentAt) }}</span>
+              <span class="edited-badge" *ngIf="message.isEdited && !message.isDeleted">
+                <i class="fas fa-pencil-alt"></i>
+              </span>
+              <span class="message-status" *ngIf="isMyMessage(message) && message.readAt">
+                <i class="fas fa-check-double"></i>
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </ng-container>
+
+    <div class="typing-indicator" *ngIf="getTypingText()">
+      <div class="typing-dots">
+        <span></span>
+        <span></span>
+        <span></span>
+      </div>
+      <span class="typing-text">{{ getTypingText() }}</span>
+    </div>
+  </div>
+
+  <div class="message-input-container">
+    <button class="btn btn-link emoji-btn" (click)="toggleEmojiPicker(); $event.preventDefault()" type="button" title="Add emoji">
+      <i class="far fa-smile"></i>
+    </button>
+    <div class="emoji-picker" *ngIf="showEmojiPicker">
+      <div class="emoji-grid">
+        <button *ngFor="let emoji of commonEmojis" class="emoji-item" (click)="insertEmoji(emoji); $event.preventDefault()" type="button">
+          {{ emoji }}
+        </button>
+      </div>
+    </div>
+    <input
+      #fileInput
+      type="file"
+      style="display: none;"
+      (change)="onFileSelected($event)"
+      accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.csv,.zip,.rar,.7z,.mp4,.avi,.mov,.wmv,.flv,.mp3,.wav,.ogg,.m4a">
+    <button class="btn btn-link file-btn" (click)="triggerFileInput(); $event.preventDefault()" type="button" title="Attach file">
+      <i class="fas fa-paperclip"></i>
+    </button>
+    <button class="btn btn-link voice-btn" [class.recording]="isRecording" (click)="toggleVoiceRecording(); $event.preventDefault()" type="button" [title]="isRecording ? 'Stop Recording' : 'Voice Message'">
+      <i class="fas" [class.fa-microphone]="!isRecording" [class.fa-stop]="isRecording"></i>
+    </button>
+    <div class="file-preview" *ngIf="selectedFile">
+      <div class="file-preview-content">
+        <i class="fas" [class.fa-image]="selectedFile.type.startsWith('image/')" [class.fa-file]="!selectedFile.type.startsWith('image/')"></i>
+        <span class="file-preview-name">{{ selectedFile.name }}</span>
+        <button class="btn btn-sm btn-link" type="button" (click)="removeSelectedFile(); $event.preventDefault()" type="button">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      <img *ngIf="filePreviewUrl" [src]="filePreviewUrl" class="file-preview-image" alt="Preview">
+    </div>
+
+    <!-- Voice Recording UI -->
+    <div class="voice-recording-container" *ngIf="isRecording">
+      <div class="recording-indicator">
+        <div class="recording-dot"></div>
+        <span class="recording-timer">{{ formatTime(recordingTime) }}</span>
+        <span class="recording-text">Recording...</span>
+        <button class="btn btn-sm btn-outline-light cancel-btn" (click)="cancelRecording(); $event.preventDefault()" type="button">
+          <i class="fas fa-times"></i> Cancel
+        </button>
+      </div>
+    </div>
+
+    <div class="recorded-audio-preview" *ngIf="recordedAudio && !isRecording">
+      <div class="audio-preview-content">
+        <button class="btn btn-sm btn-link play-btn" (click)="playRecordedAudio(); $event.preventDefault()" type="button">
+          <i class="fas fa-play"></i>
+        </button>
+        <span class="audio-duration">{{ formatTime(recordingTime) }}</span>
+        <span class="audio-label">Voice message</span>
+      </div>
+      <div class="audio-actions">
+        <button class="btn btn-sm btn-success send-btn" (click)="sendVoiceMessage(); $event.preventDefault()" type="button">
+          <i class="fas fa-paper-plane"></i> Send
+        </button>
+        <button class="btn btn-sm btn-outline-secondary discard-btn" (click)="discardRecording(); $event.preventDefault()" type="button">
+          <i class="fas fa-trash"></i>
+        </button>
+      </div>
+      <audio #recordedAudioPlayer [src]="audioUrl" style="display: none;"></audio>
+    </div>
+
+    <input
+      #messageInput
+      type="text"
+      class="form-control"
+      [(ngModel)]="messageContent"
+      (keyup.enter)="sendMessage(); $event.preventDefault()"
+      (input)="onTyping()"
+      (focus)="showEmojiPicker = false"
+      placeholder="Type a message...">
+    <button class="btn btn-primary" type="button" (click)="sendMessage(); $event.preventDefault()" [disabled]="(!messageContent.trim() && !selectedFile) || uploadingFile">
+      <i class="fas" [class.fa-spinner]="uploadingFile" [class.fa-spin]="uploadingFile" [class.fa-paper-plane]="!uploadingFile"></i>
+    </button>
+  </div>
+
+  <!-- Call Modal -->
+  <div class="call-modal" *ngIf="showCallModal">
+    <div class="call-modal-content">
+      <div class="call-icon" [class.voice-call]="currentCallType === 'Voice'">
+        <i class="fas" [class.fa-phone]="currentCallType === 'Voice'" [class.fa-video]="currentCallType === 'Video'"></i>
+      </div>
+      <h4>Incoming {{ currentCallType === 'Voice' ? 'Voice' : 'Video' }} Call</h4>
+      <p>{{ getChatDisplayName() }} is calling you</p>
+      <div class="call-actions">
+        <button class="btn btn-success" type="button" (click)="acceptCall(); $event.preventDefault()">
+          <i class="fas" [class.fa-phone]="currentCallType === 'Voice'" [class.fa-video]="currentCallType === 'Video'"></i>
+          Accept
+        </button>
+        <button class="btn btn-danger" type="button" (click)="rejectCall(); $event.preventDefault()">
+          <i class="fas fa-phone-slash"></i> Reject
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Jitsi Container -->
+  <div class="jitsi-container" *ngIf="isInCall">
+    <div class="jitsi-header">
+      <div class="call-type-info">
+        <i class="fas" [class.fa-phone]="currentCallType === 'Voice'" [class.fa-video]="currentCallType === 'Video'"></i>
+        <h4>{{ currentCallType === 'Voice' ? 'Voice' : 'Video' }} Call</h4>
+      </div>
+      <button class="btn btn-danger btn-sm" type="button" (click)="endCall(); $event.preventDefault()">
+        <i class="fas fa-phone-slash"></i> End Call
+      </button>
+    </div>
+    <div id="jitsi-container"></div>
+  </div>
+  </div>
+
+  <!-- Image Modal -->
+  <div class="image-modal" *ngIf="showImageModal && selectedImageMessage" (click)="closeImageModal()">
+    <div class="image-modal-content" (click)="$event.stopPropagation()">
+      <div class="image-modal-header">
+        <h4>{{ selectedImageMessage.fileName || 'Image' }}</h4>
+        <button class="btn btn-sm btn-outline-secondary" (click)="closeImageModal()">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      <div class="image-modal-body">
+        <img [src]="getImageUrl(selectedImageMessage)" [alt]="selectedImageMessage.fileName || 'Image'" class="modal-image">
+      </div>
+      <div class="image-modal-footer">
+        <button class="btn btn-primary" (click)="downloadFile(selectedImageMessage)">
+          <i class="fas fa-download"></i> Download
+        </button>
+      </div>
+    </div>
+  </div>
+
+

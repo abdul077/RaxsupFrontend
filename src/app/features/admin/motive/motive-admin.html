@@ -1,0 +1,472 @@
+<div class="motive-admin">
+  <div class="page-header">
+    <div class="header-content">
+      <h1>Motive Integration</h1>
+      <p class="subtitle">View Motive sync logs, webhooks, and ID mappings</p>
+    </div>
+    <div class="header-actions">
+      <button class="btn btn-primary" (click)="refreshAll()">
+        Refresh
+      </button>
+    </div>
+  </div>
+
+  <div *ngIf="errorSummary" class="alert alert-danger">
+    {{ errorSummary }}
+  </div>
+
+  <div class="card overview">
+    <div class="card-body">
+      <div class="overview-top">
+        <div class="muted" *ngIf="lastRefreshedAt">Last refreshed: {{ lastRefreshedAt | date:'short' }}</div>
+        <button class="btn btn-outline-primary" (click)="loadSummary()">Refresh overview</button>
+      </div>
+
+      <div *ngIf="loadingSummary">Loading overview…</div>
+      <div *ngIf="!loadingSummary && summary">
+        <div class="overview-grid">
+          <div class="overview-item">
+            <div class="label">Configured</div>
+            <div class="value" [class.ok]="summary.configured" [class.bad]="!summary.configured">
+              {{ summary.configured ? 'Yes' : 'No' }}
+            </div>
+          </div>
+          <div class="overview-item">
+            <div class="label">Base URL</div>
+            <div class="value mono">{{ summary.baseUrl }}</div>
+          </div>
+          <div class="overview-item">
+            <div class="label">Webhook Secret</div>
+            <div class="value" [class.ok]="summary.webhooksEnabled" [class.bad]="!summary.webhooksEnabled">
+              {{ summary.webhooksEnabled ? 'Enabled' : 'Missing' }}
+            </div>
+          </div>
+          <div class="overview-item">
+            <div class="label">Webhooks (Pending)</div>
+            <div class="value">{{ summary.webhookCounts.pending }}</div>
+          </div>
+          <div class="overview-item">
+            <div class="label">Webhooks (Failed)</div>
+            <div class="value" [class.bad]="summary.webhookCounts.failed > 0">{{ summary.webhookCounts.failed }}</div>
+          </div>
+          <div class="overview-item" *ngIf="summary.lastSync">
+            <div class="label">Last Sync</div>
+            <div class="value">
+              <span [class]="statusBadgeClass(summary.lastSync.status)">{{ summary.lastSync.status }}</span>
+              <span class="muted"> — {{ summary.lastSync.entityType }} / {{ summary.lastSync.syncType }}</span>
+              <div class="muted">{{ summary.lastSync.startedAt | date:'short' }}</div>
+            </div>
+          </div>
+          <div class="overview-item" *ngIf="summary.lastFailure">
+            <div class="label">Last Failure</div>
+            <div class="value">
+              <span [class]="statusBadgeClass(summary.lastFailure.status)">{{ summary.lastFailure.status }}</span>
+              <span class="muted"> — {{ summary.lastFailure.kind }} {{ summary.lastFailure.id }}</span>
+              <div class="muted">{{ summary.lastFailure.at | date:'short' }}</div>
+              <div class="muted">{{ formatJsonPreview(summary.lastFailure.error, 120) }}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="tabs">
+    <button class="tab" [class.active]="activeTab === 'status'" (click)="setTab('status')">Status</button>
+    <button class="tab" [class.active]="activeTab === 'syncLogs'" (click)="setTab('syncLogs')">Sync Logs</button>
+    <button class="tab" [class.active]="activeTab === 'webhooks'" (click)="setTab('webhooks')">Webhook Events</button>
+    <button class="tab" [class.active]="activeTab === 'mappings'" (click)="setTab('mappings')">ID Mappings</button>
+  </div>
+
+  <!-- Status -->
+  <div *ngIf="activeTab === 'status'" class="card">
+    <div class="card-body">
+      <div *ngIf="errorStatus" class="alert alert-danger">
+        {{ errorStatus }}
+      </div>
+      <div *ngIf="loadingStatus">Loading status…</div>
+      <div *ngIf="!loadingStatus && status">
+        <div class="status-grid">
+          <div class="status-item">
+            <div class="label">Configured</div>
+            <div class="value" [class.ok]="status.configured" [class.bad]="!status.configured">
+              {{ status.configured ? 'Yes' : 'No' }}
+            </div>
+          </div>
+          <div class="status-item">
+            <div class="label">Base URL</div>
+            <div class="value mono">{{ status.baseUrl }}</div>
+          </div>
+          <div class="status-item">
+            <div class="label">Webhook Secret</div>
+            <div class="value" [class.ok]="status.webhooksEnabled" [class.bad]="!status.webhooksEnabled">
+              {{ status.webhooksEnabled ? 'Enabled' : 'Missing' }}
+            </div>
+          </div>
+        </div>
+      </div>
+      <div *ngIf="!loadingStatus && !status" class="muted">
+        No status available.
+      </div>
+    </div>
+  </div>
+
+  <!-- Sync logs -->
+  <div *ngIf="activeTab === 'syncLogs'" class="card">
+    <div class="card-body">
+      <div class="filters-row">
+        <label>Take</label>
+        <input type="number" [(ngModel)]="logsTake" min="1" max="500" class="form-control small" />
+        <label>Status</label>
+        <select [(ngModel)]="logsStatusFilter" class="form-control small">
+          <option value="">All</option>
+          <option value="Success">Success</option>
+          <option value="Partial">Partial</option>
+          <option value="Failed">Failed</option>
+        </select>
+        <label>Entity</label>
+        <select [(ngModel)]="logsEntityTypeFilter" class="form-control small">
+          <option value="">All</option>
+          <option value="Vehicle">Vehicle</option>
+          <option value="Driver">Driver</option>
+          <option value="Load">Load</option>
+          <option value="Asset">Asset</option>
+        </select>
+        <label>From</label>
+        <input type="datetime-local" [(ngModel)]="logsFrom" class="form-control small" />
+        <label>To</label>
+        <input type="datetime-local" [(ngModel)]="logsTo" class="form-control small" />
+        <label>Search</label>
+        <input type="text" [(ngModel)]="logsSearch" placeholder="ID, entity type, error…" class="form-control small" />
+        <button class="btn btn-outline-primary" (click)="loadSyncLogs()">Load</button>
+      </div>
+
+      <div *ngIf="errorLogs" class="alert alert-danger">
+        {{ errorLogs }}
+      </div>
+      <div *ngIf="loadingLogs">Loading sync logs…</div>
+      <div *ngIf="!loadingLogs && syncLogs.length === 0" class="muted">No sync logs found.</div>
+
+      <div *ngIf="!loadingLogs && syncLogs.length > 0" class="table-wrap">
+        <table class="table">
+          <thead>
+            <tr>
+              <th class="sortable" (click)="setLogsSort('syncLogId')">
+                ID <span class="sort-ind" *ngIf="logsSort.key === 'syncLogId'">{{ logsSort.dir === 'asc' ? '▲' : '▼' }}</span>
+              </th>
+              <th>Entity</th>
+              <th>Type</th>
+              <th class="sortable" (click)="setLogsSort('status')">
+                Status <span class="sort-ind" *ngIf="logsSort.key === 'status'">{{ logsSort.dir === 'asc' ? '▲' : '▼' }}</span>
+              </th>
+              <th>Processed</th>
+              <th>Failed</th>
+              <th class="sortable" (click)="setLogsSort('startedAt')">
+                Started <span class="sort-ind" *ngIf="logsSort.key === 'startedAt'">{{ logsSort.dir === 'asc' ? '▲' : '▼' }}</span>
+              </th>
+              <th>Completed</th>
+              <th>Duration</th>
+              <th>Error</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let log of sortedSyncLogs">
+              <td class="mono">{{ log.syncLogId }}</td>
+              <td>{{ log.entityType }}</td>
+              <td>{{ log.syncType }}</td>
+              <td><span [class]="statusBadgeClass(log.status)">{{ log.status }}</span></td>
+              <td class="mono">{{ log.recordsProcessed ?? '-' }}</td>
+              <td class="mono">{{ log.recordsFailed ?? '-' }}</td>
+              <td class="mono">{{ log.startedAt | date:'short' }}</td>
+              <td class="mono">{{ (log.completedAt | date:'short') || '-' }}</td>
+              <td class="mono">{{ formatDuration(log.startedAt, log.completedAt) || '-' }}</td>
+              <td class="mono">{{ formatJsonPreview(log.errorMessage, 120) || '-' }}</td>
+              <td>
+                <button class="btn btn-sm btn-outline-primary" (click)="openSyncLogDetails(log.syncLogId)">Details</button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Webhook events -->
+  <div *ngIf="activeTab === 'webhooks'" class="card">
+    <div class="card-body">
+      <div class="filters-row">
+        <label>Status</label>
+        <select [(ngModel)]="webhookStatusFilter" class="form-control small">
+          <option value="">All</option>
+          <option value="Pending">Pending</option>
+          <option value="Processing">Processing</option>
+          <option value="Processed">Processed</option>
+          <option value="Failed">Failed</option>
+        </select>
+        <label>Event</label>
+        <select [(ngModel)]="webhookEventTypeFilter" class="form-control small">
+          <option value="">All</option>
+          <option value="vehicle.location">vehicle.location</option>
+          <option value="hos.status">hos.status</option>
+          <option value="geofence.event">geofence.event</option>
+          <option value="document.update">document.update</option>
+          <option value="driver.status">driver.status</option>
+        </select>
+        <label>Entity</label>
+        <select [(ngModel)]="webhookEntityTypeFilter" class="form-control small">
+          <option value="">All</option>
+          <option value="Vehicle">Vehicle</option>
+          <option value="Driver">Driver</option>
+          <option value="Load">Load</option>
+          <option value="Asset">Asset</option>
+        </select>
+        <label>From</label>
+        <input type="datetime-local" [(ngModel)]="webhooksFrom" class="form-control small" />
+        <label>To</label>
+        <input type="datetime-local" [(ngModel)]="webhooksTo" class="form-control small" />
+        <label>Search</label>
+        <input type="text" [(ngModel)]="webhooksSearch" placeholder="ID, entity id, error…" class="form-control small" />
+        <label>Take</label>
+        <input type="number" [(ngModel)]="webhooksTake" min="1" max="500" class="form-control small" />
+        <button class="btn btn-outline-primary" (click)="loadWebhookEvents()">Load</button>
+      </div>
+
+      <div *ngIf="errorWebhooks" class="alert alert-danger">
+        {{ errorWebhooks }}
+      </div>
+      <div *ngIf="loadingWebhooks">Loading webhook events…</div>
+      <div *ngIf="!loadingWebhooks && webhookEvents.length === 0" class="muted">No webhook events found.</div>
+
+      <div *ngIf="!loadingWebhooks && webhookEvents.length > 0" class="table-wrap">
+        <table class="table">
+          <thead>
+            <tr>
+              <th class="sortable" (click)="setWebhooksSort('webhookEventId')">
+                ID <span class="sort-ind" *ngIf="webhooksSort.key === 'webhookEventId'">{{ webhooksSort.dir === 'asc' ? '▲' : '▼' }}</span>
+              </th>
+              <th>Event</th>
+              <th class="sortable" (click)="setWebhooksSort('status')">
+                Status <span class="sort-ind" *ngIf="webhooksSort.key === 'status'">{{ webhooksSort.dir === 'asc' ? '▲' : '▼' }}</span>
+              </th>
+              <th>Retries</th>
+              <th class="sortable" (click)="setWebhooksSort('receivedAt')">
+                Received <span class="sort-ind" *ngIf="webhooksSort.key === 'receivedAt'">{{ webhooksSort.dir === 'asc' ? '▲' : '▼' }}</span>
+              </th>
+              <th>Processed</th>
+              <th>Entity</th>
+              <th>Payload</th>
+              <th>Error</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let evt of sortedWebhookEvents">
+              <td class="mono">{{ evt.webhookEventId }}</td>
+              <td>{{ evt.eventType }}</td>
+              <td><span [class]="statusBadgeClass(evt.status)">{{ evt.status }}</span></td>
+              <td class="mono">{{ evt.retryCount }}</td>
+              <td class="mono">{{ evt.receivedAt | date:'short' }}</td>
+              <td class="mono">{{ (evt.processedAt | date:'short') || '-' }}</td>
+              <td class="mono">{{ (evt.entityType || '-') + ' / ' + (evt.entityId || '-') }}</td>
+              <td class="mono">
+                {{ formatJsonPreview(evt.payloadPreview, 120) }}
+                <span class="muted" *ngIf="evt.payloadLength"> ({{ evt.payloadLength }} chars)</span>
+              </td>
+              <td class="mono">{{ formatJsonPreview(evt.processingError, 120) || '-' }}</td>
+              <td>
+                <button class="btn btn-sm btn-outline-primary" (click)="openWebhookDetails(evt.webhookEventId)">Details</button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Mappings -->
+  <div *ngIf="activeTab === 'mappings'" class="card">
+    <div class="card-body">
+      <div class="filters-row">
+        <label>EntityType</label>
+        <select [(ngModel)]="mappingEntityTypeFilter" class="form-control small">
+          <option value="">All</option>
+          <option value="Vehicle">Vehicle</option>
+          <option value="Driver">Driver</option>
+          <option value="Load">Load</option>
+          <option value="Asset">Asset</option>
+        </select>
+        <label>SyncStatus</label>
+        <select [(ngModel)]="mappingSyncStatusFilter" class="form-control small">
+          <option value="">All</option>
+          <option value="Active">Active</option>
+          <option value="Paused">Paused</option>
+          <option value="Failed">Failed</option>
+        </select>
+        <label>Search</label>
+        <input type="text" [(ngModel)]="mappingsSearch" placeholder="ID, motive id, external id…" class="form-control small" />
+        <label>Take</label>
+        <input type="number" [(ngModel)]="mappingsTake" min="1" max="1000" class="form-control small" />
+        <button class="btn btn-outline-primary" (click)="loadMappings()">Load</button>
+        <button class="btn btn-outline-secondary" (click)="clearMappingsFilters()">Clear</button>
+      </div>
+
+      <div class="subrow muted">
+        <span>Loaded: <span class="mono">{{ mappings.length }}</span></span>
+        <span *ngIf="mappings.length >= mappingsTake">Showing first <span class="mono">{{ mappingsTake }}</span>. Increase Take or narrow filters.</span>
+      </div>
+
+      <div *ngIf="errorMappings" class="alert alert-danger">
+        {{ errorMappings }}
+      </div>
+      <div *ngIf="loadingMappings">Loading mappings…</div>
+      <div *ngIf="!loadingMappings && mappings.length === 0" class="muted">No mappings found.</div>
+
+      <div *ngIf="!loadingMappings && mappings.length > 0" class="table-wrap">
+        <table class="table">
+          <thead>
+            <tr>
+              <th class="sortable" (click)="setMappingsSort('mappingId')">
+                ID <span class="sort-ind" *ngIf="mappingsSort.key === 'mappingId'">{{ mappingsSort.dir === 'asc' ? '▲' : '▼' }}</span>
+              </th>
+              <th class="sortable" (click)="setMappingsSort('entityType')">
+                EntityType <span class="sort-ind" *ngIf="mappingsSort.key === 'entityType'">{{ mappingsSort.dir === 'asc' ? '▲' : '▼' }}</span>
+              </th>
+              <th>InternalId</th>
+              <th>MotiveId</th>
+              <th>ExternalId</th>
+              <th>SyncDirection</th>
+              <th class="sortable" (click)="setMappingsSort('syncStatus')">
+                SyncStatus <span class="sort-ind" *ngIf="mappingsSort.key === 'syncStatus'">{{ mappingsSort.dir === 'asc' ? '▲' : '▼' }}</span>
+              </th>
+              <th class="sortable" (click)="setMappingsSort('createdAt')">
+                Created <span class="sort-ind" *ngIf="mappingsSort.key === 'createdAt'">{{ mappingsSort.dir === 'asc' ? '▲' : '▼' }}</span>
+              </th>
+              <th class="sortable" (click)="setMappingsSort('lastSyncedAt')">
+                LastSynced <span class="sort-ind" *ngIf="mappingsSort.key === 'lastSyncedAt'">{{ mappingsSort.dir === 'asc' ? '▲' : '▼' }}</span>
+              </th>
+              <th class="actions"></th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let m of sortedMappings" class="row-hover">
+              <td class="mono">{{ m.mappingId }}</td>
+              <td>{{ m.entityType }}</td>
+              <td class="mono">{{ m.internalId ?? '-' }}</td>
+              <td class="mono truncate" [title]="m.motiveId ?? ''">{{ m.motiveId ?? '-' }}</td>
+              <td class="mono truncate" [title]="m.externalId ?? ''">{{ m.externalId ?? '-' }}</td>
+              <td><span class="badge">{{ m.syncDirection }}</span></td>
+              <td><span [class]="statusBadgeClass(m.syncStatus || '')">{{ m.syncStatus ?? '-' }}</span></td>
+              <td class="mono">{{ m.createdAt | date:'short' }}</td>
+              <td class="mono">{{ (m.lastSyncedAt | date:'short') || '-' }}</td>
+              <td class="actions">
+                <button class="btn btn-sm btn-outline-primary" (click)="openMappingDetails(m)">Details</button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Details modal -->
+  <div *ngIf="detailOpen" class="motive-detail-backdrop" (click)="closeDetail()">
+    <div class="motive-detail-modal" (click)="$event.stopPropagation()">
+      <div class="motive-detail-header">
+        <div class="motive-detail-title">
+          <span *ngIf="detailType === 'syncLog'">Sync log details</span>
+          <span *ngIf="detailType === 'webhook'">Webhook event details</span>
+          <span *ngIf="detailType === 'mapping'">ID mapping details</span>
+        </div>
+        <button class="btn btn-sm btn-outline-secondary" (click)="closeDetail()">Close</button>
+      </div>
+      <div class="motive-detail-body">
+        <div *ngIf="detailError" class="alert alert-danger">{{ detailError }}</div>
+        <div *ngIf="detailLoading">Loading details…</div>
+
+        <ng-container *ngIf="!detailLoading && detailType === 'syncLog' && selectedSyncLog">
+          <div class="detail-grid">
+            <div><span class="muted">ID</span> <span class="mono">{{ selectedSyncLog.syncLogId }}</span></div>
+            <div><span class="muted">Entity</span> {{ selectedSyncLog.entityType }} <span class="mono" *ngIf="selectedSyncLog.entityId">/ {{ selectedSyncLog.entityId }}</span></div>
+            <div><span class="muted">Type</span> {{ selectedSyncLog.syncType }}</div>
+            <div><span class="muted">Status</span> <span [class]="statusBadgeClass(selectedSyncLog.status)">{{ selectedSyncLog.status }}</span></div>
+            <div><span class="muted">Started</span> <span class="mono">{{ selectedSyncLog.startedAt | date:'short' }}</span></div>
+            <div><span class="muted">Completed</span> <span class="mono">{{ (selectedSyncLog.completedAt | date:'short') || '-' }}</span></div>
+            <div><span class="muted">Duration</span> <span class="mono">{{ formatDuration(selectedSyncLog.startedAt, selectedSyncLog.completedAt) || '-' }}</span></div>
+            <div><span class="muted">Processed</span> <span class="mono">{{ selectedSyncLog.recordsProcessed ?? '-' }}</span></div>
+            <div><span class="muted">Failed</span> <span class="mono">{{ selectedSyncLog.recordsFailed ?? '-' }}</span></div>
+          </div>
+
+          <div class="detail-section" *ngIf="selectedSyncLog.errorMessage">
+            <div class="section-title">Error message</div>
+            <div class="mono">{{ selectedSyncLog.errorMessage }}</div>
+            <button class="btn btn-sm btn-outline-primary" (click)="copyToClipboard(selectedSyncLog.errorMessage || '')">Copy</button>
+            <button class="btn btn-sm btn-outline-primary" (click)="downloadText('motive-sync-log-' + selectedSyncLog.syncLogId + '-error.txt', selectedSyncLog.errorMessage || '')">Download</button>
+          </div>
+
+          <div class="detail-section" *ngIf="selectedSyncLog.rawResponse">
+            <div class="section-title">Raw response</div>
+            <pre class="json">{{ formatJsonPretty(selectedSyncLog.rawResponse) }}</pre>
+            <button class="btn btn-sm btn-outline-primary" (click)="copyToClipboard(selectedSyncLog.rawResponse || '')">Copy</button>
+            <button class="btn btn-sm btn-outline-primary" (click)="downloadText('motive-sync-log-' + selectedSyncLog.syncLogId + '-raw.json', selectedSyncLog.rawResponse || '')">Download</button>
+          </div>
+        </ng-container>
+
+        <ng-container *ngIf="!detailLoading && detailType === 'webhook' && selectedWebhookEvent">
+          <div class="detail-grid">
+            <div><span class="muted">ID</span> <span class="mono">{{ selectedWebhookEvent.webhookEventId }}</span></div>
+            <div><span class="muted">Event</span> {{ selectedWebhookEvent.eventType }}</div>
+            <div><span class="muted">Status</span> <span [class]="statusBadgeClass(selectedWebhookEvent.status)">{{ selectedWebhookEvent.status }}</span></div>
+            <div><span class="muted">Retries</span> <span class="mono">{{ selectedWebhookEvent.retryCount }}</span></div>
+            <div><span class="muted">Received</span> <span class="mono">{{ selectedWebhookEvent.receivedAt | date:'short' }}</span></div>
+            <div><span class="muted">Processed</span> <span class="mono">{{ (selectedWebhookEvent.processedAt | date:'short') || '-' }}</span></div>
+            <div><span class="muted">Entity</span> <span class="mono">{{ (selectedWebhookEvent.entityType || '-') + ' / ' + (selectedWebhookEvent.entityId || '-') }}</span></div>
+          </div>
+
+          <div class="detail-section" *ngIf="selectedWebhookEvent.processingError">
+            <div class="section-title">Processing error</div>
+            <div class="mono">{{ selectedWebhookEvent.processingError }}</div>
+            <button class="btn btn-sm btn-outline-primary" (click)="copyToClipboard(selectedWebhookEvent.processingError || '')">Copy</button>
+            <button class="btn btn-sm btn-outline-primary" (click)="downloadText('motive-webhook-' + selectedWebhookEvent.webhookEventId + '-error.txt', selectedWebhookEvent.processingError || '')">Download</button>
+          </div>
+
+          <div class="detail-section" *ngIf="selectedWebhookEvent.payload">
+            <div class="section-title">Payload</div>
+            <pre class="json">{{ formatJsonPretty(selectedWebhookEvent.payload) }}</pre>
+            <button class="btn btn-sm btn-outline-primary" (click)="copyToClipboard(selectedWebhookEvent.payload || '')">Copy</button>
+            <button class="btn btn-sm btn-outline-primary" (click)="downloadText('motive-webhook-' + selectedWebhookEvent.webhookEventId + '-payload.json', selectedWebhookEvent.payload || '')">Download</button>
+          </div>
+        </ng-container>
+
+        <ng-container *ngIf="!detailLoading && detailType === 'mapping' && selectedMapping">
+          <div class="detail-grid">
+            <div><span class="muted">ID</span> <span class="mono">{{ selectedMapping.mappingId }}</span></div>
+            <div><span class="muted">EntityType</span> {{ selectedMapping.entityType }}</div>
+            <div>
+              <span class="muted">InternalId</span> <span class="mono">{{ selectedMapping.internalId ?? '-' }}</span>
+              <button class="btn btn-sm btn-outline-primary inline-btn" *ngIf="selectedMapping.internalId != null" (click)="copyValue(selectedMapping.internalId)">Copy</button>
+            </div>
+            <div>
+              <span class="muted">MotiveId</span> <span class="mono">{{ selectedMapping.motiveId ?? '-' }}</span>
+              <button class="btn btn-sm btn-outline-primary inline-btn" *ngIf="selectedMapping.motiveId" (click)="copyValue(selectedMapping.motiveId)">Copy</button>
+            </div>
+            <div>
+              <span class="muted">ExternalId</span> <span class="mono">{{ selectedMapping.externalId ?? '-' }}</span>
+              <button class="btn btn-sm btn-outline-primary inline-btn" *ngIf="selectedMapping.externalId" (click)="copyValue(selectedMapping.externalId)">Copy</button>
+            </div>
+            <div><span class="muted">SyncDirection</span> <span class="badge">{{ selectedMapping.syncDirection }}</span></div>
+            <div><span class="muted">SyncStatus</span> <span [class]="statusBadgeClass(selectedMapping.syncStatus || '')">{{ selectedMapping.syncStatus ?? '-' }}</span></div>
+            <div><span class="muted">Created</span> <span class="mono">{{ selectedMapping.createdAt | date:'short' }}</span></div>
+            <div><span class="muted">LastSynced</span> <span class="mono">{{ (selectedMapping.lastSyncedAt | date:'short') || '-' }}</span></div>
+          </div>
+
+          <div class="detail-section" *ngIf="selectedMapping.entityType === 'Vehicle' && selectedMapping.internalId != null">
+            <div class="section-title">Quick actions</div>
+            <a class="btn btn-sm btn-outline-primary" [routerLink]="['/equipment', selectedMapping.internalId]">Open equipment</a>
+          </div>
+        </ng-container>
+      </div>
+    </div>
+  </div>
+</div>
+

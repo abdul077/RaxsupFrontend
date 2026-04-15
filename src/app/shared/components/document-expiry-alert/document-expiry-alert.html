@@ -1,0 +1,22 @@
+@if (hasAlerts()) {
+  <div class="alert alert-warning">
+    <div class="d-flex align-items-center">
+      <i class="fas fa-exclamation-triangle fa-2x me-3"></i>
+      <div class="flex-grow-1">
+        <strong>Document Expiry Alert</strong>
+        <p class="mb-0">
+          @if (expiredCount > 0) {
+            <span class="text-danger">{{ expiredCount }} document(s) expired.</span>
+          }
+          @if (expiredCount > 0 && expiringCount > 0) {
+            <span> </span>
+          }
+          @if (expiringCount > 0) {
+            <span class="text-warning">{{ expiringCount }} document(s) expiring soon.</span>
+          }
+        </p>
+      </div>
+    </div>
+  </div>
+}
+

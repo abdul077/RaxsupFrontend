@@ -1,0 +1,72 @@
+:host {
+  display: block;
+  height: 100%;
+}
+
+.live-fleet-map {
+  position: relative;
+  height: 100%;
+  min-height: 320px;
+  display: flex;
+  flex-direction: column;
+
+  .live-map-error {
+    margin-bottom: 0.5rem;
+    padding: 0.5rem 0.75rem;
+    flex-shrink: 0;
+  }
+
+  .live-map-container {
+    width: 100%;
+    flex: 1;
+    min-height: 280px;
+    background: #1e2a38;
+    border-radius: 6px;
+
+    &.loading {
+      opacity: 0.7;
+    }
+  }
+
+  .live-map-overlay {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    display: flex;
+    align-items: center;
+    color: #e9ecef;
+    pointer-events: none;
+  }
+
+  .live-map-legend {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 1rem;
+    margin-top: 0.5rem;
+    padding: 0.5rem 0;
+    font-size: 0.85rem;
+    color: #adb5bd;
+
+    .legend-item {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+
+      .fa-circle {
+        font-size: 0.5rem;
+      }
+    }
+  }
+}
+
+::ng-deep .tms-map-infowindow {
+  padding: 0.25rem;
+  font-size: 13px;
+  min-width: 180px;
+
+  strong {
+    color: #2c3e50;
+  }
+}

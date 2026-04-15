@@ -1,0 +1,162 @@
+<div class="container-fluid">
+  @if (loading) {
+    <div class="text-center py-5">
+      <div class="spinner-border text-primary" role="status">
+        <span class="visually-hidden">Loading...</span>
+      </div>
+    </div>
+  }
+
+  @if (!loading && incident) {
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+      <div>
+        <h2 class="mb-1">Incident {{ incident.incidentNumber }}</h2>
+        <p class="text-muted mb-0">{{ formatDate(incident.incidentDate) }}</p>
+      </div>
+      <button class="btn btn-outline-secondary" (click)="backToList()">
+        <i class="fas fa-arrow-left me-2"></i>Back to Incidents
+      </button>
+    </div>
+
+    <div class="row">
+      <!-- Basic Information -->
+      <div class="col-md-8">
+        <div class="card mb-4">
+          <div class="card-header">
+            <h5 class="mb-0">
+              <i class="fas fa-info-circle me-2"></i>Incident Details
+            </h5>
+          </div>
+          <div class="card-body">
+            <dl class="row">
+              <dt class="col-sm-4">Incident Number:</dt>
+              <dd class="col-sm-8"><strong>{{ incident.incidentNumber }}</strong></dd>
+
+              <dt class="col-sm-4">Incident Date:</dt>
+              <dd class="col-sm-8">{{ formatDate(incident.incidentDate) }}</dd>
+
+              <dt class="col-sm-4">Reported Date:</dt>
+              <dd class="col-sm-8">{{ incident.reportedDate ? formatDate(incident.reportedDate) : 'N/A' }}</dd>
+
+              <dt class="col-sm-4">Type:</dt>
+              <dd class="col-sm-8">{{ incident.incidentType }}</dd>
+
+              <dt class="col-sm-4">Severity:</dt>
+              <dd class="col-sm-8">
+                <span class="badge" [ngClass]="getSeverityBadgeClass(incident.severity)">
+                  {{ incident.severity }}
+                </span>
+              </dd>
+
+              <dt class="col-sm-4">Status:</dt>
+              <dd class="col-sm-8">
+                @if (incident.resolved) {
+                  <span class="badge bg-success">Resolved</span>
+                  @if (incident.resolvedDate) {
+                    <small class="text-muted d-block mt-1">Resolved: {{ formatDate(incident.resolvedDate) }}</small>
+                  }
+                } @else {
+                  <span class="badge bg-warning">Open</span>
+                }
+              </dd>
+
+              <dt class="col-sm-4">Load Number:</dt>
+              <dd class="col-sm-8">{{ incident.loadNumber || 'N/A' }}</dd>
+
+              <dt class="col-sm-4">Equipment:</dt>
+              <dd class="col-sm-8">{{ incident.equipmentType || 'N/A' }}</dd>
+
+              <dt class="col-sm-4">Description:</dt>
+              <dd class="col-sm-8">
+                <div class="border rounded p-3 bg-light">
+                  {{ incident.description }}
+                </div>
+              </dd>
+
+              <dt class="col-sm-4">Location:</dt>
+              <dd class="col-sm-8">
+                @if (incident.location || incident.city || incident.state) {
+                  <div>
+                    <i class="fas fa-map-marker-alt text-muted me-1"></i>
+                    {{ getLocationString() }}
+                  </div>
+                } @else {
+                  N/A
+                }
+              </dd>
+
+              @if (incident.weatherConditions) {
+                <dt class="col-sm-4">Weather Conditions:</dt>
+                <dd class="col-sm-8">{{ incident.weatherConditions }}</dd>
+              }
+
+              @if (incident.roadConditions) {
+                <dt class="col-sm-4">Road Conditions:</dt>
+                <dd class="col-sm-8">{{ incident.roadConditions }}</dd>
+              }
+
+              @if (incident.estimatedCost) {
+                <dt class="col-sm-4">Estimated Cost:</dt>
+                <dd class="col-sm-8">{{ formatCurrency(incident.estimatedCost) }}</dd>
+              }
+            </dl>
+          </div>
+        </div>
+      </div>
+
+      <!-- Reporting Information -->
+      <div class="col-md-4">
+        <div class="card mb-4">
+          <div class="card-header">
+            <h5 class="mb-0">
+              <i class="fas fa-file-alt me-2"></i>Reporting Information
+            </h5>
+          </div>
+          <div class="card-body">
+            <dl class="row">
+              <dt class="col-sm-6">DOT Reportable:</dt>
+              <dd class="col-sm-6">
+                @if (incident.isDOTReportable) {
+                  <span class="badge bg-danger">Yes</span>
+                } @else {
+                  <span class="badge bg-secondary">No</span>
+                }
+              </dd>
+
+              @if (incident.dotReportNumber) {
+                <dt class="col-sm-6">DOT Report #:</dt>
+                <dd class="col-sm-6">{{ incident.dotReportNumber }}</dd>
+              }
+
+              <dt class="col-sm-6">OSHA Reportable:</dt>
+              <dd class="col-sm-6">
+                @if (incident.isOSHAReportable) {
+                  <span class="badge bg-danger">Yes</span>
+                } @else {
+                  <span class="badge bg-secondary">No</span>
+                }
+              </dd>
+
+              @if (incident.oshaReportNumber) {
+                <dt class="col-sm-6">OSHA Report #:</dt>
+                <dd class="col-sm-6">{{ incident.oshaReportNumber }}</dd>
+              }
+            </dl>
+          </div>
+        </div>
+      </div>
+    </div>
+  }
+
+  @if (!loading && !incident) {
+    <div class="alert alert-warning">
+      <i class="fas fa-exclamation-triangle me-2"></i>
+      Incident not found or you don't have access to view it.
+    </div>
+    <button class="btn btn-outline-secondary" (click)="backToList()">
+      <i class="fas fa-arrow-left me-2"></i>Back to Incidents
+    </button>
+  }
+</div>
+

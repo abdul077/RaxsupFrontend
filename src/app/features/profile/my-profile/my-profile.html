@@ -1,0 +1,189 @@
+<div class="profile-container">
+  <div class="profile-header">
+    <h2>My Profile</h2>
+    <p class="text-muted">Manage your personal information and account details</p>
+  </div>
+
+  @if (loading) {
+    <div class="text-center py-5">
+      <div class="spinner-border text-primary" role="status">
+        <span class="visually-hidden">Loading...</span>
+      </div>
+    </div>
+  } @else if (profile) {
+    <div class="row">
+      <!-- Profile Photo Section -->
+      <div class="col-md-4 mb-4">
+        <div class="card">
+          <div class="card-body text-center">
+            <div class="profile-photo-container mb-3">
+              @if (previewUrl) {
+                <img [src]="previewUrl" alt="Profile Preview" class="profile-photo">
+              } @else if (profile.profilePhotoUrl) {
+                <img [src]="profile.profilePhotoUrl" alt="Profile Photo" class="profile-photo">
+              } @else {
+                <div class="profile-photo-placeholder">
+                  <i class="fas fa-user fa-3x"></i>
+                </div>
+              }
+            </div>
+            @if (editing) {
+              <div class="mb-3">
+                <input type="file" 
+                       class="form-control form-control-sm" 
+                       accept="image/*"
+                       (change)="onFileSelected($event)">
+                @if (selectedFile) {
+                  <button class="btn btn-primary btn-sm mt-2" 
+                          (click)="uploadPhoto()" 
+                          [disabled]="saving">
+                    <i class="fas fa-upload me-1"></i>
+                    @if (saving) {
+                      <span class="spinner-border spinner-border-sm me-1"></span>
+                    }
+                    Upload Photo
+                  </button>
+                }
+              </div>
+            }
+            <h5 class="mb-1">{{ profile.fullName }}</h5>
+            <p class="text-muted mb-1">{{ profile.email }}</p>
+            <span class="badge bg-primary">{{ getRoleDisplayName(profile.role) }}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Profile Information Section -->
+      <div class="col-md-8">
+        <div class="card">
+          <div class="card-header d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">Profile Information</h5>
+            @if (!editing) {
+              <button class="btn btn-outline-primary btn-sm" (click)="toggleEdit()">
+                <i class="fas fa-edit me-1"></i>Edit
+              </button>
+            } @else {
+              <div>
+                <button class="btn btn-outline-secondary btn-sm me-2" 
+                        (click)="toggleEdit()" 
+                        [disabled]="saving">
+                  Cancel
+                </button>
+                <button class="btn btn-primary btn-sm" 
+                        (click)="saveProfile()" 
+                        [disabled]="saving || profileForm.invalid">
+                  @if (saving) {
+                    <span class="spinner-border spinner-border-sm me-1"></span>
+                  } @else {
+                    <i class="fas fa-save me-1"></i>
+                  }
+                  Save Changes
+                </button>
+              </div>
+            }
+          </div>
+          <div class="card-body">
+            @if (error) {
+              <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                {{ error }}
+                <button type="button" class="btn-close" (click)="error = null"></button>
+              </div>
+            }
+            @if (success) {
+              <div class="alert alert-success alert-dismissible fade show" role="alert">
+                {{ success }}
+                <button type="button" class="btn-close" (click)="success = null"></button>
+              </div>
+            }
+
+            <form [formGroup]="profileForm">
+              <div class="row mb-3">
+                <div class="col-md-6">
+                  <label class="form-label">Full Name <span class="text-danger">*</span></label>
+                  <input type="text" 
+                         class="form-control" 
+                         formControlName="fullName"
+                         [class.is-invalid]="profileForm.get('fullName')?.invalid && profileForm.get('fullName')?.touched"
+                         [readonly]="!editing">
+                  @if (profileForm.get('fullName')?.invalid && profileForm.get('fullName')?.touched) {
+                    <div class="invalid-feedback">
+                      Full name is required and must be at least 2 characters
+                    </div>
+                  }
+                </div>
+                <div class="col-md-6">
+                  <label class="form-label">Email</label>
+                  <input type="email" 
+                         class="form-control" 
+                         formControlName="email"
+                         readonly>
+                  <small class="text-muted">Email cannot be changed</small>
+                </div>
+              </div>
+
+              <div class="row mb-3">
+                <div class="col-md-6">
+                  <label class="form-label">Phone Number</label>
+                  <input type="tel" 
+                         class="form-control" 
+                         formControlName="phoneNumber"
+                         [readonly]="!editing"
+                         placeholder="(555) 123-4567">
+                </div>
+                <div class="col-md-6">
+                  <label class="form-label">Role</label>
+                  <input type="text" 
+                         class="form-control" 
+                         [value]="getRoleDisplayName(profile.role)"
+                         readonly>
+                </div>
+              </div>
+
+              <div class="mb-3">
+                <label class="form-label">Address</label>
+                <input type="text" 
+                       class="form-control" 
+                       formControlName="address"
+                       [readonly]="!editing"
+                       placeholder="Street address">
+              </div>
+
+              <div class="row mb-3">
+                <div class="col-md-4">
+                  <label class="form-label">City</label>
+                  <input type="text" 
+                         class="form-control" 
+                         formControlName="city"
+                         [readonly]="!editing">
+                </div>
+                <div class="col-md-4">
+                  <label class="form-label">State</label>
+                  <input type="text" 
+                         class="form-control" 
+                         formControlName="state"
+                         [readonly]="!editing"
+                         maxlength="2"
+                         placeholder="CA">
+                </div>
+                <div class="col-md-4">
+                  <label class="form-label">Zip Code</label>
+                  <input type="text" 
+                         class="form-control" 
+                         formControlName="zipCode"
+                         [readonly]="!editing"
+                         placeholder="12345">
+                </div>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  } @else {
+    <div class="alert alert-warning">
+      <i class="fas fa-exclamation-triangle me-2"></i>
+      Unable to load profile information.
+    </div>
+  }
+</div>
+

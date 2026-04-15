@@ -1,0 +1,141 @@
+<div class="container-fluid" *ngIf="payroll">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>Payroll Details: {{ payroll.payrollNumber }}</h2>
+    <div>
+      <button class="btn btn-secondary me-2" (click)="router.navigate(['/payroll/list'])">
+        <i class="fas fa-arrow-left me-2"></i>Back to List
+      </button>
+      <button *ngIf="payroll.evereeSyncStatus !== 'Synced'" 
+              class="btn btn-success me-2" 
+              (click)="syncToEveree()"
+              [disabled]="syncing">
+        <i class="fas fa-sync me-2" [class.spin]="syncing"></i>
+        {{ syncing ? 'Syncing...' : 'Sync to Everee' }}
+      </button>
+      <button *ngIf="payroll.evereePayrollId" 
+              class="btn btn-info" 
+              (click)="syncFromEveree()"
+              [disabled]="syncing">
+        <i class="fas fa-download me-2" [class.spin]="syncing"></i>
+        {{ syncing ? 'Syncing...' : 'Sync from Everee' }}
+      </button>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="col-md-8">
+      <div class="card mb-4">
+        <div class="card-header">
+          <h5 class="mb-0">Payroll Information</h5>
+        </div>
+        <div class="card-body">
+          <div class="row mb-3">
+            <div class="col-md-6">
+              <strong>Worker:</strong> {{ payroll.driverName || payroll.ownerOperatorName || 'N/A' }}
+            </div>
+            <div class="col-md-6">
+              <strong>Pay Period:</strong> 
+              {{ payroll.payPeriodStart | date:'shortDate' }} - 
+              {{ payroll.payPeriodEnd | date:'shortDate' }}
+            </div>
+          </div>
+          <div class="row mb-3">
+            <div class="col-md-4">
+              <strong>Gross Pay:</strong> ${{ payroll.grossPay | number:'1.2-2' }}
+            </div>
+            <div class="col-md-4">
+              <strong>Deductions:</strong> ${{ payroll.totalDeductions | number:'1.2-2' }}
+            </div>
+            <div class="col-md-4">
+              <strong>Net Pay:</strong> 
+              <span class="h5 text-primary">${{ payroll.netPay | number:'1.2-2' }}</span>
+            </div>
+          </div>
+          <div class="row mb-3">
+            <div class="col-md-6">
+              <strong>Status:</strong> 
+              <span class="badge" [ngClass]="getSyncStatusClass(payroll.status)">
+                {{ payroll.status }}
+              </span>
+            </div>
+            <div class="col-md-6">
+              <strong>Created:</strong> {{ payroll.createdAt | date:'short' }}
+            </div>
+          </div>
+          <div *ngIf="payroll.notes" class="row">
+            <div class="col-12">
+              <strong>Notes:</strong>
+              <p>{{ payroll.notes }}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card mb-4" *ngIf="payroll.paidAt">
+        <div class="card-header">
+          <h5 class="mb-0">Payment Information</h5>
+        </div>
+        <div class="card-body">
+          <div class="row">
+            <div class="col-md-4">
+              <strong>Paid At:</strong> {{ payroll.paidAt | date:'short' }}
+            </div>
+            <div class="col-md-4">
+              <strong>Payment Method:</strong> {{ payroll.paymentMethod || 'N/A' }}
+            </div>
+            <div class="col-md-4">
+              <strong>Reference:</strong> {{ payroll.paymentReference || 'N/A' }}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-4">
+      <div class="card">
+        <div class="card-header">
+          <h5 class="mb-0">Everee Integration</h5>
+        </div>
+        <div class="card-body">
+          <div class="mb-3">
+            <strong>Sync Status:</strong>
+            <span class="badge ms-2" [ngClass]="getSyncStatusClass(payroll.evereeSyncStatus)">
+              {{ payroll.evereeSyncStatus }}
+            </span>
+          </div>
+          <div class="mb-3" *ngIf="payroll.evereePayrollId">
+            <strong>Everee Payroll ID:</strong>
+            <div class="text-muted small">{{ payroll.evereePayrollId }}</div>
+          </div>
+          <div class="mb-3" *ngIf="payroll.lastSyncedAt">
+            <strong>Last Synced:</strong>
+            <div class="text-muted small">{{ payroll.lastSyncedAt | date:'short' }}</div>
+          </div>
+          <div class="mb-3" *ngIf="payroll.syncError">
+            <strong>Sync Error:</strong>
+            <div class="text-danger small">{{ payroll.syncError }}</div>
+          </div>
+          <div *ngIf="payroll.settlementId" class="mb-3">
+            <strong>Related Settlement:</strong>
+            <div>
+              <a [routerLink]="['/financial/settlements', payroll.settlementId]" class="text-decoration-none">
+                View Settlement
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div *ngIf="!payroll && !loading" class="container-fluid">
+  <div class="alert alert-warning">Payroll not found</div>
+</div>
+
+<div *ngIf="loading" class="container-fluid text-center py-5">
+  <div class="spinner-border" role="status">
+    <span class="visually-hidden">Loading...</span>
+  </div>
+</div>
+

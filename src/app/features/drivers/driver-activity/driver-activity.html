@@ -1,0 +1,77 @@
+<div class="driver-activity-container">
+  <div class="page-header">
+    <div class="header-content">
+      <button class="btn btn-back" (click)="navigateBack()">
+        <i class="fas fa-arrow-left me-2"></i>Back
+      </button>
+      <div>
+        <h1 class="page-title">Driver Activity Log</h1>
+        <p class="page-subtitle">Comprehensive activity history</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="card mb-4">
+    <div class="card-header">
+      <h5 class="mb-0">Filters</h5>
+    </div>
+    <div class="card-body">
+      <div class="row g-3">
+        <div class="col-md-3">
+          <label class="form-label">Activity Type</label>
+          <select class="form-select" [(ngModel)]="activityTypeFilter" (change)="applyFilters()">
+            @for (type of activityTypes; track type) {
+              <option [value]="type">{{ type }}</option>
+            }
+          </select>
+        </div>
+        <div class="col-md-3">
+          <label class="form-label">Start Date</label>
+          <input type="date" class="form-control" [(ngModel)]="startDate" (change)="applyFilters()">
+        </div>
+        <div class="col-md-3">
+          <label class="form-label">End Date</label>
+          <input type="date" class="form-control" [(ngModel)]="endDate" (change)="applyFilters()">
+        </div>
+      </div>
+    </div>
+  </div>
+
+  @if (loading) {
+    <div class="loading-container">
+      <div class="spinner-border text-primary" role="status"></div>
+    </div>
+  }
+
+  @if (!loading) {
+    <div class="card">
+      <div class="card-header">
+        <h5 class="mb-0">Activities ({{ totalCount }})</h5>
+      </div>
+      <div class="card-body">
+        <div class="timeline">
+          @for (activity of activities; track activity.activityId) {
+            <div class="timeline-item">
+              <div class="timeline-marker">
+                <i class="fas" [ngClass]="getActivityIcon(activity.activityType)"></i>
+              </div>
+              <div class="timeline-content">
+                <div class="d-flex justify-content-between">
+                  <div>
+                    <strong>{{ activity.activityType }}</strong>
+                    <p class="mb-1">{{ activity.description }}</p>
+                    <small class="text-muted">{{ formatDate(activity.timestamp) }}</small>
+                  </div>
+                </div>
+              </div>
+            </div>
+          }
+          @if (activities.length === 0) {
+            <div class="text-center text-muted py-4">No activities found</div>
+          }
+        </div>
+      </div>
+    </div>
+  }
+</div>
+

@@ -1,0 +1,373 @@
+<div class="branch-list">
+  <div class="page-header">
+    <div class="header-content">
+      <div>
+        <h1>Branch Management</h1>
+        <p class="page-subtitle">Manage branch locations and information</p>
+      </div>
+      <button class="btn btn-primary" (click)="openCreateModal()">
+        <i class="fas fa-plus"></i>
+        Add New Branch
+      </button>
+    </div>
+  </div>
+
+  <!-- Search and Filters -->
+  <div class="filters-section">
+    <div class="filters-row">
+      <div class="search-box">
+        <i class="fas fa-search"></i>
+        <input 
+          type="text" 
+          placeholder="Search branches by name, code, city, or email..." 
+          [(ngModel)]="searchTerm"
+          (ngModelChange)="applyFilters()">
+      </div>
+      <div class="filter-select">
+        <select [(ngModel)]="companyFilter" (ngModelChange)="applyFilters()">
+          <option [value]="null">All Companies</option>
+          <option *ngFor="let company of companies" [value]="company.companyId">
+            {{ company.companyName }}
+          </option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <!-- Loading State -->
+  <div *ngIf="loading" class="loading-state">
+    <i class="fas fa-spinner fa-spin"></i>
+    <span>Loading branches...</span>
+  </div>
+
+  <!-- Branches Table -->
+  <div *ngIf="!loading" class="branches-table">
+    <table>
+      <thead>
+        <tr>
+          <th>Branch Name</th>
+          <th>Company</th>
+          <th>Location</th>
+          <th>Contact</th>
+          <th>Manager</th>
+          <th>Users</th>
+          <th>Status</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let branch of filteredBranches">
+          <td>
+            <strong>{{ branch.branchName }}</strong>
+            <div *ngIf="branch.branchCode" class="branch-code">{{ branch.branchCode }}</div>
+          </td>
+          <td>{{ branch.companyName }}</td>
+          <td>
+            <span *ngIf="branch.city || branch.state">
+              {{ branch.city }}{{ branch.state ? ', ' + branch.state : '' }}
+            </span>
+            <span *ngIf="!branch.city && !branch.state">-</span>
+          </td>
+          <td>
+            <div *ngIf="branch.email" class="contact-info">
+              <i class="fas fa-envelope"></i> {{ branch.email }}
+            </div>
+            <div *ngIf="branch.phone" class="contact-info">
+              <i class="fas fa-phone"></i> {{ branch.phone }}
+            </div>
+            <span *ngIf="!branch.email && !branch.phone">-</span>
+          </td>
+          <td>{{ branch.managerName || '-' }}</td>
+          <td>{{ branch.userCount }}</td>
+          <td>
+            <span class="badge" [ngClass]="branch.isActive ? 'badge-success' : 'badge-danger'">
+              {{ branch.isActive ? 'Active' : 'Inactive' }}
+            </span>
+          </td>
+          <td>
+            <div class="action-buttons">
+              <button class="btn btn-sm btn-icon" (click)="openEditModal(branch)" title="Edit">
+                <i class="fas fa-edit"></i>
+              </button>
+              <button class="btn btn-sm btn-icon" (click)="toggleActive(branch)" [title]="branch.isActive ? 'Deactivate' : 'Activate'">
+                <i class="fas" [ngClass]="branch.isActive ? 'fa-toggle-on' : 'fa-toggle-off'"></i>
+              </button>
+            </div>
+          </td>
+        </tr>
+        <tr *ngIf="filteredBranches.length === 0">
+          <td colspan="8" class="empty-state">
+            <i class="fas fa-code-branch"></i>
+            <p>{{ searchTerm || companyFilter ? 'No branches found matching your filters' : 'No branches found' }}</p>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Create Branch Modal -->
+  <div *ngIf="showCreateModal" class="modal-overlay" (click)="showCreateModal = false">
+    <div class="modal-content" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h2>
+          <i class="fas fa-code-branch"></i>
+          Create New Branch
+        </h2>
+        <button class="btn-close" (click)="showCreateModal = false">&times;</button>
+      </div>
+      <div class="modal-body">
+        <form (ngSubmit)="createBranch()">
+          <!-- Basic Information Section -->
+          <div class="form-section">
+            <h3 class="section-title">Basic Information</h3>
+            <div class="form-group">
+              <label>Company *</label>
+              <select [(ngModel)]="newBranch.companyId" name="companyId" required>
+                <option [value]="0">Select Company</option>
+                <option *ngFor="let company of companies" [value]="company.companyId">
+                  {{ company.companyName }}
+                </option>
+              </select>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label>Branch Name *</label>
+                <input 
+                  type="text" 
+                  [(ngModel)]="newBranch.branchName" 
+                  name="branchName" 
+                  required
+                  placeholder="Enter branch name">
+              </div>
+              <div class="form-group">
+                <label>Branch Code</label>
+                <input 
+                  type="text" 
+                  [(ngModel)]="newBranch.branchCode" 
+                  name="branchCode"
+                  placeholder="Unique branch code">
+              </div>
+            </div>
+            <div class="form-group">
+              <label>Manager Name</label>
+              <input 
+                type="text" 
+                [(ngModel)]="newBranch.managerName" 
+                name="managerName"
+                placeholder="Branch manager name">
+            </div>
+          </div>
+
+          <!-- Address Section -->
+          <div class="form-section">
+            <h3 class="section-title">Address Information</h3>
+            <div class="form-group">
+              <label>Street Address</label>
+              <input 
+                type="text" 
+                [(ngModel)]="newBranch.address" 
+                name="address"
+                placeholder="Street address">
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label>City</label>
+                <input 
+                  type="text" 
+                  [(ngModel)]="newBranch.city" 
+                  name="city"
+                  placeholder="City">
+              </div>
+              <div class="form-group">
+                <label>State</label>
+                <input 
+                  type="text" 
+                  [(ngModel)]="newBranch.state" 
+                  name="state"
+                  placeholder="State/Province">
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label>Zip Code</label>
+                <input 
+                  type="text" 
+                  [(ngModel)]="newBranch.zipCode" 
+                  name="zipCode"
+                  placeholder="ZIP/Postal code">
+              </div>
+              <div class="form-group">
+                <label>Country</label>
+                <input 
+                  type="text" 
+                  [(ngModel)]="newBranch.country" 
+                  name="country"
+                  placeholder="Country">
+              </div>
+            </div>
+          </div>
+
+          <!-- Contact Information Section -->
+          <div class="form-section">
+            <h3 class="section-title">Contact Information</h3>
+            <div class="form-row">
+              <div class="form-group">
+                <label>Email</label>
+                <input 
+                  type="email" 
+                  [(ngModel)]="newBranch.email" 
+                  name="email"
+                  placeholder="branch@example.com">
+              </div>
+              <div class="form-group">
+                <label>Phone</label>
+                <input 
+                  type="tel" 
+                  [(ngModel)]="newBranch.phone" 
+                  name="phone"
+                  placeholder="(555) 123-4567">
+              </div>
+            </div>
+          </div>
+
+          <div class="form-actions">
+            <button type="button" class="btn btn-secondary" (click)="showCreateModal = false">Cancel</button>
+            <button type="submit" class="btn btn-primary" [disabled]="!isCreateFormValid()">
+              <i class="fas fa-plus"></i>
+              Create Branch
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Edit Branch Modal -->
+  <div *ngIf="showEditModal" class="modal-overlay" (click)="closeEditModal()">
+    <div class="modal-content" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h2>
+          <i class="fas fa-edit"></i>
+          Edit Branch
+        </h2>
+        <button class="btn-close" (click)="closeEditModal()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <form (ngSubmit)="updateBranch()">
+          <!-- Basic Information Section -->
+          <div class="form-section">
+            <h3 class="section-title">Basic Information</h3>
+            <div class="form-row">
+              <div class="form-group">
+                <label>Branch Name *</label>
+                <input 
+                  type="text" 
+                  [(ngModel)]="editBranch.branchName" 
+                  name="editBranchName" 
+                  required
+                  placeholder="Enter branch name">
+              </div>
+              <div class="form-group">
+                <label>Branch Code</label>
+                <input 
+                  type="text" 
+                  [(ngModel)]="editBranch.branchCode" 
+                  name="editBranchCode"
+                  placeholder="Unique branch code">
+              </div>
+            </div>
+            <div class="form-group">
+              <label>Manager Name</label>
+              <input 
+                type="text" 
+                [(ngModel)]="editBranch.managerName" 
+                name="editManagerName"
+                placeholder="Branch manager name">
+            </div>
+          </div>
+
+          <!-- Address Section -->
+          <div class="form-section">
+            <h3 class="section-title">Address Information</h3>
+            <div class="form-group">
+              <label>Street Address</label>
+              <input 
+                type="text" 
+                [(ngModel)]="editBranch.address" 
+                name="editAddress"
+                placeholder="Street address">
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label>City</label>
+                <input 
+                  type="text" 
+                  [(ngModel)]="editBranch.city" 
+                  name="editCity"
+                  placeholder="City">
+              </div>
+              <div class="form-group">
+                <label>State</label>
+                <input 
+                  type="text" 
+                  [(ngModel)]="editBranch.state" 
+                  name="editState"
+                  placeholder="State/Province">
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label>Zip Code</label>
+                <input 
+                  type="text" 
+                  [(ngModel)]="editBranch.zipCode" 
+                  name="editZipCode"
+                  placeholder="ZIP/Postal code">
+              </div>
+              <div class="form-group">
+                <label>Country</label>
+                <input 
+                  type="text" 
+                  [(ngModel)]="editBranch.country" 
+                  name="editCountry"
+                  placeholder="Country">
+              </div>
+            </div>
+          </div>
+
+          <!-- Contact Information Section -->
+          <div class="form-section">
+            <h3 class="section-title">Contact Information</h3>
+            <div class="form-row">
+              <div class="form-group">
+                <label>Email</label>
+                <input 
+                  type="email" 
+                  [(ngModel)]="editBranch.email" 
+                  name="editEmail"
+                  placeholder="branch@example.com">
+              </div>
+              <div class="form-group">
+                <label>Phone</label>
+                <input 
+                  type="tel" 
+                  [(ngModel)]="editBranch.phone" 
+                  name="editPhone"
+                  placeholder="(555) 123-4567">
+              </div>
+            </div>
+          </div>
+
+          <div class="form-actions">
+            <button type="button" class="btn btn-secondary" (click)="closeEditModal()">Cancel</button>
+            <button type="submit" class="btn btn-primary" [disabled]="!isEditFormValid()">
+              <i class="fas fa-save"></i>
+              Update Branch
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+

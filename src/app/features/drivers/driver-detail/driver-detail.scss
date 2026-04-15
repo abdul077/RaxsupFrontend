@@ -1,0 +1,3468 @@
+// Driver Detail Component Styles
+
+.driver-detail-container {
+  padding: 1.5rem;
+  max-width: 1400px;
+  margin: 0 auto;
+
+  // Page Header
+  .page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    padding: 1.5rem 0;
+    border-bottom: 2px solid #e9ecef;
+    margin-bottom: 2rem;
+    flex-wrap: wrap;
+    gap: 1rem;
+
+    .header-content {
+      flex: 1;
+      min-width: 300px;
+
+      .btn-back {
+        border-radius: 8px;
+        padding: 0.5rem 1rem;
+        font-weight: 500;
+        transition: all 0.2s ease;
+        border: 1px solid #dee2e6;
+        background-color: #ffffff;
+        color: #495057;
+
+        &:hover {
+          transform: translateX(-2px);
+          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+          background-color: #f8f9fa;
+          border-color: #adb5bd;
+        }
+
+        &:focus {
+          box-shadow: 0 0 0 0.2rem rgba(44, 123, 229, 0.25);
+        }
+      }
+
+      .page-title {
+        font-size: 2rem;
+        font-weight: 700;
+        color: #2c3e50;
+        margin: 0.5rem 0 0.25rem 0;
+        line-height: 1.2;
+      }
+
+      .page-subtitle {
+        color: #6c757d;
+        font-size: 0.95rem;
+        margin: 0;
+      }
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      flex-wrap: wrap;
+
+      .status-badge {
+        padding: 0.5rem 1rem;
+        border-radius: 20px;
+        font-weight: 600;
+        font-size: 0.875rem;
+        white-space: nowrap;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+
+        &.status-active,
+        &.badge.bg-success {
+          background-color: #d4edda !important;
+          color: #155724;
+          border: 1px solid #c3e6cb;
+        }
+
+        &.status-ontrip,
+        &.badge.bg-primary {
+          background-color: #cfe2ff !important;
+          color: #084298;
+          border: 1px solid #b6d4fe;
+        }
+
+        &.status-inactive,
+        &.badge.bg-secondary {
+          background-color: #e2e3e5 !important;
+          color: #41464b;
+          border: 1px solid #d3d6d8;
+        }
+
+        &.status-offduty,
+        &.badge.bg-warning {
+          background-color: #fff3cd !important;
+          color: #856404;
+          border: 1px solid #ffecb5;
+        }
+      }
+
+      .btn-edit {
+        border-radius: 8px;
+        padding: 0.5rem 1.25rem;
+        font-weight: 500;
+        transition: all 0.2s ease;
+        box-shadow: 0 2px 4px rgba(44, 123, 229, 0.2);
+
+        &:hover {
+          transform: translateY(-1px);
+          box-shadow: 0 4px 8px rgba(44, 123, 229, 0.3);
+        }
+      }
+    }
+  }
+}
+
+.nav-tabs {
+  border-bottom: 2px solid #dee2e6;
+  margin-bottom: 2rem;
+  
+  .nav-link {
+    color: #6c757d;
+    border: none;
+    border-bottom: 2px solid transparent;
+    padding: 0.75rem 1.5rem;
+    transition: all 0.2s ease;
+    font-weight: 500;
+    
+    &:hover {
+      border-bottom-color: #dee2e6;
+      color: #2c7be5;
+      background-color: rgba(44, 123, 229, 0.05);
+    }
+    
+    &.active {
+      color: #2c7be5;
+      border-bottom-color: #2c7be5;
+      font-weight: 600;
+      background-color: transparent;
+    }
+  }
+}
+
+.card {
+  border: none;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+  border-radius: 12px;
+  transition: all 0.2s ease;
+  
+  &:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+  }
+  
+  .card-header {
+    background-color: #f8f9fa;
+    border-bottom: 1px solid #dee2e6;
+    font-weight: 600;
+    padding: 1rem 1.25rem;
+    border-radius: 12px 12px 0 0;
+
+    .card-title {
+      margin: 0;
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: #2c3e50;
+      display: flex;
+      align-items: center;
+
+      i {
+        color: #2c7be5;
+      }
+    }
+  }
+
+  .card-body {
+    padding: 1.25rem;
+  }
+}
+
+.info-card {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+
+  .card-body {
+    flex: 1;
+  }
+}
+
+.info-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+
+  .info-item {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid #f0f0f0;
+
+    &:last-child {
+      border-bottom: none;
+      padding-bottom: 0;
+    }
+
+    .info-label {
+      font-size: 0.875rem;
+      font-weight: 600;
+      color: #6c757d;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .info-value {
+      font-size: 1rem;
+      color: #2c3e50;
+      font-weight: 500;
+      word-break: break-word;
+
+      a {
+        text-decoration: none;
+        transition: color 0.2s ease;
+
+        &:hover {
+          text-decoration: underline;
+        }
+      }
+    }
+  }
+}
+
+.referral-link-card {
+  background: linear-gradient(135deg, #f8f9ff 0%, #ffffff 100%);
+  border: 2px solid #e7e9fd;
+
+  .card-header {
+    background: linear-gradient(135deg, #2c7be5 0%, #1a5bb8 100%);
+    color: white;
+    border-bottom: none;
+
+    .card-title {
+      color: white;
+
+      i {
+        color: rgba(255, 255, 255, 0.9);
+      }
+    }
+  }
+
+  .commission-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+    padding: 1rem;
+    background-color: #ffffff;
+    border-radius: 8px;
+    border: 1px solid #e9ecef;
+
+    .commission-item {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      padding: 0.75rem;
+      background-color: #f8f9fa;
+      border-radius: 6px;
+      border-left: 3px solid #2c7be5;
+
+      .commission-level {
+        font-weight: 600;
+        color: #2c3e50;
+        font-size: 0.9rem;
+      }
+
+      .commission-rate {
+        color: #28a745;
+        font-weight: 600;
+        font-size: 0.85rem;
+      }
+    }
+  }
+
+  .referral-link-input-group {
+    display: flex;
+    gap: 0.5rem;
+
+    .referral-link-input {
+      flex: 1;
+      padding: 0.75rem 1rem;
+      border: 2px solid #dee2e6;
+      border-radius: 8px;
+      font-size: 0.9rem;
+      background-color: #ffffff;
+
+      &:focus {
+        border-color: #2c7be5;
+        box-shadow: 0 0 0 0.2rem rgba(44, 123, 229, 0.25);
+      }
+    }
+
+    .btn-copy {
+      padding: 0.75rem 1.5rem;
+      border-radius: 8px;
+      font-weight: 500;
+      white-space: nowrap;
+      transition: all 0.2s ease;
+
+      &:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 8px rgba(44, 123, 229, 0.3);
+      }
+    }
+  }
+
+  .referral-info {
+    padding-top: 0.75rem;
+    border-top: 1px solid #e9ecef;
+  }
+}
+
+.table-borderless {
+  td {
+    padding: 0.75rem 0.5rem;
+    vertical-align: middle;
+  }
+}
+
+.compliance-summary-card {
+  height: 100%;
+
+  .card-body {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+  }
+
+  .compliance-summary-label {
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    color: #6c757d;
+    font-weight: 600;
+  }
+
+  .compliance-summary-value {
+    font-size: 1.75rem;
+    font-weight: 700;
+    line-height: 1.2;
+  }
+}
+
+.compliance-filter-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.compliance-table {
+  th {
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.35px;
+    color: #6c757d;
+    border-bottom-width: 1px;
+  }
+
+  td {
+    vertical-align: middle;
+  }
+}
+
+.badge {
+  padding: 0.35em 0.65em;
+  font-weight: 500;
+  border-radius: 6px;
+}
+
+.bg-purple {
+  background-color: #6f42c1 !important;
+}
+
+// Loading State
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 4rem 2rem;
+  text-align: center;
+
+  .spinner-border {
+    width: 3rem;
+    height: 3rem;
+    border-width: 0.25em;
+  }
+}
+
+// Performance Tab Styles
+.performance-card {
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  border: 2px solid transparent;
+  position: relative;
+  overflow: hidden;
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+  }
+
+  &:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+    
+    &::before {
+      opacity: 1;
+    }
+  }
+
+  .performance-card-icon {
+    width: 60px;
+    height: 60px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.75rem;
+    margin-bottom: 1rem;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  }
+
+  &:hover .performance-card-icon {
+    transform: scale(1.1) rotate(5deg);
+  }
+
+  .performance-card-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .performance-card-label {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: #6c757d;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 0.5rem;
+  }
+
+  .performance-card-value {
+    font-size: 2rem;
+    font-weight: 700;
+    color: #2c3e50;
+    line-height: 1.2;
+    margin-bottom: 0.75rem;
+  }
+
+  .performance-card-subtitle {
+    font-size: 0.875rem;
+    color: #6c757d;
+    margin-top: auto;
+  }
+
+  .performance-card-progress {
+    width: 100%;
+    height: 6px;
+    background-color: #e9ecef;
+    border-radius: 10px;
+    overflow: hidden;
+    margin-top: auto;
+
+    .progress-bar {
+      height: 100%;
+      border-radius: 10px;
+      transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    }
+  }
+}
+
+.performance-card-primary {
+  color: #2c7be5;
+  border-color: #e7e9fd;
+
+  .performance-card-icon {
+    background: linear-gradient(135deg, #2c7be5 0%, #1a5bb8 100%);
+    color: #ffffff;
+  }
+
+  .performance-card-progress .progress-bar {
+    background: linear-gradient(90deg, #2c7be5 0%, #1a5bb8 100%);
+  }
+
+  &:hover {
+    border-color: #2c7be5;
+    
+    &::before {
+      background: linear-gradient(90deg, transparent 0%, #2c7be5 50%, transparent 100%);
+    }
+  }
+}
+
+.performance-card-success {
+  color: #28a745;
+  border-color: #d4edda;
+
+  .performance-card-icon {
+    background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+    color: #ffffff;
+  }
+
+  &:hover {
+    border-color: #28a745;
+    
+    &::before {
+      background: linear-gradient(90deg, transparent 0%, #28a745 50%, transparent 100%);
+    }
+  }
+}
+
+.performance-card-info {
+  color: #17a2b8;
+  border-color: #d1ecf1;
+
+  .performance-card-icon {
+    background: linear-gradient(135deg, #17a2b8 0%, #138496 100%);
+    color: #ffffff;
+  }
+
+  &:hover {
+    border-color: #17a2b8;
+    
+    &::before {
+      background: linear-gradient(90deg, transparent 0%, #17a2b8 50%, transparent 100%);
+    }
+  }
+}
+
+.performance-card-danger {
+  color: #dc3545;
+  border-color: #f8d7da;
+
+  .performance-card-icon {
+    background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+    color: #ffffff;
+  }
+
+  &:hover {
+    border-color: #dc3545;
+    
+    &::before {
+      background: linear-gradient(90deg, transparent 0%, #dc3545 50%, transparent 100%);
+    }
+  }
+}
+
+.performance-summary-card {
+  .performance-summary-item {
+    .summary-label {
+      font-size: 0.875rem;
+      font-weight: 600;
+      color: #6c757d;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 0.75rem;
+      display: flex;
+      align-items: center;
+
+      i {
+        color: #2c7be5;
+      }
+    }
+
+    .summary-content {
+      .rating-display {
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+
+        .rating-stars {
+          display: flex;
+          gap: 0.5rem;
+
+          .fa-star {
+            font-size: 1.5rem;
+            color: #e9ecef;
+            transition: all 0.2s ease;
+
+            &.filled {
+              color: #ffc107;
+              text-shadow: 0 2px 4px rgba(255, 193, 7, 0.3);
+            }
+
+            &.empty {
+              color: #e9ecef;
+            }
+          }
+        }
+
+        .rating-value {
+          display: flex;
+          align-items: baseline;
+          gap: 0.25rem;
+
+          .rating-number {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #2c3e50;
+          }
+
+          .rating-max {
+            font-size: 1.25rem;
+            font-weight: 500;
+            color: #6c757d;
+          }
+        }
+      }
+
+      .updated-date {
+        font-size: 1.125rem;
+        color: #2c3e50;
+        font-weight: 500;
+        display: flex;
+        align-items: center;
+
+        i {
+          color: #6c757d;
+        }
+      }
+    }
+  }
+
+  .performance-insights {
+    .insights-title {
+      font-size: 1rem;
+      font-weight: 600;
+      color: #2c3e50;
+      margin-bottom: 1rem;
+      display: flex;
+      align-items: center;
+
+      i {
+        color: #ffc107;
+      }
+    }
+
+    .insights-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 0.75rem;
+
+      .insight-item {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        padding: 0.875rem 1rem;
+        border-radius: 8px;
+        font-size: 0.9rem;
+        font-weight: 500;
+        transition: all 0.2s ease;
+
+        i {
+          font-size: 1.125rem;
+          flex-shrink: 0;
+        }
+
+        &.insight-positive {
+          background-color: #d4edda;
+          color: #155724;
+          border-left: 3px solid #28a745;
+
+          i {
+            color: #28a745;
+          }
+        }
+
+        &.insight-warning {
+          background-color: #fff3cd;
+          color: #856404;
+          border-left: 3px solid #ffc107;
+
+          i {
+            color: #ffc107;
+          }
+        }
+
+        &.insight-negative {
+          background-color: #f8d7da;
+          color: #721c24;
+          border-left: 3px solid #dc3545;
+
+          i {
+            color: #dc3545;
+          }
+        }
+
+        &:hover {
+          transform: translateX(4px);
+          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+      }
+    }
+  }
+}
+
+// Earnings Chart Styles
+.earnings-chart-wrapper {
+  position: relative;
+  display: flex;
+  gap: 1rem;
+  padding: 1.5rem;
+  min-height: 350px;
+}
+
+.chart-y-axis {
+  display: flex;
+  flex-direction: column-reverse;
+  justify-content: space-between;
+  padding-right: 0.75rem;
+  min-width: 80px;
+  height: 300px;
+  border-right: 2px solid #e9ecef;
+  position: relative;
+  
+  .y-axis-tick {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    height: 0;
+    
+    .y-axis-label {
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: #6c757d;
+      background: #ffffff;
+      padding: 0 0.5rem;
+      position: relative;
+      z-index: 2;
+    }
+    
+    .y-axis-line {
+      position: absolute;
+      right: -0.75rem;
+      width: 8px;
+      height: 1px;
+      background: #e9ecef;
+      z-index: 1;
+    }
+  }
+}
+
+.chart-main-container {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.earnings-chart-container {
+  flex: 1;
+  height: 300px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-around;
+  gap: 0.75rem;
+  padding: 0;
+  position: relative;
+  border-radius: 8px 8px 0 0;
+  
+  .grid-line {
+    position: absolute;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: #e9ecef;
+    z-index: 0;
+    pointer-events: none;
+  }
+  
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(
+      to top,
+      rgba(44, 123, 229, 0.02) 0%,
+      transparent 50%
+    );
+    pointer-events: none;
+    border-radius: 8px 8px 0 0;
+    z-index: 0;
+  }
+}
+
+.chart-x-axis {
+  display: flex;
+  justify-content: space-around;
+  gap: 0.75rem;
+  padding: 0.75rem 0;
+  border-top: 2px solid #e9ecef;
+  min-height: 40px;
+  align-items: flex-start;
+  position: relative;
+  
+  // Add a subtle background to match Y-axis
+  background-color: #fafbfc;
+  
+  .x-axis-label {
+    flex: 1;
+    text-align: center;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #495057;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 120px;
+    transition: color 0.2s ease;
+    padding: 0.25rem 0;
+  }
+}
+
+// Highlight corresponding X-axis label when bar is hovered using :has() selector
+.chart-main-container {
+  &:has(.chart-bar-wrapper[data-index="0"]:hover) .chart-x-axis .x-axis-label[data-index="0"],
+  &:has(.chart-bar-wrapper[data-index="1"]:hover) .chart-x-axis .x-axis-label[data-index="1"],
+  &:has(.chart-bar-wrapper[data-index="2"]:hover) .chart-x-axis .x-axis-label[data-index="2"],
+  &:has(.chart-bar-wrapper[data-index="3"]:hover) .chart-x-axis .x-axis-label[data-index="3"],
+  &:has(.chart-bar-wrapper[data-index="4"]:hover) .chart-x-axis .x-axis-label[data-index="4"],
+  &:has(.chart-bar-wrapper[data-index="5"]:hover) .chart-x-axis .x-axis-label[data-index="5"] {
+    color: #2c7be5;
+    font-weight: 700;
+  }
+}
+
+.chart-bar-wrapper {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  height: 100%;
+  max-width: 120px;
+  position: relative;
+}
+
+.chart-bar {
+  width: 100%;
+  min-width: 40px;
+  max-width: 80px;
+  position: relative;
+  background: linear-gradient(
+    180deg,
+    #2c7be5 0%,
+    #1a5bb8 50%,
+    #2c7be5 100%
+  );
+  border-radius: 8px 8px 0 0;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 
+    0 4px 12px rgba(44, 123, 229, 0.25),
+    0 2px 6px rgba(44, 123, 229, 0.15),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  animation: chartBarGrow 0.6s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  transform-origin: bottom;
+  min-height: 10px;
+  
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(
+      180deg,
+      rgba(255, 255, 255, 0.3) 0%,
+      transparent 50%
+    );
+    border-radius: 8px 8px 0 0;
+    pointer-events: none;
+  }
+  
+  &::after {
+    content: '';
+    position: absolute;
+    top: -2px;
+    left: -2px;
+    right: -2px;
+    height: 4px;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      rgba(255, 255, 255, 0.5),
+      transparent
+    );
+    border-radius: 8px 8px 0 0;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+  }
+  
+  &:hover,
+  &.chart-bar-hover {
+    transform: translateY(-4px) scale(1.05);
+    box-shadow: 
+      0 8px 20px rgba(44, 123, 229, 0.4),
+      0 4px 10px rgba(44, 123, 229, 0.25),
+      inset 0 1px 0 rgba(255, 255, 255, 0.3);
+    background: linear-gradient(
+      180deg,
+      #3d8bfd 0%,
+      #2c7be5 50%,
+      #1a5bb8 100%
+    );
+    
+    &::after {
+      opacity: 1;
+    }
+    
+    .chart-bar-value {
+      opacity: 1 !important;
+      transform: translateX(-50%) translateY(-8px) !important;
+    }
+  }
+  
+  .chart-bar-value {
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%) translateY(0);
+    white-space: nowrap;
+    padding: 0.5rem 0.75rem;
+    background: linear-gradient(135deg, #2c3e50 0%, #1a252f 100%);
+    color: #ffffff;
+    border-radius: 8px;
+    font-size: 0.875rem;
+    font-weight: 600;
+    margin-bottom: 8px;
+    opacity: 0;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    pointer-events: none;
+    box-shadow: 
+      0 4px 12px rgba(0, 0, 0, 0.2),
+      0 2px 6px rgba(0, 0, 0, 0.15);
+    z-index: 10;
+    
+    &::before {
+      content: '';
+      position: absolute;
+      top: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      border: 6px solid transparent;
+      border-top-color: #1a252f;
+    }
+  }
+}
+
+.chart-bar-wrapper:hover ~ .chart-x-axis .x-axis-label,
+.chart-main-container:hover .chart-x-axis .x-axis-label {
+  color: #2c7be5;
+  font-weight: 700;
+}
+
+@keyframes chartBarGrow {
+  from {
+    transform: scaleY(0);
+    opacity: 0;
+  }
+  to {
+    transform: scaleY(1);
+    opacity: 1;
+  }
+}
+
+// Responsive Design
+@media (max-width: 768px) {
+  .earnings-chart-wrapper {
+    flex-direction: column;
+    padding: 1rem;
+    min-height: auto;
+  }
+  
+  .chart-y-axis {
+    flex-direction: row;
+    justify-content: space-between;
+    height: auto;
+    width: 100%;
+    min-width: auto;
+    padding-right: 0;
+    padding-bottom: 0.75rem;
+    border-right: none;
+    border-bottom: 2px solid #e9ecef;
+    
+    .y-axis-tick {
+      .y-axis-line {
+        right: auto;
+        bottom: -0.75rem;
+        width: 1px;
+        height: 8px;
+      }
+    }
+  }
+  
+  .earnings-chart-container {
+    height: 250px;
+    gap: 0.5rem;
+  }
+  
+  .chart-bar {
+    min-width: 30px;
+    max-width: 60px;
+  }
+  
+  .chart-bar-label {
+    font-size: 0.7rem;
+  }
+  
+  .driver-detail-container {
+    padding: 1rem;
+
+    .page-header {
+      flex-direction: column;
+      align-items: stretch;
+
+      .header-content {
+        .page-title {
+          font-size: 1.5rem;
+        }
+      }
+
+      .header-actions {
+        justify-content: flex-start;
+        margin-top: 1rem;
+      }
+    }
+
+    .nav-tabs {
+      overflow-x: auto;
+      flex-wrap: nowrap;
+      -webkit-overflow-scrolling: touch;
+
+      .nav-link {
+        padding: 0.75rem 1rem;
+        font-size: 0.9rem;
+        white-space: nowrap;
+      }
+    }
+
+    .info-grid {
+      gap: 0.75rem;
+
+      .info-item {
+        padding-bottom: 0.75rem;
+      }
+    }
+
+    .referral-link-card {
+      .commission-list {
+        grid-template-columns: 1fr;
+      }
+
+      .referral-link-input-group {
+        flex-direction: column;
+
+        .btn-copy {
+          width: 100%;
+        }
+      }
+    }
+
+    .performance-card {
+      .performance-card-value {
+        font-size: 1.75rem;
+      }
+
+      .performance-card-icon {
+        width: 50px;
+        height: 50px;
+        font-size: 1.5rem;
+      }
+    }
+
+    .performance-summary-card {
+      .performance-summary-item {
+        .summary-content {
+          .rating-display {
+            .rating-stars .fa-star {
+              font-size: 1.25rem;
+            }
+
+            .rating-value {
+              .rating-number {
+                font-size: 1.5rem;
+              }
+
+              .rating-max {
+                font-size: 1rem;
+              }
+            }
+          }
+        }
+      }
+
+      .performance-insights {
+        .insights-grid {
+          grid-template-columns: 1fr;
+        }
+      }
+    }
+  }
+}
+
+@media (max-width: 576px) {
+  .driver-detail-container {
+    .page-header {
+      .header-content {
+        .page-title {
+          font-size: 1.25rem;
+        }
+
+        .page-subtitle {
+          font-size: 0.85rem;
+        }
+      }
+    }
+
+    .card {
+      .card-header {
+        padding: 0.875rem 1rem;
+
+        .card-title {
+          font-size: 1rem;
+        }
+      }
+
+      .card-body {
+        padding: 1rem;
+      }
+    }
+  }
+}
+
+.modal {
+  .modal-dialog {
+    z-index: 1055;
+  }
+}
+
+.modal-backdrop {
+  z-index: 1050;
+}
+
+// Referral Cards View Styles
+.referral-cards-view {
+  .root-driver-card {
+    display: flex;
+    justify-content: center;
+    
+    .root-card {
+      max-width: 300px;
+      background: linear-gradient(135deg, #2c7be5 0%, #1a5bb8 100%);
+      color: white;
+      border: none;
+      border-radius: 16px;
+      box-shadow: 
+        0 8px 20px rgba(44, 123, 229, 0.3),
+        0 4px 10px rgba(44, 123, 229, 0.2);
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      overflow: hidden;
+      position: relative;
+      
+      &::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, transparent 100%);
+        opacity: 0;
+        transition: opacity 0.3s ease;
+      }
+      
+      &:hover {
+        transform: translateY(-4px);
+        box-shadow: 
+          0 12px 28px rgba(44, 123, 229, 0.35),
+          0 6px 14px rgba(44, 123, 229, 0.25);
+        
+        &::before {
+          opacity: 1;
+        }
+      }
+      
+      .driver-avatar {
+        font-size: 3rem;
+        color: rgba(255, 255, 255, 0.9);
+        transition: transform 0.3s ease;
+      }
+      
+      &:hover .driver-avatar {
+        transform: scale(1.1);
+      }
+      
+      h5 {
+        color: white;
+        font-weight: 600;
+      }
+      
+      .generation-badge {
+        background: rgba(255, 255, 255, 0.25);
+        border: 1px solid rgba(255, 255, 255, 0.5);
+        color: white;
+        border-radius: 12px;
+        padding: 0.4rem 0.8rem;
+        transition: all 0.3s ease;
+        
+        &:hover {
+          background: rgba(255, 255, 255, 0.35);
+        }
+      }
+      
+      strong {
+        color: white;
+        font-size: 1.5rem;
+      }
+    }
+  }
+  
+  .generation-section {
+    .generation-header {
+      padding: 1rem;
+      background: #f8f9fa;
+      border-radius: 8px;
+      border-left: 4px solid #2c7be5;
+      
+      h5 {
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+      }
+    }
+    
+    .referral-card {
+      height: 100%;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      border: 2px solid #dee2e6;
+      border-radius: 12px;
+      box-shadow: 
+        0 2px 4px rgba(0, 0, 0, 0.06),
+        0 1px 2px rgba(0, 0, 0, 0.04);
+      overflow: hidden;
+      position: relative;
+      
+      &::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 3px;
+        background: linear-gradient(90deg, #2c7be5 0%, #1a5bb8 100%);
+        opacity: 0;
+        transition: opacity 0.3s ease;
+      }
+      
+      &:hover {
+        transform: translateY(-4px);
+        box-shadow: 
+          0 12px 24px rgba(0, 0, 0, 0.12),
+          0 6px 12px rgba(0, 0, 0, 0.08);
+        border-color: #2c7be5;
+        
+        &::before {
+          opacity: 1;
+        }
+      }
+      
+      &.generation-2 {
+        border-left: 4px solid #28a745;
+        
+        &:hover {
+          border-left-color: #1e7e34;
+        }
+      }
+      
+      &.generation-3 {
+        border-left: 4px solid #17a2b8;
+        
+        &:hover {
+          border-left-color: #117a8b;
+        }
+      }
+      
+      &.generation-4 {
+        border-left: 4px solid #ffc107;
+        
+        &:hover {
+          border-left-color: #e0a800;
+        }
+      }
+      
+      &.generation-5 {
+        border-left: 4px solid #6f42c1;
+        
+        &:hover {
+          border-left-color: #5a32a3;
+        }
+      }
+      
+      .driver-avatar-small {
+        width: 48px;
+        height: 48px;
+        border-radius: 12px;
+        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        color: #495057;
+        margin: 0 auto;
+        box-shadow: 
+          0 2px 6px rgba(0, 0, 0, 0.1),
+          0 1px 3px rgba(0, 0, 0, 0.06);
+        transition: all 0.3s ease;
+        
+        &:hover {
+          transform: scale(1.05);
+          box-shadow: 
+            0 4px 12px rgba(0, 0, 0, 0.15),
+            0 2px 6px rgba(0, 0, 0, 0.1);
+        }
+      }
+      
+      h6 {
+        font-weight: 600;
+        color: #212529;
+        margin-bottom: 0.25rem;
+      }
+      
+      .driver-info {
+        .info-item {
+          margin-bottom: 0.5rem;
+          
+          small {
+            font-size: 0.85rem;
+          }
+        }
+      }
+      
+      .nested-referrals {
+        .nested-cards {
+          .nested-card {
+            background: #f8f9fa;
+            padding: 0.875rem;
+            border-radius: 10px;
+            border-left: 3px solid #dee2e6;
+            box-shadow: 
+              0 1px 3px rgba(0, 0, 0, 0.08),
+              0 1px 2px rgba(0, 0, 0, 0.04);
+            transition: all 0.2s ease;
+            
+            &:hover {
+              transform: translateX(2px);
+              box-shadow: 
+                0 2px 6px rgba(0, 0, 0, 0.12),
+                0 1px 3px rgba(0, 0, 0, 0.08);
+            }
+            
+            .small-badge {
+              font-size: 0.65rem;
+              padding: 0.2rem 0.4rem;
+              border-radius: 6px;
+            }
+          }
+        }
+        
+        .deeply-nested-cards {
+          .deeply-nested-card {
+            background: #e9ecef;
+            padding: 0.625rem;
+            border-radius: 8px;
+            border-left: 2px solid #adb5bd;
+            font-size: 0.8rem;
+            box-shadow: 
+              0 1px 2px rgba(0, 0, 0, 0.06);
+            transition: all 0.2s ease;
+            
+            &:hover {
+              transform: translateX(2px);
+              box-shadow: 
+                0 2px 4px rgba(0, 0, 0, 0.1);
+            }
+          }
+        }
+      }
+    }
+  }
+  
+  .generation-badge {
+    padding: 0.4rem 0.8rem;
+    border-radius: 20px;
+    font-weight: 600;
+    font-size: 0.75rem;
+    display: inline-block;
+    
+    &.generation-1 {
+      background: linear-gradient(135deg, #2c7be5 0%, #1a5bb8 100%);
+      color: white;
+    }
+    
+    &.generation-2 {
+      background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
+      color: #155724;
+      border: 1px solid #28a745;
+    }
+    
+    &.generation-3 {
+      background: linear-gradient(135deg, #d1ecf1 0%, #bee5eb 100%);
+      color: #0c5460;
+      border: 1px solid #17a2b8;
+    }
+    
+    &.generation-4 {
+      background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%);
+      color: #856404;
+      border: 1px solid #ffc107;
+    }
+    
+    &.generation-5 {
+      background: linear-gradient(135deg, #e7d9f5 0%, #dcc8f0 100%);
+      color: #4a2c5a;
+      border: 1px solid #6f42c1;
+    }
+  }
+  
+  .commission-badge {
+    background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+    color: white;
+    padding: 0.3rem 0.6rem;
+    border-radius: 15px;
+    font-weight: 600;
+    font-size: 0.7rem;
+  }
+  
+  .status-badge {
+    background: #6c757d;
+    color: white;
+    font-size: 0.7rem;
+  }
+}
+
+// Referral Tree Diagram Styles - Complete Redesign
+.referral-tree-diagram {
+  padding: 2rem 0;
+  overflow-x: auto;
+  min-height: 400px;
+    display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+
+  .tree-connector-layer {
+    position: relative;
+    width: 100%;
+    margin: 2.5rem 0;
+    min-height: 140px;
+    
+    // Add subtle background to help lines stand out
+    &::before {
+      content: '';
+      position: absolute;
+      top: -50px;
+      left: 0;
+      right: 0;
+      height: 50px;
+      z-index: 0;
+      pointer-events: none;
+      background: linear-gradient(to bottom, 
+        transparent 0%,
+        rgba(248, 249, 250, 0.3) 50%,
+        transparent 100%
+      );
+    }
+  }
+
+
+  .tree-generation-row {
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    gap: 1.5rem;
+    flex-wrap: nowrap;
+    position: relative;
+    padding: 50px 2rem 0;
+    width: 100%;
+    min-height: 140px;
+    z-index: 2;
+  }
+
+  .tree-node-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: relative;
+    min-width: 140px;
+    max-width: 160px;
+    flex: 0 0 auto;
+    z-index: 3;
+    
+    // Vertical connector from parent level to this node
+    &::before {
+      content: '';
+      position: absolute;
+      top: -50px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 3.5px;
+      height: 50px;
+      background: linear-gradient(to bottom, 
+        rgba(90, 98, 104, 0.9) 0%, 
+        rgba(73, 80, 87, 0.95) 30%,
+        rgba(52, 58, 64, 1) 70%,
+        rgba(33, 37, 41, 1) 100%
+      );
+      border-radius: 2px;
+      box-shadow: 
+        0 2px 4px rgba(0, 0, 0, 0.2),
+        inset 0 1px 0 rgba(255, 255, 255, 0.1);
+      z-index: 2;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    
+    // Horizontal connector for siblings (extends from node center)
+    &::after {
+      content: '';
+      position: absolute;
+      top: -50px;
+      left: 50%;
+      transform: translateX(-50%);
+      height: 3.5px;
+      background: linear-gradient(to right, 
+        rgba(90, 98, 104, 0.9) 0%, 
+        rgba(73, 80, 87, 0.95) 30%,
+        rgba(52, 58, 64, 1) 50%,
+        rgba(73, 80, 87, 0.95) 70%,
+        rgba(90, 98, 104, 0.9) 100%
+      );
+      border-radius: 2px;
+      box-shadow: 
+        0 2px 4px rgba(0, 0, 0, 0.2),
+        inset 0 1px 0 rgba(255, 255, 255, 0.1);
+      z-index: 1;
+      width: 0;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    
+    // Horizontal connector for siblings - improved logic
+    &.has-siblings {
+      // First sibling: extend line to the right
+      &.first-sibling::after {
+        left: 50%;
+        width: calc(50% + 0.75rem);
+        transform: translateX(0);
+      }
+      
+      // Last sibling: extend line to the left
+      &.last-sibling::after {
+        left: 0;
+        width: calc(50% + 0.75rem);
+        transform: translateX(0);
+      }
+      
+      // Middle siblings: extend line both ways
+      &:not(.first-sibling):not(.last-sibling)::after {
+        left: 0;
+        width: calc(100% + 1.5rem);
+        transform: translateX(-50%);
+      }
+      
+      // Single sibling (shouldn't happen, but handle it)
+      &:only-child::after {
+        width: 0;
+      }
+    }
+  }
+  
+  // Connect consecutive siblings with horizontal line
+  .tree-generation-row {
+    // Draw horizontal connector between consecutive siblings
+    .tree-node-wrapper.has-siblings:not(.last-sibling) + .tree-node-wrapper.has-siblings {
+      // Check if they might be siblings (approximate check)
+      // Create a connecting line between them
+      position: relative;
+      
+      &::before {
+        // This creates a bridge between consecutive siblings
+        // The actual horizontal line is handled by ::after on each node
+        z-index: 1;
+      }
+    }
+    
+    // Ensure horizontal lines connect properly
+    .tree-node-wrapper.has-siblings {
+      // Make sure horizontal lines overlap slightly for seamless connection
+      &.first-sibling ~ .tree-node-wrapper.has-siblings.last-sibling {
+        &::after {
+          // Extend to connect with first sibling
+          width: calc(50% + 0.75rem);
+        }
+      }
+    }
+  }
+
+  .tree-node {
+    background: white;
+    border: 2px solid #dee2e6;
+    border-radius: 10px;
+    padding: 0.8rem;
+    box-shadow: 0 3px 6px rgba(0, 0, 0, 0.12);
+    transition: all 0.3s ease;
+    position: relative;
+    z-index: 2;
+    width: 100%;
+    min-width: 140px;
+    max-width: 160px;
+    cursor: pointer;
+
+    &:hover {
+      box-shadow: 0 6px 12px rgba(0, 0, 0, 0.18);
+      transform: translateY(-3px);
+      border-width: 2.5px;
+    }
+
+    &.root-node {
+      border-color: #2c7be5;
+      background: linear-gradient(135deg, #2c7be5 0%, #1a5bb8 100%);
+      color: white;
+      box-shadow: 0 4px 12px rgba(44, 123, 229, 0.3);
+      border-width: 3px;
+      min-width: 150px;
+      max-width: 170px;
+      padding: 0.9rem;
+
+      .node-avatar {
+        background: rgba(255, 255, 255, 0.25);
+        color: white;
+        border-color: rgba(255, 255, 255, 0.5);
+        width: 45px;
+        height: 45px;
+        font-size: 1.4rem;
+      }
+
+      .node-info {
+        color: white;
+
+        strong {
+          color: white;
+          font-size: 0.9rem;
+        }
+
+        small {
+          color: rgba(255, 255, 255, 0.95);
+          font-size: 0.65rem;
+          
+          &.level-badge {
+            background: rgba(255, 255, 255, 0.25);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+          }
+        }
+      }
+    }
+
+    &.level-2-node {
+      border-color: #28a745;
+      border-width: 2.5px;
+      background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
+      box-shadow: 0 3px 8px rgba(40, 167, 69, 0.2);
+      
+      &:hover {
+        border-color: #1e7e34;
+        background: linear-gradient(135deg, #c3e6cb 0%, #b1dfbb 100%);
+        box-shadow: 0 6px 14px rgba(40, 167, 69, 0.3);
+      }
+    }
+
+    &.level-3-node {
+      border-color: #17a2b8;
+      border-width: 2.5px;
+      background: linear-gradient(135deg, #d1ecf1 0%, #bee5eb 100%);
+      box-shadow: 0 3px 8px rgba(23, 162, 184, 0.2);
+      
+      &:hover {
+        border-color: #117a8b;
+        background: linear-gradient(135deg, #bee5eb 0%, #abdde5 100%);
+        box-shadow: 0 6px 14px rgba(23, 162, 184, 0.3);
+      }
+    }
+
+    &.level-4-node {
+      border-color: #ffc107;
+      border-width: 2.5px;
+      background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%);
+      box-shadow: 0 3px 8px rgba(255, 193, 7, 0.2);
+      
+      &:hover {
+        border-color: #e0a800;
+        background: linear-gradient(135deg, #ffeaa7 0%, #ffe69c 100%);
+        box-shadow: 0 6px 14px rgba(255, 193, 7, 0.3);
+      }
+    }
+
+    &.level-5-node {
+      border-color: #6f42c1;
+      border-width: 2.5px;
+      background: linear-gradient(135deg, #e7d9f5 0%, #dcc8f0 100%);
+      box-shadow: 0 3px 8px rgba(111, 66, 193, 0.2);
+      
+      &:hover {
+        border-color: #5a32a3;
+        background: linear-gradient(135deg, #dcc8f0 0%, #d1b7eb 100%);
+        box-shadow: 0 6px 14px rgba(111, 66, 193, 0.3);
+      }
+    }
+  }
+
+  .node-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 0.5rem;
+  }
+
+  .node-avatar {
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.3rem;
+    color: #495057;
+    margin-bottom: 0.6rem;
+    border: 2.5px solid #dee2e6;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.12);
+    transition: all 0.3s ease;
+  }
+
+  .tree-node:hover .node-avatar {
+    transform: scale(1.05);
+    box-shadow: 0 3px 6px rgba(0, 0, 0, 0.18);
+  }
+
+  .node-info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+    width: 100%;
+
+    strong {
+      font-size: 0.8rem;
+      color: #212529;
+      display: block;
+      margin-bottom: 0.2rem;
+      word-break: break-word;
+      font-weight: 600;
+      line-height: 1.2;
+    }
+
+    small {
+      font-size: 0.6rem;
+      display: block;
+      color: #6c757d;
+      line-height: 1.3;
+
+      &.level-badge {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 0.15rem 0.4rem;
+        border-radius: 10px;
+        font-weight: 600;
+        font-size: 0.6rem;
+        display: inline-block;
+        margin: 0.1rem 0;
+        text-align: center;
+      }
+
+      &.commission-badge {
+        background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        color: white;
+        padding: 0.15rem 0.4rem;
+        border-radius: 10px;
+        font-weight: 600;
+        font-size: 0.6rem;
+        display: inline-block;
+        margin: 0.1rem 0;
+        text-align: center;
+      }
+
+      &.text-success {
+        color: #28a745;
+        font-weight: 600;
+        font-size: 0.65rem;
+      }
+
+      &.text-muted {
+        color: #6c757d;
+        font-size: 0.6rem;
+      }
+    }
+  }
+
+  // Enhanced hover effects - make lines more prominent
+  .tree-node-wrapper:hover {
+    &::before {
+      background: linear-gradient(to bottom, 
+        rgba(73, 80, 87, 1) 0%, 
+        rgba(52, 58, 64, 1) 30%,
+        rgba(33, 37, 41, 1) 70%,
+        rgba(20, 22, 25, 1) 100%
+      );
+      box-shadow: 
+        0 3px 8px rgba(0, 0, 0, 0.3),
+        inset 0 1px 0 rgba(255, 255, 255, 0.15);
+      width: 4px;
+      transform: translateX(-50%) scaleY(1.05);
+    }
+    
+    &::after {
+      background: linear-gradient(to right, 
+        rgba(73, 80, 87, 1) 0%, 
+        rgba(52, 58, 64, 1) 30%,
+        rgba(33, 37, 41, 1) 50%,
+        rgba(52, 58, 64, 1) 70%,
+        rgba(73, 80, 87, 1) 100%
+      );
+      box-shadow: 
+        0 3px 8px rgba(0, 0, 0, 0.3),
+        inset 0 1px 0 rgba(255, 255, 255, 0.15);
+      height: 4px;
+    }
+  }
+  
+  // Highlight entire sibling group on hover
+  .tree-generation-row:hover {
+    .tree-node-wrapper.has-siblings {
+      &::after {
+        background: linear-gradient(to right, 
+          rgba(73, 80, 87, 0.95) 0%, 
+          rgba(52, 58, 64, 1) 30%,
+          rgba(33, 37, 41, 1) 50%,
+          rgba(52, 58, 64, 1) 70%,
+          rgba(73, 80, 87, 0.95) 100%
+        );
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
+      }
+    }
+  }
+
+  // Root level - no connectors above
+  .tree-generation-row:first-of-type {
+    padding-top: 0;
+    
+    .tree-node-wrapper {
+    &::before {
+        display: none;
+      }
+    }
+  }
+  
+  // Better spacing between levels
+  .tree-connector-layer:not(:first-of-type) {
+    margin-top: 2.5rem;
+  }
+  
+  // Connect siblings with horizontal lines - improved accuracy
+  .tree-generation-row {
+    
+    // Group siblings visually by drawing horizontal lines
+    .tree-node-wrapper.has-siblings {
+      // First sibling - line extends right
+      &.first-sibling::after {
+        left: 50%;
+        width: 50%;
+      }
+      
+      // Last sibling - line extends left
+      &.last-sibling::after {
+      left: 0;
+        width: 50%;
+        transform: translateX(0);
+      }
+      
+      // Middle siblings - line extends both ways
+      &:not(.first-sibling):not(.last-sibling)::after {
+        left: 0;
+        width: 100%;
+        transform: translateX(-50%);
+      }
+    }
+    
+    // Draw horizontal connector between consecutive siblings with same parent
+    .tree-node-wrapper.has-siblings:not(.last-sibling) {
+      // Check if next node is also a sibling
+      & + .tree-node-wrapper.has-siblings {
+        // Draw horizontal line connecting them
+        &::before {
+      content: '';
+      position: absolute;
+      top: -50px;
+          left: -50%;
+          width: calc(100% + 1.5rem);
+          height: 3px;
+          background: linear-gradient(to right, #5a6268 0%, #495057 50%, #343a40 100%);
+          border-radius: 2px;
+          box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+          z-index: 0;
+        }
+      }
+    }
+  }
+  
+  // Ensure proper T-junction where vertical and horizontal lines meet
+  .tree-node-wrapper.has-siblings {
+    // Vertical line should connect to horizontal line
+    &::before {
+      // Extend to meet horizontal line
+      height: 50px;
+      z-index: 2; // Above horizontal line
+    }
+    
+    // Horizontal line should be at the same level
+    &::after {
+      top: -50px;
+      z-index: 1; // Below vertical line
+    }
+    
+    // Create a smooth T-junction
+    // Both lines meet at top: -50px, creating a clean T-junction
+    // The vertical line (::before) is on top, horizontal (::after) is below
+  }
+  
+  // Improve line visibility and connection
+  .tree-connector-layer {
+    // Add a subtle background to help lines stand out
+    position: relative;
+    
+    // Ensure proper stacking context
+    &::before {
+      z-index: 0;
+    }
+  }
+
+  // Responsive adjustments
+  @media (max-width: 768px) {
+    .tree-generation-row {
+      gap: 1rem;
+      padding: 0 1rem;
+    }
+
+    .tree-node-wrapper {
+      min-width: 130px;
+      max-width: 140px;
+    }
+
+    .tree-node {
+      min-width: 130px;
+      max-width: 140px;
+      padding: 0.65rem;
+    }
+
+    .node-avatar {
+      width: 36px;
+      height: 36px;
+      font-size: 1.1rem;
+    }
+
+    .node-info {
+      strong {
+        font-size: 0.75rem;
+      }
+
+      small {
+        font-size: 0.55rem;
+      }
+    }
+  }
+
+  @media (min-width: 1200px) {
+    .tree-generation-row {
+      gap: 2rem;
+      padding: 0 3rem;
+    }
+
+    .tree-node-wrapper {
+      min-width: 150px;
+      max-width: 170px;
+    }
+
+    .tree-node {
+      min-width: 150px;
+      max-width: 170px;
+      padding: 0.9rem;
+    }
+  }
+}
+
+// Modern Vertical MLM Tree - Enhanced Design
+.modern-mlm-tree-container {
+  width: 100%;
+  padding: 2.5rem;
+  background: linear-gradient(135deg, 
+    #f8f9fa 0%, 
+    #ffffff 25%, 
+    #fafbfc 50%, 
+    #ffffff 75%, 
+    #f8f9fa 100%
+  );
+  border-radius: 16px;
+  margin-top: 1.5rem;
+  margin-bottom: 2rem;
+  min-height: 300px;
+  position: relative;
+  box-shadow: 
+    0 8px 24px rgba(0, 0, 0, 0.06),
+    0 4px 12px rgba(0, 0, 0, 0.04),
+    inset 0 1px 0 rgba(255, 255, 255, 0.8);
+  border: 1px solid rgba(233, 236, 239, 0.8);
+  overflow: visible;
+  backdrop-filter: blur(10px);
+  
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 5px;
+    background: linear-gradient(90deg, 
+      #667eea 0%, 
+      #764ba2 50%, 
+      #667eea 100%
+    );
+    border-radius: 16px 16px 0 0;
+    box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+  }
+  
+  &::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: 
+      radial-gradient(circle at 20% 20%, rgba(102, 126, 234, 0.03) 0%, transparent 50%),
+      radial-gradient(circle at 80% 80%, rgba(118, 75, 162, 0.03) 0%, transparent 50%);
+    border-radius: 16px;
+    pointer-events: none;
+    z-index: 0;
+  }
+}
+
+.mlm-tree-children {
+  position: relative;
+  margin-left: 0;
+  padding-left: 0;
+  padding-top: 0.5rem;
+  
+  // Add subtle connecting line from root to first child
+  &::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: -0.5rem;
+    width: 3px;
+    height: 0.5rem;
+    background: linear-gradient(to bottom, 
+      rgba(102, 126, 234, 0.4) 0%,
+      transparent 100%
+    );
+    border-radius: 2px;
+    z-index: 0;
+  }
+}
+
+// Use ::ng-deep to apply styles to child component (tree-node)
+:host ::ng-deep {
+  .mlm-tree-branch {
+    position: relative;
+    margin-left: 0;
+    margin-bottom: 0.75rem;
+    min-height: 50px;
+    
+    &:last-child {
+      margin-bottom: 0;
+    }
+  }
+
+  // Tree Connector Lines - Enhanced Design with Better Visibility
+  .tree-connector {
+    position: absolute;
+    left: -60px;
+    top: 0;
+    width: 60px;
+    height: 50px;
+    pointer-events: none;
+    z-index: 1;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    
+    .connector-vertical {
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 3px;
+      height: 25px;
+      background: #adb5bd;
+      border-radius: 1.5px;
+      box-shadow: 
+        0 1px 2px rgba(0, 0, 0, 0.1),
+        inset 0 1px 0 rgba(255, 255, 255, 0.3);
+      opacity: 0.7;
+      transition: all 0.3s ease;
+      
+      // Small circular node at the bottom (branching point)
+      &::before {
+        content: '';
+        position: absolute;
+        bottom: -3px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 6px;
+        height: 6px;
+        background: #adb5bd;
+        border-radius: 50%;
+        box-shadow: 
+          0 1px 2px rgba(0, 0, 0, 0.15),
+          inset 0 1px 0 rgba(255, 255, 255, 0.4);
+        z-index: 2;
+      }
+      
+      &::after {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: linear-gradient(to bottom, 
+          rgba(255, 255, 255, 0.2) 0%,
+          transparent 50%,
+          rgba(0, 0, 0, 0.05) 100%
+        );
+        border-radius: 1.5px;
+      }
+    }
+    
+    .connector-horizontal {
+      position: absolute;
+      left: 0;
+      top: 25px;
+      width: 60px;
+      height: 3px;
+      background: #adb5bd;
+      border-radius: 1.5px;
+      box-shadow: 
+        0 1px 2px rgba(0, 0, 0, 0.1),
+        inset 0 1px 0 rgba(255, 255, 255, 0.3);
+      opacity: 0.7;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      pointer-events: auto;
+      transition: all 0.3s ease;
+      
+      &::after {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: linear-gradient(to right, 
+          rgba(255, 255, 255, 0.2) 0%,
+          transparent 50%,
+          rgba(0, 0, 0, 0.05) 100%
+        );
+        border-radius: 1.5px;
+      }
+    }
+    
+    &:hover {
+      .connector-vertical,
+      .connector-horizontal {
+        opacity: 1;
+        background: #868e96;
+        box-shadow: 
+          0 2px 4px rgba(0, 0, 0, 0.15),
+          inset 0 1px 0 rgba(255, 255, 255, 0.4);
+      }
+      
+      .connector-vertical::before {
+        background: #868e96;
+        box-shadow: 
+          0 2px 4px rgba(0, 0, 0, 0.2),
+          inset 0 1px 0 rgba(255, 255, 255, 0.5);
+      }
+    }
+  }
+  
+  .branch-expand-btn {
+    position: absolute;
+    left: 50%;
+    top: 25px;
+    transform: translate(-50%, -50%);
+    width: 28px;
+    height: 28px;
+    border-radius: 10px;
+    border: 2.5px solid #667eea;
+    background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    color: #667eea;
+    font-size: 12px;
+    z-index: 3;
+    box-shadow: 
+      0 3px 8px rgba(102, 126, 234, 0.25),
+      0 2px 4px rgba(0, 0, 0, 0.12),
+      inset 0 1px 0 rgba(255, 255, 255, 0.8);
+    backdrop-filter: blur(10px);
+    
+    &:hover {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      border-color: #5a5fcf;
+      color: #ffffff;
+      transform: translate(-50%, -50%) scale(1.2) rotate(90deg);
+      box-shadow: 
+        0 6px 16px rgba(102, 126, 234, 0.4),
+        0 3px 8px rgba(102, 126, 234, 0.3),
+        inset 0 1px 0 rgba(255, 255, 255, 0.3);
+    }
+    
+    &.expanded {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      border-color: #5a5fcf;
+      color: #ffffff;
+      box-shadow: 
+        0 3px 10px rgba(102, 126, 234, 0.3),
+        0 2px 6px rgba(102, 126, 234, 0.2),
+        inset 0 1px 0 rgba(255, 255, 255, 0.3);
+      
+      &:hover {
+        background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
+        transform: translate(-50%, -50%) scale(1.2) rotate(90deg);
+        box-shadow: 
+          0 6px 16px rgba(102, 126, 234, 0.45),
+          0 3px 8px rgba(102, 126, 234, 0.35);
+      }
+    }
+    
+    i {
+      pointer-events: none;
+      font-weight: 700;
+      transition: transform 0.3s ease;
+    }
+    
+    &:active {
+      transform: translate(-50%, -50%) scale(0.95);
+    }
+  }
+
+  // Node Wrapper - Level-specific styling
+  .mlm-tree-node-wrapper {
+  position: relative;
+  margin-left: 0;
+  margin-bottom: 0.75rem;
+  z-index: 1;
+  transition: transform 0.2s ease;
+  
+  &.root-node {
+    margin-left: 0;
+    margin-bottom: 2rem;
+    padding-bottom: 0.5rem;
+    
+      .root-node-card {
+      background: linear-gradient(135deg, 
+        #667eea 0%, 
+        #764ba2 50%, 
+        #667eea 100%
+      );
+      background-size: 200% 200%;
+      animation: gradientShift 8s ease infinite;
+      border: none;
+      color: #ffffff;
+      box-shadow: 
+        0 8px 24px rgba(102, 126, 234, 0.3),
+        0 4px 12px rgba(102, 126, 234, 0.2),
+        inset 0 1px 0 rgba(255, 255, 255, 0.2);
+      padding: 1.5rem 1.75rem;
+      border-radius: 18px;
+      position: relative;
+      overflow: hidden;
+      
+      &::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        left: -50%;
+        width: 200%;
+        height: 200%;
+        background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, transparent 70%);
+        animation: shimmer 3s ease-in-out infinite;
+      }
+      
+      .node-content {
+        .node-id,
+        .node-name {
+          color: #ffffff;
+        }
+      }
+      
+      .node-avatar {
+        background: rgba(255, 255, 255, 0.2);
+        border: 2px solid rgba(255, 255, 255, 0.3);
+        
+        .avatar-initials {
+          color: #ffffff;
+        }
+      }
+      
+      .root-level-badge {
+        background: rgba(255, 255, 255, 0.2);
+        border-color: rgba(255, 255, 255, 0.3);
+        color: #ffffff;
+      }
+      
+      .root-info-btn {
+        background: rgba(255, 255, 255, 0.15);
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        color: #ffffff;
+        
+        &:hover {
+          background: rgba(255, 255, 255, 0.25);
+        }
+      }
+    }
+  }
+  
+  // Level 2 Styling - Green Theme
+  &[data-level="2"],
+  ::ng-deep &[data-level="2"] {
+    ::ng-deep .tree-connector,
+    .tree-connector {
+      .connector-vertical {
+        background: linear-gradient(to bottom, 
+          rgba(40, 167, 69, 0.6) 0%,
+          rgba(32, 201, 151, 0.6) 100%
+        );
+      }
+      
+      .connector-horizontal {
+        background: linear-gradient(to right, 
+          rgba(40, 167, 69, 0.6) 0%,
+          rgba(32, 201, 151, 0.6) 50%,
+          rgba(40, 167, 69, 0.6) 100%
+        );
+      }
+    }
+    
+    ::ng-deep .mlm-tree-node,
+    .mlm-tree-node {
+      background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+      border: 2.5px solid #28a745;
+      box-shadow: 
+        0 4px 12px rgba(40, 167, 69, 0.12),
+        0 2px 6px rgba(40, 167, 69, 0.08),
+        inset 0 1px 0 rgba(255, 255, 255, 0.9);
+      
+      &::after {
+        background: linear-gradient(90deg, 
+          #28a745 0%, 
+          #20c997 50%, 
+          #28a745 100%
+        );
+        background-size: 200% 100%;
+      }
+      
+      .level-badge {
+        background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
+        border-color: #28a745;
+        color: #155724;
+        box-shadow: 
+          0 4px 8px rgba(40, 167, 69, 0.2),
+          0 2px 4px rgba(40, 167, 69, 0.15),
+          inset 0 1px 0 rgba(255, 255, 255, 0.9);
+      }
+      
+      .info-btn {
+        border-color: #28a745;
+        color: #28a745;
+        
+        &:hover {
+          background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
+          border-color: #1e7e34;
+          color: #1e7e34;
+        }
+      }
+      
+      &:hover {
+        background: linear-gradient(135deg, #f0f9f4 0%, #ffffff 100%);
+        border-color: #1e7e34;
+        box-shadow: 
+          0 12px 28px rgba(40, 167, 69, 0.2),
+          0 6px 14px rgba(40, 167, 69, 0.15),
+          0 0 0 1px rgba(40, 167, 69, 0.1);
+        transform: translateY(-4px) scale(1.01);
+        
+        &::after {
+          opacity: 1;
+          animation: gradientFlow 3s ease infinite;
+        }
+      }
+    }
+  }
+  
+  // Level 3 Styling - Cyan Theme
+  &[data-level="3"],
+  ::ng-deep &[data-level="3"] {
+    ::ng-deep .tree-connector,
+    .tree-connector {
+      .connector-vertical {
+        background: linear-gradient(to bottom, 
+          rgba(23, 162, 184, 0.6) 0%,
+          rgba(19, 132, 150, 0.6) 100%
+        );
+      }
+      
+      .connector-horizontal {
+        background: linear-gradient(to right, 
+          rgba(23, 162, 184, 0.6) 0%,
+          rgba(19, 132, 150, 0.6) 50%,
+          rgba(23, 162, 184, 0.6) 100%
+        );
+      }
+    }
+    
+    .mlm-tree-node {
+      background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+      border: 2.5px solid #17a2b8;
+      box-shadow: 
+        0 4px 12px rgba(23, 162, 184, 0.12),
+        0 2px 6px rgba(23, 162, 184, 0.08),
+        inset 0 1px 0 rgba(255, 255, 255, 0.9);
+      
+      &::after {
+        background: linear-gradient(90deg, 
+          #17a2b8 0%, 
+          #138496 50%, 
+          #17a2b8 100%
+        );
+        background-size: 200% 100%;
+      }
+      
+      .level-badge {
+        background: linear-gradient(135deg, #d1ecf1 0%, #bee5eb 100%);
+        border-color: #17a2b8;
+        color: #0c5460;
+        box-shadow: 
+          0 4px 8px rgba(23, 162, 184, 0.2),
+          0 2px 4px rgba(23, 162, 184, 0.15),
+          inset 0 1px 0 rgba(255, 255, 255, 0.9);
+      }
+      
+      .info-btn {
+        border-color: #17a2b8;
+        color: #17a2b8;
+        
+        &:hover {
+          background: linear-gradient(135deg, #d1ecf1 0%, #bee5eb 100%);
+          border-color: #117a8b;
+          color: #117a8b;
+        }
+      }
+      
+      &:hover {
+        background: linear-gradient(135deg, #f0f9fb 0%, #ffffff 100%);
+        border-color: #117a8b;
+        box-shadow: 
+          0 12px 28px rgba(23, 162, 184, 0.2),
+          0 6px 14px rgba(23, 162, 184, 0.15),
+          0 0 0 1px rgba(23, 162, 184, 0.1);
+        transform: translateY(-4px) scale(1.01);
+        
+        &::after {
+          opacity: 1;
+          animation: gradientFlow 3s ease infinite;
+        }
+      }
+    }
+  }
+  
+  // Level 4 Styling - Yellow/Orange Theme
+  &[data-level="4"],
+  ::ng-deep &[data-level="4"] {
+    ::ng-deep .tree-connector,
+    .tree-connector {
+      .connector-vertical {
+        background: linear-gradient(to bottom, 
+          rgba(255, 193, 7, 0.6) 0%,
+          rgba(255, 152, 0, 0.6) 100%
+        );
+      }
+      
+      .connector-horizontal {
+        background: linear-gradient(to right, 
+          rgba(255, 193, 7, 0.6) 0%,
+          rgba(255, 152, 0, 0.6) 50%,
+          rgba(255, 193, 7, 0.6) 100%
+        );
+      }
+    }
+    
+    .mlm-tree-node {
+      background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+      border: 2.5px solid #ffc107;
+      box-shadow: 
+        0 4px 12px rgba(255, 193, 7, 0.12),
+        0 2px 6px rgba(255, 193, 7, 0.08),
+        inset 0 1px 0 rgba(255, 255, 255, 0.9);
+      
+      &::after {
+        background: linear-gradient(90deg, 
+          #ffc107 0%, 
+          #ff9800 50%, 
+          #ffc107 100%
+        );
+        background-size: 200% 100%;
+      }
+      
+      .level-badge {
+        background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%);
+        border-color: #ffc107;
+        color: #856404;
+        box-shadow: 
+          0 4px 8px rgba(255, 193, 7, 0.2),
+          0 2px 4px rgba(255, 193, 7, 0.15),
+          inset 0 1px 0 rgba(255, 255, 255, 0.9);
+      }
+      
+      .info-btn {
+        border-color: #ffc107;
+        color: #ffc107;
+        
+        &:hover {
+          background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%);
+          border-color: #e0a800;
+          color: #e0a800;
+        }
+      }
+      
+      &:hover {
+        background: linear-gradient(135deg, #fffef5 0%, #ffffff 100%);
+        border-color: #e0a800;
+        box-shadow: 
+          0 12px 28px rgba(255, 193, 7, 0.2),
+          0 6px 14px rgba(255, 193, 7, 0.15),
+          0 0 0 1px rgba(255, 193, 7, 0.1);
+        transform: translateY(-4px) scale(1.01);
+        
+        &::after {
+          opacity: 1;
+          animation: gradientFlow 3s ease infinite;
+        }
+      }
+    }
+  }
+  
+  // Level 5 Styling - Purple Theme
+  &[data-level="5"],
+  ::ng-deep &[data-level="5"] {
+    ::ng-deep .tree-connector,
+    .tree-connector {
+      .connector-vertical {
+        background: linear-gradient(to bottom, 
+          rgba(111, 66, 193, 0.6) 0%,
+          rgba(90, 50, 163, 0.6) 100%
+        );
+      }
+      
+      .connector-horizontal {
+        background: linear-gradient(to right, 
+          rgba(111, 66, 193, 0.6) 0%,
+          rgba(90, 50, 163, 0.6) 50%,
+          rgba(111, 66, 193, 0.6) 100%
+        );
+      }
+    }
+    
+    .mlm-tree-node {
+      background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+      border: 2.5px solid #6f42c1;
+      box-shadow: 
+        0 4px 12px rgba(111, 66, 193, 0.12),
+        0 2px 6px rgba(111, 66, 193, 0.08),
+        inset 0 1px 0 rgba(255, 255, 255, 0.9);
+      
+      &::after {
+        background: linear-gradient(90deg, 
+          #6f42c1 0%, 
+          #5a32a3 50%, 
+          #6f42c1 100%
+        );
+        background-size: 200% 100%;
+      }
+      
+      .level-badge {
+        background: linear-gradient(135deg, #e7d9f5 0%, #dcc8f0 100%);
+        border-color: #6f42c1;
+        color: #4a2c5a;
+        box-shadow: 
+          0 4px 8px rgba(111, 66, 193, 0.2),
+          0 2px 4px rgba(111, 66, 193, 0.15),
+          inset 0 1px 0 rgba(255, 255, 255, 0.9);
+      }
+      
+      .info-btn {
+        border-color: #6f42c1;
+        color: #6f42c1;
+        
+        &:hover {
+          background: linear-gradient(135deg, #e7d9f5 0%, #dcc8f0 100%);
+          border-color: #5a32a3;
+          color: #5a32a3;
+        }
+      }
+      
+      &:hover {
+        background: linear-gradient(135deg, #f9f7fc 0%, #ffffff 100%);
+        border-color: #5a32a3;
+        box-shadow: 
+          0 12px 28px rgba(111, 66, 193, 0.2),
+          0 6px 14px rgba(111, 66, 193, 0.15),
+          0 0 0 1px rgba(111, 66, 193, 0.1);
+        transform: translateY(-4px) scale(1.01);
+        
+        &::after {
+          opacity: 1;
+          animation: gradientFlow 3s ease infinite;
+        }
+      }
+    }
+  }
+  
+  &.selected {
+    .mlm-tree-node {
+      background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+      border-color: #2196f3;
+      box-shadow: 0 4px 16px rgba(33, 150, 243, 0.25);
+      transform: translateX(4px);
+    }
+  }
+  
+  &:hover:not(.root-node) {
+    transform: translateX(2px);
+  }
+  } // End of .mlm-tree-node-wrapper
+  
+  // Node Card - Enhanced Design
+  .mlm-tree-node {
+    display: flex;
+    align-items: center;
+    gap: 1.125rem;
+    padding: 1.125rem 1.375rem;
+    background: linear-gradient(135deg, #ffffff 0%, #fafbfc 100%);
+    border: 2px solid #e9ecef;
+    border-radius: 14px;
+    min-width: 320px;
+    max-width: 420px;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    cursor: pointer;
+    position: relative;
+    box-shadow: 
+      0 4px 12px rgba(0, 0, 0, 0.08),
+      0 2px 6px rgba(0, 0, 0, 0.05),
+      inset 0 1px 0 rgba(255, 255, 255, 0.9);
+    overflow: hidden;
+    z-index: 1;
+    
+    &::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      border-radius: 14px;
+      background: linear-gradient(135deg, 
+        rgba(102, 126, 234, 0.06) 0%, 
+        rgba(118, 75, 162, 0.06) 100%
+      );
+      opacity: 0;
+      transition: opacity 0.4s ease;
+      pointer-events: none;
+    }
+    
+    &::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 4px;
+      background: linear-gradient(90deg, 
+        #667eea 0%, 
+        #764ba2 50%, 
+        #667eea 100%
+      );
+      background-size: 200% 100%;
+      opacity: 0;
+      transition: all 0.4s ease;
+      animation: gradientFlow 3s ease infinite;
+    }
+    
+    // Enhanced hover effect for non-root nodes
+    &:hover:not(.root-node-card) {
+      background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+      transform: translateY(-4px) scale(1.01);
+      border-color: #667eea;
+      box-shadow: 
+        0 12px 28px rgba(0, 0, 0, 0.12),
+        0 6px 14px rgba(0, 0, 0, 0.08),
+        0 0 0 1px rgba(102, 126, 234, 0.1);
+      
+      &::before {
+        opacity: 1;
+      }
+      
+      &::after {
+        opacity: 1;
+        animation-play-state: running;
+      }
+    }
+    
+    // Root node hover
+    &.root-node-card:hover {
+      box-shadow: 
+        0 12px 32px rgba(102, 126, 234, 0.4),
+        0 6px 16px rgba(102, 126, 234, 0.3),
+        inset 0 1px 0 rgba(255, 255, 255, 0.3);
+      transform: translateY(-4px) scale(1.02);
+    }
+    
+    &:active {
+      transform: translateY(-1px) scale(0.99);
+      transition: all 0.15s ease;
+    }
+  }
+
+// Avatar - Enhanced Design
+.node-avatar {
+  flex-shrink: 0;
+  width: 52px;
+  height: 52px;
+  border-radius: 14px;
+  background: linear-gradient(135deg, 
+    #667eea 0%, 
+    #764ba2 50%, 
+    #667eea 100%
+  );
+  background-size: 200% 200%;
+  animation: gradientShift 6s ease infinite;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  box-shadow: 
+    0 4px 12px rgba(102, 126, 234, 0.3),
+    0 2px 6px rgba(0, 0, 0, 0.15),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3);
+  border: 3px solid #ffffff;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  
+  &::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle, rgba(255, 255, 255, 0.3) 0%, transparent 70%);
+    animation: shimmer 2s ease-in-out infinite;
+  }
+  
+  &:hover {
+    transform: scale(1.1) rotate(5deg);
+    box-shadow: 
+      0 6px 16px rgba(102, 126, 234, 0.4),
+      0 3px 8px rgba(0, 0, 0, 0.2),
+      inset 0 1px 0 rgba(255, 255, 255, 0.4);
+  }
+  
+  .avatar-initials {
+    color: #ffffff;
+    font-weight: 700;
+    font-size: 15px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    position: relative;
+    z-index: 1;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+  }
+  
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    position: relative;
+    z-index: 1;
+  }
+}
+
+  // Level-specific avatar colors (higher specificity)
+  .mlm-tree-node-wrapper[data-level="2"] .node-avatar {
+    background: linear-gradient(135deg, #28a745 0%, #20c997 100%) !important;
+  }
+
+  .mlm-tree-node-wrapper[data-level="3"] .node-avatar {
+    background: linear-gradient(135deg, #17a2b8 0%, #138496 100%) !important;
+  }
+
+  .mlm-tree-node-wrapper[data-level="4"] .node-avatar {
+    background: linear-gradient(135deg, #ffc107 0%, #ff9800 100%) !important;
+  }
+
+  .mlm-tree-node-wrapper[data-level="5"] .node-avatar {
+    background: linear-gradient(135deg, #6f42c1 0%, #5a32a3 100%) !important;
+  }
+  
+  // Node Content - Reference Design Typography
+  .node-content {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+    
+    .node-id {
+      font-size: 12px;
+      color: #212529;
+      font-weight: 700;
+      letter-spacing: 0;
+      text-transform: none;
+      line-height: 1.2;
+    }
+    
+    .node-name {
+      font-size: 13px;
+      color: #495057;
+      font-weight: 500;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      letter-spacing: 0;
+      line-height: 1.3;
+    }
+  }
+
+  // Node Badges
+  .node-badges {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    flex-shrink: 0;
+  }
+
+  .level-badge {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 56px;
+    height: 56px;
+    border-radius: 14px;
+    background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+    border: 2.5px solid #dee2e6;
+    font-size: 10px;
+    font-weight: 700;
+    color: #495057;
+    text-align: center;
+    line-height: 1.2;
+    box-shadow: 
+      0 4px 8px rgba(0, 0, 0, 0.1),
+      0 2px 4px rgba(0, 0, 0, 0.06),
+      inset 0 1px 0 rgba(255, 255, 255, 0.9);
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    flex-shrink: 0;
+    position: relative;
+    overflow: hidden;
+    
+    &::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, 
+        transparent 0%, 
+        rgba(255, 255, 255, 0.4) 50%, 
+        transparent 100%
+      );
+      transition: left 0.5s ease;
+    }
+    
+    &:hover {
+      transform: scale(1.08) rotate(5deg);
+      box-shadow: 
+        0 6px 12px rgba(0, 0, 0, 0.15),
+        0 3px 6px rgba(0, 0, 0, 0.1),
+        inset 0 1px 0 rgba(255, 255, 255, 1);
+      border-color: #adb5bd;
+      
+      &::before {
+        left: 100%;
+      }
+    }
+  }
+
+  .info-btn {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    border: 2.5px solid #212529;
+    background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    color: #212529;
+    font-size: 12px;
+    font-weight: 700;
+    box-shadow: 
+      0 3px 6px rgba(0, 0, 0, 0.1),
+      0 2px 4px rgba(0, 0, 0, 0.06),
+      inset 0 1px 0 rgba(255, 255, 255, 0.9);
+    flex-shrink: 0;
+    position: relative;
+    overflow: hidden;
+    
+    &::before {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 0;
+      height: 0;
+      border-radius: 50%;
+      background: rgba(33, 37, 41, 0.1);
+      transform: translate(-50%, -50%);
+      transition: width 0.4s ease, height 0.4s ease;
+    }
+    
+    &:hover {
+      background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+      border-color: #495057;
+      transform: scale(1.15) translateY(-2px) rotate(5deg);
+      box-shadow: 
+        0 6px 12px rgba(0, 0, 0, 0.15),
+        0 3px 6px rgba(0, 0, 0, 0.1),
+        inset 0 1px 0 rgba(255, 255, 255, 1);
+      color: #495057;
+      
+      &::before {
+        width: 100%;
+        height: 100%;
+      }
+      
+      i {
+        transform: scale(1.2);
+      }
+    }
+    
+    &:active {
+      transform: scale(1.05) translateY(0) rotate(0deg);
+      transition: all 0.15s ease;
+    }
+    
+    i {
+      pointer-events: none;
+      font-size: 12px;
+      transition: transform 0.3s ease;
+      position: relative;
+      z-index: 1;
+    }
+  }
+  
+  // Avatar - Reference Design
+  .node-avatar {
+    flex-shrink: 0;
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    box-shadow: 
+      0 2px 6px rgba(0, 0, 0, 0.15),
+      0 1px 3px rgba(0, 0, 0, 0.1);
+    border: 2px solid #ffffff;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    
+    &:hover {
+      transform: scale(1.05);
+      box-shadow: 
+        0 4px 12px rgba(0, 0, 0, 0.2),
+        0 2px 6px rgba(0, 0, 0, 0.15);
+    }
+    
+    .avatar-initials {
+      color: #ffffff;
+      font-weight: 600;
+      font-size: 14px;
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+    }
+    
+    img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+  }
+} // End of :host ::ng-deep block
+
+// Keep these outside ::ng-deep for root node (in parent template)  
+// Node Content - Reference Design Typography
+.node-content {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  
+  .node-id {
+    font-size: 12px;
+    color: #212529;
+    font-weight: 700;
+    letter-spacing: 0;
+    text-transform: none;
+    line-height: 1.2;
+  }
+  
+  .node-name {
+    font-size: 13px;
+    color: #495057;
+    font-weight: 500;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    letter-spacing: 0;
+    line-height: 1.3;
+  }
+}
+
+// Node Badges
+.node-badges {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-shrink: 0;
+}
+
+.level-badge {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 52px;
+  height: 52px;
+  border-radius: 12px;
+  background: #f8f9fa;
+  border: 2px solid #dee2e6;
+  font-size: 10px;
+  font-weight: 600;
+  color: #495057;
+  text-align: center;
+  line-height: 1.2;
+  box-shadow: 
+    0 2px 4px rgba(0, 0, 0, 0.08),
+    0 1px 2px rgba(0, 0, 0, 0.04);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  flex-shrink: 0;
+  
+  &:hover {
+    transform: scale(1.05);
+    box-shadow: 
+      0 4px 8px rgba(0, 0, 0, 0.12),
+      0 2px 4px rgba(0, 0, 0, 0.08);
+  }
+}
+
+.info-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  border: 2px solid #212529;
+  background: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  color: #212529;
+  font-size: 11px;
+  font-weight: 600;
+  box-shadow: 
+    0 2px 4px rgba(0, 0, 0, 0.08),
+    0 1px 2px rgba(0, 0, 0, 0.04);
+  flex-shrink: 0;
+  
+  &:hover {
+    background: #f8f9fa;
+    border-color: #495057;
+    transform: scale(1.1) translateY(-1px);
+    box-shadow: 
+      0 4px 8px rgba(0, 0, 0, 0.12),
+      0 2px 4px rgba(0, 0, 0, 0.08);
+  }
+  
+  &:active {
+    transform: scale(0.95) translateY(0);
+  }
+  
+  i {
+    pointer-events: none;
+    font-size: 11px;
+  }
+}
+
+// Expand button removed from node badges - now at branch point
+
+// Legacy MLM Tree Container (SVG-based)
+.mlm-tree-container {
+  width: 100%;
+  overflow-x: auto;
+  overflow-y: visible;
+  padding: 2.5rem 1.5rem;
+  background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 50%, #f8f9fa 100%);
+  border-radius: 16px;
+  margin-top: 1.5rem;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
+  border: 1px solid #e9ecef;
+  position: relative;
+
+  &::-webkit-scrollbar {
+    height: 8px;
+    width: 8px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: #f1f3f5;
+    border-radius: 4px;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: #adb5bd;
+    border-radius: 4px;
+    
+    &:hover {
+      background: #868e96;
+    }
+  }
+
+  .mlm-tree-wrapper {
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    min-height: 450px;
+    width: 100%;
+    position: relative;
+    
+    svg {
+      max-width: 100%;
+      height: auto;
+      display: block;
+      margin: 0 auto;
+      transition: transform 0.3s ease;
+    }
+  }
+}
+
+// Legacy SVG Tree Container (kept for reference)
+.referral-tree-svg-container {
+  width: 100%;
+  overflow-x: auto;
+  overflow-y: visible;
+  padding: 1.5rem 1rem;
+  background: #ffffff;
+  border-radius: 8px;
+  margin-top: 1.5rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+
+  .svg-tree-wrapper {
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    min-height: 350px;
+    width: 100%;
+    
+    svg {
+      max-width: 100%;
+      height: auto;
+      display: block;
+      margin: 0 auto;
+    }
+  }
+}
+
+// Enhanced Animations
+@keyframes gradientShift {
+  0%, 100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+}
+
+@keyframes shimmer {
+  0%, 100% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.8);
+  }
+  50% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1.2);
+  }
+}
+
+@keyframes gradientFlow {
+  0% {
+    background-position: 0% 0%;
+  }
+  100% {
+    background-position: 200% 0%;
+  }
+}
+
+// Enhanced Level-Specific Connector Colors
+:host ::ng-deep {
+  .mlm-tree-node-wrapper[data-level="2"] {
+    .tree-connector {
+      .connector-vertical {
+        background: linear-gradient(to bottom, 
+          rgba(40, 167, 69, 0.8) 0%,
+          rgba(32, 201, 151, 0.85) 50%,
+          rgba(40, 167, 69, 0.8) 100%
+        );
+        box-shadow: 
+          0 2px 6px rgba(40, 167, 69, 0.3),
+          0 1px 3px rgba(0, 0, 0, 0.15),
+          inset 0 1px 0 rgba(255, 255, 255, 0.2);
+      }
+      
+      .connector-horizontal {
+        background: linear-gradient(to right, 
+          rgba(40, 167, 69, 0.8) 0%,
+          rgba(32, 201, 151, 0.85) 25%,
+          rgba(32, 201, 151, 0.9) 50%,
+          rgba(32, 201, 151, 0.85) 75%,
+          rgba(40, 167, 69, 0.8) 100%
+        );
+        box-shadow: 
+          0 2px 6px rgba(40, 167, 69, 0.3),
+          0 1px 3px rgba(0, 0, 0, 0.15),
+          inset 0 1px 0 rgba(255, 255, 255, 0.2);
+      }
+    }
+    
+    .branch-expand-btn {
+      border-color: #28a745;
+      color: #28a745;
+      
+      &:hover {
+        background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+        border-color: #1e7e34;
+        color: #ffffff;
+      }
+      
+      &.expanded {
+        background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+        border-color: #1e7e34;
+        color: #ffffff;
+      }
+    }
+  }
+  
+  .mlm-tree-node-wrapper[data-level="3"] {
+    .tree-connector {
+      .connector-vertical {
+        background: linear-gradient(to bottom, 
+          rgba(23, 162, 184, 0.8) 0%,
+          rgba(19, 132, 150, 0.85) 50%,
+          rgba(23, 162, 184, 0.8) 100%
+        );
+        box-shadow: 
+          0 2px 6px rgba(23, 162, 184, 0.3),
+          0 1px 3px rgba(0, 0, 0, 0.15),
+          inset 0 1px 0 rgba(255, 255, 255, 0.2);
+      }
+      
+      .connector-horizontal {
+        background: linear-gradient(to right, 
+          rgba(23, 162, 184, 0.8) 0%,
+          rgba(19, 132, 150, 0.85) 25%,
+          rgba(19, 132, 150, 0.9) 50%,
+          rgba(19, 132, 150, 0.85) 75%,
+          rgba(23, 162, 184, 0.8) 100%
+        );
+        box-shadow: 
+          0 2px 6px rgba(23, 162, 184, 0.3),
+          0 1px 3px rgba(0, 0, 0, 0.15),
+          inset 0 1px 0 rgba(255, 255, 255, 0.2);
+      }
+    }
+    
+    .branch-expand-btn {
+      border-color: #17a2b8;
+      color: #17a2b8;
+      
+      &:hover {
+        background: linear-gradient(135deg, #17a2b8 0%, #138496 100%);
+        border-color: #117a8b;
+        color: #ffffff;
+      }
+      
+      &.expanded {
+        background: linear-gradient(135deg, #17a2b8 0%, #138496 100%);
+        border-color: #117a8b;
+        color: #ffffff;
+      }
+    }
+  }
+  
+  .mlm-tree-node-wrapper[data-level="4"] {
+    .tree-connector {
+      .connector-vertical {
+        background: linear-gradient(to bottom, 
+          rgba(255, 193, 7, 0.8) 0%,
+          rgba(255, 152, 0, 0.85) 50%,
+          rgba(255, 193, 7, 0.8) 100%
+        );
+        box-shadow: 
+          0 2px 6px rgba(255, 193, 7, 0.3),
+          0 1px 3px rgba(0, 0, 0, 0.15),
+          inset 0 1px 0 rgba(255, 255, 255, 0.2);
+      }
+      
+      .connector-horizontal {
+        background: linear-gradient(to right, 
+          rgba(255, 193, 7, 0.8) 0%,
+          rgba(255, 152, 0, 0.85) 25%,
+          rgba(255, 152, 0, 0.9) 50%,
+          rgba(255, 152, 0, 0.85) 75%,
+          rgba(255, 193, 7, 0.8) 100%
+        );
+        box-shadow: 
+          0 2px 6px rgba(255, 193, 7, 0.3),
+          0 1px 3px rgba(0, 0, 0, 0.15),
+          inset 0 1px 0 rgba(255, 255, 255, 0.2);
+      }
+    }
+    
+    .branch-expand-btn {
+      border-color: #ffc107;
+      color: #ffc107;
+      
+      &:hover {
+        background: linear-gradient(135deg, #ffc107 0%, #ff9800 100%);
+        border-color: #e0a800;
+        color: #ffffff;
+      }
+      
+      &.expanded {
+        background: linear-gradient(135deg, #ffc107 0%, #ff9800 100%);
+        border-color: #e0a800;
+        color: #ffffff;
+      }
+    }
+  }
+  
+  .mlm-tree-node-wrapper[data-level="5"] {
+    .tree-connector {
+      .connector-vertical {
+        background: linear-gradient(to bottom, 
+          rgba(111, 66, 193, 0.8) 0%,
+          rgba(90, 50, 163, 0.85) 50%,
+          rgba(111, 66, 193, 0.8) 100%
+        );
+        box-shadow: 
+          0 2px 6px rgba(111, 66, 193, 0.3),
+          0 1px 3px rgba(0, 0, 0, 0.15),
+          inset 0 1px 0 rgba(255, 255, 255, 0.2);
+      }
+      
+      .connector-horizontal {
+        background: linear-gradient(to right, 
+          rgba(111, 66, 193, 0.8) 0%,
+          rgba(90, 50, 163, 0.85) 25%,
+          rgba(90, 50, 163, 0.9) 50%,
+          rgba(90, 50, 163, 0.85) 75%,
+          rgba(111, 66, 193, 0.8) 100%
+        );
+        box-shadow: 
+          0 2px 6px rgba(111, 66, 193, 0.3),
+          0 1px 3px rgba(0, 0, 0, 0.15),
+          inset 0 1px 0 rgba(255, 255, 255, 0.2);
+      }
+    }
+    
+    .branch-expand-btn {
+      border-color: #6f42c1;
+      color: #6f42c1;
+      
+      &:hover {
+        background: linear-gradient(135deg, #6f42c1 0%, #5a32a3 100%);
+        border-color: #5a32a3;
+        color: #ffffff;
+      }
+      
+      &.expanded {
+        background: linear-gradient(135deg, #6f42c1 0%, #5a32a3 100%);
+        border-color: #5a32a3;
+        color: #ffffff;
+      }
+    }
+  }
+}

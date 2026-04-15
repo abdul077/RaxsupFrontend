@@ -1,0 +1,1474 @@
+<div class="load-detail-container" *ngIf="load">
+  <!-- Header Section -->
+  <div class="load-header">
+    <div class="header-top-row">
+      <div class="header-left">
+        <button class="btn-back" (click)="goBack()">
+          <i class="fas fa-arrow-left"></i>
+        </button>
+        <div class="title-group">
+          <h1 class="load-number">Load #{{ load.loadNumber }}</h1>
+          <div class="route-pill">
+            <span class="origin">{{ load.origin }}</span>
+            <i class="fas fa-long-arrow-alt-right route-arrow"></i>
+            <span class="destination">{{ load.destination }}</span>
+          </div>
+        </div>
+      </div>
+      <div class="header-right">
+        <div class="status-area" *ngIf="canEditLoadStatus()">
+          <select class="status-dropdown" [ngClass]="'status-' + load.status.toLowerCase()" [(ngModel)]="load.status" (change)="updateStatus(load.status)">
+            <option [value]="load.status">{{ getStatusDisplayName(load.status) }}</option>
+            <option *ngFor="let status of getAvailableStatusTransitions()" [value]="status">{{ getStatusDisplayName(status) }}</option>
+          </select>
+          <div *ngIf="(load.status === 'PickedUp' || load.status === 'InTransit') && !canMarkAsDelivered() && load.deliveryDateTime" class="delivery-restriction-notice">
+            <i class="fas fa-info-circle"></i>
+            <small>Delivery available on {{ formatDate(load.deliveryDateTime) }}</small>
+          </div>
+        </div>
+        <div class="status-area" *ngIf="!canEditLoadStatus()">
+          <span class="status-badge" [ngClass]="getStatusBadgeClass(load.status)">{{ getStatusDisplayName(load.status) }}</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="header-meta-row">
+      <div class="meta-chips">
+        <span class="meta-chip" *ngIf="load.loadType">
+          <i class="fas fa-truck"></i>
+          {{ load.loadType }}
+        </span>
+        <span class="meta-chip">
+          <i class="fas fa-map-marker-alt"></i>
+          {{ load.stops.length }} Stop{{ load.stops.length !== 1 ? 's' : '' }}
+        </span>
+        <span class="meta-chip" *ngIf="getAssignedDriver()">
+          <i class="fas fa-user-circle"></i>
+          {{ getAssignedDriver() }}
+        </span>
+      </div>
+    </div>
+
+    <div class="header-details-row">
+      <div class="detail-card">
+        <i class="fas fa-calendar-plus detail-card-icon"></i>
+        <div class="detail-card-content">
+          <span class="detail-label">Created</span>
+          <span class="detail-value">{{ formatCreatedDate(load.createdAt) }}</span>
+        </div>
+      </div>
+      <div class="detail-card" *ngIf="load.pickupDateTime">
+        <i class="fas fa-box detail-card-icon pickup"></i>
+        <div class="detail-card-content">
+          <span class="detail-label">Pickup</span>
+          <span class="detail-value">{{ formatDate(load.pickupDateTime) }}</span>
+        </div>
+      </div>
+      <div class="detail-card" *ngIf="load.deliveryDateTime">
+        <i class="fas fa-flag-checkered detail-card-icon delivery"></i>
+        <div class="detail-card-content">
+          <span class="detail-label">Delivery</span>
+          <span class="detail-value">{{ formatDate(load.deliveryDateTime) }}</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Navigation Tabs -->
+  <div class="nav-tabs-wrapper">
+    <ul class="nav nav-tabs">
+      <li class="nav-item">
+        <a class="nav-link" [class.active]="activeTab === 'overview'" (click)="onOverviewTabClick()">
+          Overview
+        </a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" [class.active]="activeTab === 'stops'" (click)="activeTab = 'stops'">
+          Stops
+          <span class="tab-badge" [ngClass]="load.stops.length > 0 ? 'badge-success' : 'badge-default'">
+            {{ load.stops.length }}
+          </span>
+        </a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" [class.active]="activeTab === 'assignments'" (click)="activeTab = 'assignments'">
+          Assignments
+          <span class="tab-badge" [ngClass]="load.assignments.length > 0 ? 'badge-success' : 'badge-default'">
+            {{ load.assignments.length }}
+          </span>
+        </a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" [class.active]="activeTab === 'documents'" (click)="activeTab = 'documents'">
+          Documents
+          <span class="tab-badge" [ngClass]="load.documents.length > 0 ? 'badge-success' : 'badge-danger'">
+            {{ load.documents.length }}
+          </span>
+        </a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" [class.active]="activeTab === 'activity'" (click)="activeTab = 'activity'; loadActivityLogs()">
+          Activity Log
+        </a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" [class.active]="activeTab === 'billing'" (click)="activeTab = 'billing'">
+          Billing
+        </a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" [class.active]="activeTab === 'tracking'" (click)="onTrackingTabClick()">
+          Tracking
+        </a>
+      </li>
+    </ul>
+  </div>
+
+  <!-- Loading State -->
+  <div *ngIf="loading" class="loading-state">
+    <div class="spinner"></div>
+    <p>Loading...</p>
+  </div>
+
+  <!-- Overview Tab -->
+  <div *ngIf="!loading && activeTab === 'overview'" class="overview-content">
+    <!-- Load Progress Tracker -->
+    <div class="progress-tracker-card">
+      <div class="progress-tracker-header">
+        <h3 class="progress-tracker-title">
+          <i class="fas fa-tasks"></i>
+          Load Progress
+        </h3>
+        <span class="progress-tracker-status" [ngClass]="'tracker-status-' + load.status.toLowerCase()">
+          {{ getStatusDisplayName(load.status) }}
+        </span>
+      </div>
+      <div class="progress-tracker">
+        <!-- Step 1: Created -->
+        <div class="progress-step" [class.completed]="isStatusCompleted('Created')" [class.active]="load.status === 'Created'">
+          <div class="step-icon-wrapper">
+            <div class="step-icon">
+              <i class="fas fa-plus-circle"></i>
+            </div>
+            <div class="step-check" *ngIf="isStatusCompleted('Created') && load.status !== 'Created'">
+              <i class="fas fa-check"></i>
+            </div>
+          </div>
+          <div class="step-content">
+            <div class="step-title">Created</div>
+            <div class="step-date">{{ formatCreatedDate(load.createdAt) }}</div>
+          </div>
+        </div>
+
+        <!-- Line 1 -->
+        <div class="progress-line" [class.completed]="isStatusCompleted('Assigned')"></div>
+
+        <!-- Step 2: Assigned -->
+        <div class="progress-step" [class.completed]="isStatusCompleted('Assigned')" [class.active]="load.status === 'Assigned'">
+          <div class="step-icon-wrapper">
+            <div class="step-icon">
+              <i class="fas fa-user-check"></i>
+            </div>
+            <div class="step-check" *ngIf="isStatusCompleted('Assigned') && load.status !== 'Assigned'">
+              <i class="fas fa-check"></i>
+            </div>
+          </div>
+          <div class="step-content">
+            <div class="step-title">Assigned</div>
+            <div class="step-date">{{ getStatusDate('Assigned') }}</div>
+          </div>
+        </div>
+
+        <div class="progress-line" [class.completed]="isStatusCompleted('Dispatched')"></div>
+
+        <div class="progress-step" [class.completed]="isStatusCompleted('PickedUp')" [class.active]="load.status === 'PickedUp' || load.status === 'Dispatched'">
+          <div class="step-icon-wrapper">
+            <div class="step-icon">
+              <i class="fas fa-dolly"></i>
+            </div>
+            <div class="step-check" *ngIf="isStatusCompleted('PickedUp') && load.status !== 'PickedUp'">
+              <i class="fas fa-check"></i>
+            </div>
+          </div>
+          <div class="step-content">
+            <div class="step-title">Picked up</div>
+            <div class="step-date">{{ getStatusDate('PickedUp') }}</div>
+          </div>
+        </div>
+
+        <div class="progress-line" [class.completed]="isStatusCompleted('InTransit')"></div>
+
+        <!-- Step: In transit -->
+        <div class="progress-step" [class.completed]="isStatusCompleted('InTransit')" [class.active]="load.status === 'InTransit'">
+          <div class="step-icon-wrapper">
+            <div class="step-icon">
+              <i class="fas fa-shipping-fast"></i>
+            </div>
+            <div class="step-check" *ngIf="isStatusCompleted('InTransit') && load.status !== 'InTransit'">
+              <i class="fas fa-check"></i>
+            </div>
+          </div>
+          <div class="step-content">
+            <div class="step-title">In transit</div>
+            <div class="step-date">{{ getStatusDate('InTransit') }}</div>
+          </div>
+        </div>
+
+        <div class="progress-line" [class.completed]="isStatusCompleted('Delivered')"></div>
+
+        <!-- Step: Delivered -->
+        <div class="progress-step" [class.completed]="isStatusCompleted('Delivered')" [class.active]="load.status === 'Delivered'">
+          <div class="step-icon-wrapper">
+            <div class="step-icon">
+              <i class="fas fa-clipboard-check"></i>
+            </div>
+            <div class="step-check" *ngIf="isStatusCompleted('Delivered') && load.status !== 'Delivered'">
+              <i class="fas fa-check"></i>
+            </div>
+          </div>
+          <div class="step-content">
+            <div class="step-title">Delivered</div>
+            <div class="step-date">{{ getStatusDate('Delivered') }}</div>
+          </div>
+        </div>
+
+        <div class="progress-line" [class.completed]="isStatusCompleted('Completed')"></div>
+
+        <div class="progress-step" [class.completed]="isStatusCompleted('Completed')" [class.active]="load.status === 'Completed'">
+          <div class="step-icon-wrapper">
+            <div class="step-icon">
+              <i class="fas fa-flag-checkered"></i>
+            </div>
+            <div class="step-check" *ngIf="isStatusCompleted('Completed') && load.status !== 'Completed'">
+              <i class="fas fa-check"></i>
+            </div>
+          </div>
+          <div class="step-content">
+            <div class="step-title">Completed</div>
+            <div class="step-date">{{ getStatusDate('Completed') }}</div>
+          </div>
+        </div>
+
+        <div class="progress-line" [class.completed]="isStatusCompleted('Settled')"></div>
+
+        <!-- Step: Settled -->
+        <div class="progress-step" [class.completed]="isStatusCompleted('Settled')" [class.active]="load.status === 'Settled'">
+          <div class="step-icon-wrapper">
+            <div class="step-icon">
+              <i class="fas fa-check-double"></i>
+            </div>
+            <div class="step-check" *ngIf="isStatusCompleted('Settled')">
+              <i class="fas fa-check"></i>
+            </div>
+          </div>
+          <div class="step-content">
+            <div class="step-title">Settled</div>
+            <div class="step-date">{{ getStatusDate('Settled') }}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Main Content Grid -->
+    <div class="overview-grid">
+      <!-- Left Column -->
+      <div class="overview-left">
+        <!-- Load Details Card -->
+        <div class="info-card details-card">
+          <div class="card-header">
+            <h3><i class="fas fa-file-alt card-header-icon"></i> Load Information</h3>
+          </div>
+          <div class="card-body">
+            <div class="info-row">
+              <span class="info-label"><i class="fas fa-hashtag info-row-icon"></i> Load Number</span>
+              <span class="info-value">{{ load.loadNumber }}</span>
+            </div>
+            <div class="info-row">
+              <span class="info-label"><i class="fas fa-building info-row-icon"></i> Broker</span>
+              <span class="info-value">{{ load.customerName || '-' }}</span>
+            </div>
+            <div class="info-row">
+              <span class="info-label"><i class="fas fa-headset info-row-icon"></i> Dispatcher</span>
+              <span class="info-value">
+                {{ authService.getCurrentUser()?.fullName || 'RaxUp Admin' }}
+                <span class="badge-tag">{{ authService.getCurrentUser()?.role || 'Admin' }}</span>
+              </span>
+            </div>
+            <div class="info-row">
+              <span class="info-label"><i class="fas fa-truck-loading info-row-icon"></i> Load Type</span>
+              <span class="info-value">
+                <span class="load-type-badge">{{ load.loadType || 'FTL' }}</span>
+              </span>
+            </div>
+            <div class="info-row">
+              <span class="info-label"><i class="fas fa-calendar-alt info-row-icon"></i> Created</span>
+              <span class="info-value">{{ formatCreatedDate(load.createdAt) }}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Notes Section -->
+        <div class="info-card notes-card">
+          <div class="card-header">
+            <div class="notes-tabs">
+              <button type="button" class="notes-tab" [class.active]="activeNoteTab === 'internal'" (click)="activeNoteTab = 'internal'">
+                <i class="fas fa-lock"></i> Internal
+              </button>
+              <button type="button" class="notes-tab" [class.active]="activeNoteTab === 'driver'" (click)="activeNoteTab = 'driver'">
+                <i class="fas fa-user"></i> Driver
+              </button>
+              <button type="button" class="notes-tab" [class.active]="activeNoteTab === 'customer'" (click)="activeNoteTab = 'customer'">
+                <i class="fas fa-building"></i> Broker
+              </button>
+              <button type="button" class="notes-tab" [class.active]="activeNoteTab === 'public'" (click)="activeNoteTab = 'public'">
+                <i class="fas fa-globe"></i> Public
+              </button>
+            </div>
+          </div>
+          <div class="card-body">
+            <div class="notes-list" *ngIf="getNotesForTab().length > 0">
+              <div class="note-item" *ngFor="let note of getNotesForTab()">
+                <div class="note-header">
+                  <span class="note-author">
+                    <i class="fas fa-user-circle"></i>
+                    {{ displayNoteAuthor(note) }}
+                  </span>
+                  <span class="note-date">{{ formatDate(note.createdAt) }}</span>
+                </div>
+                <div class="note-content">{{ note.content }}</div>
+              </div>
+            </div>
+            <div class="notes-empty" *ngIf="getNotesForTab().length === 0">
+              <i class="fas fa-sticky-note"></i>
+              <p>No {{ getActiveNoteTabLabel() }} notes yet</p>
+            </div>
+            <button type="button" class="btn-add-note" *ngIf="canAddLoadNotes()" (click)="openNoteModal()">
+              <i class="fas fa-plus"></i> Add Note
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Middle Column -->
+      <div class="overview-middle">
+        <!-- Route Card -->
+        <div class="info-card route-card">
+          <div class="card-header">
+            <h3><i class="fas fa-route card-header-icon"></i> Route</h3>
+          </div>
+          <div class="card-body">
+            <!-- Visual Route Timeline -->
+            <div class="route-visual-timeline">
+              <div class="route-point origin-point">
+                <div class="route-dot origin-dot"></div>
+                <div class="route-point-info">
+                  <span class="route-point-label">Origin</span>
+                  <span class="route-point-value">{{ load.origin }}</span>
+                </div>
+              </div>
+              <div class="route-connector">
+                <div class="connector-line"></div>
+                <div class="connector-stats">
+                  <span class="connector-stat">
+                    <i class="fas fa-road"></i> {{ getRouteDistance() }}
+                  </span>
+                  <span class="connector-stat">
+                    <i class="fas fa-clock"></i> {{ getEstimatedTransitTime() }}
+                  </span>
+                </div>
+              </div>
+              <div class="route-point destination-point">
+                <div class="route-dot destination-dot"></div>
+                <div class="route-point-info">
+                  <span class="route-point-label">Destination</span>
+                  <span class="route-point-value">{{ load.destination }}</span>
+                </div>
+              </div>
+            </div>
+            <div *ngIf="hasDeadheadRouteInfo()" class="deadhead-route-block mt-3 pt-3 border-top">
+              <div class="text-muted small mb-2"><i class="fas fa-truck-loading me-1"></i>Deadhead (empty miles)</div>
+              <div class="row g-2 small">
+                <div class="col-12" *ngIf="load.deadheadOrigin">
+                  <span class="text-muted">From</span> {{ load.deadheadOrigin }}
+                </div>
+                <div class="col-12" *ngIf="load.deadheadDestination">
+                  <span class="text-muted">To</span> {{ load.deadheadDestination }}
+                </div>
+              </div>
+            </div>
+            <div class="route-map-snippet" id="route-map-snippet">
+              <div class="map-placeholder" *ngIf="!mapsApiLoaded">
+                <i class="fas fa-map-marked-alt"></i>
+                <p>Loading map...</p>
+              </div>
+              <div class="overview-map-wrap" *ngIf="mapsApiLoaded">
+                <div id="overview-route-map" class="overview-route-map-inner" aria-label="Route preview map"></div>
+                <div class="overview-map-error-overlay" *ngIf="overviewMapError">
+                  <i class="fas fa-exclamation-circle"></i>
+                  <p>{{ overviewMapError }}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right Column -->
+      <div class="overview-right">
+        <!-- Financial Summary Card -->
+        <div class="info-card financial-card">
+          <div class="card-header">
+            <h3><i class="fas fa-chart-pie card-header-icon"></i> Financial Summary</h3>
+          </div>
+          <div class="card-body">
+            <div class="financial-row">
+              <span class="financial-label">Base Rate</span>
+              <span class="financial-value">{{ formatCurrency(load.totalRate, load.currency) }}</span>
+            </div>
+            <div class="financial-row" *ngIf="load.deadheadAmount != null">
+              <span class="financial-label">Deadhead</span>
+              <span class="financial-value">+{{ formatCurrency(load.deadheadAmount, load.currency) }}</span>
+            </div>
+            <div class="financial-row">
+              <span class="financial-label">Accessorials</span>
+              <span class="financial-value accessorial-amount">
+                +{{ formatCurrency(getTotalAccessorials(), load.currency) }}
+              </span>
+            </div>
+            <div class="financial-row total-row">
+              <span class="financial-label">Total Revenue</span>
+              <span class="financial-value total-amount">{{ formatCurrency(calculateTotalWithAccessorials(), load.currency) }}</span>
+            </div>
+            <div class="financial-row margin-row">
+              <span class="financial-label">
+                <i class="fas fa-arrow-trend-up margin-icon"></i>
+                Margin
+              </span>
+              <span class="financial-value margin-amount">
+                {{ formatCurrency(getMargin(), load.currency) }}
+                <span class="margin-per-stop">/Stop</span>
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Quick Actions Panel -->
+        <div class="info-card actions-card">
+          <div class="card-header">
+            <h3><i class="fas fa-bolt card-header-icon"></i> Quick Actions</h3>
+          </div>
+          <div class="card-body">
+            <button class="action-btn btn-primary" *ngIf="canEditLoad() && !hasAssignment()" (click)="openAssignmentModal()">
+              <i class="fas fa-user-tie"></i>
+              Assign Driver / Equipment
+            </button>
+            <button class="action-btn btn-edit-assignment" *ngIf="canEditLoad() && hasAssignment()" (click)="openEditAssignmentModal(load!.assignments[0])">
+              <i class="fas fa-pen"></i>
+              Edit Assignment
+            </button>
+            <button class="action-btn btn-info" *ngIf="canEditLoad()" (click)="openStopModal()">
+              <i class="fas fa-map-marker-alt"></i>
+              Add Stop
+            </button>
+            <button class="action-btn btn-success" *ngIf="canEditLoad()" (click)="openDocumentModal()">
+              <i class="fas fa-file-upload"></i>
+              Upload Documents
+            </button>
+            <button class="action-btn btn-warning" *ngIf="canEditLoad()" (click)="openAccessorialModal()">
+              <i class="fas fa-receipt"></i>
+              Add Accessorial
+            </button>
+          </div>
+        </div>
+
+        <!-- Summary Panel -->
+        <div class="info-card summary-card">
+          <div class="card-header">
+            <h3><i class="fas fa-clipboard-list card-header-icon"></i> Summary</h3>
+          </div>
+          <div class="card-body">
+            <div class="summary-grid">
+              <div class="summary-stat" (click)="activeTab = 'stops'">
+                <div class="summary-stat-icon stops-icon">
+                  <i class="fas fa-map-pin"></i>
+                </div>
+                <div class="summary-stat-info">
+                  <span class="summary-stat-count">{{ load.stops.length }}</span>
+                  <span class="summary-stat-label">Stop{{ load.stops.length !== 1 ? 's' : '' }}</span>
+                </div>
+              </div>
+              <div class="summary-stat" (click)="activeTab = 'assignments'">
+                <div class="summary-stat-icon assignments-icon">
+                  <i class="fas fa-user-check"></i>
+                </div>
+                <div class="summary-stat-info">
+                  <span class="summary-stat-count">{{ load.assignments.length }}</span>
+                  <span class="summary-stat-label">Assignment{{ load.assignments.length !== 1 ? 's' : '' }}</span>
+                </div>
+              </div>
+              <div class="summary-stat" (click)="activeTab = 'documents'">
+                <div class="summary-stat-icon documents-icon" [class.warning]="load.documents.length === 0">
+                  <i class="fas fa-file-alt"></i>
+                </div>
+                <div class="summary-stat-info">
+                  <span class="summary-stat-count">{{ load.documents.length }}</span>
+                  <span class="summary-stat-label">Document{{ load.documents.length !== 1 ? 's' : '' }}</span>
+                </div>
+              </div>
+              <div class="summary-stat">
+                <div class="summary-stat-icon accessorials-icon">
+                  <i class="fas fa-receipt"></i>
+                </div>
+                <div class="summary-stat-info">
+                  <span class="summary-stat-count">{{ load.accessorials?.length || 0 }}</span>
+                  <span class="summary-stat-label">Accessorial{{ (load.accessorials?.length || 0) !== 1 ? 's' : '' }}</span>
+                </div>
+              </div>
+            </div>
+            <div class="summary-status-indicators">
+              <div class="status-indicator-item">
+                <i class="fas fa-check-circle indicator-icon success"></i>
+                <span>On-Time Pickup</span>
+              </div>
+              <div class="status-indicator-item">
+                <i class="fas fa-check-circle indicator-icon success"></i>
+                <span>On-Time Delivery</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Stops Tab -->
+  <div *ngIf="!loading && activeTab === 'stops'" class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+      <h5 class="mb-0">Route Stops</h5>
+      <button *ngIf="canEditLoad()" class="btn btn-sm btn-primary" (click)="openStopModal()">
+        <i class="fas fa-plus me-2"></i>Add Stop
+      </button>
+    </div>
+    <div class="card-body">
+      <div class="table-responsive">
+        <table class="table table-hover">
+          <thead>
+            <tr>
+              <th>Sequence</th>
+              <th>Location</th>
+              <th>Type</th>
+              <th>Planned Date/Time</th>
+              <th>Notes</th>
+              <th *ngIf="canEditLoad()">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngIf="load.stops.length === 0">
+              <td [attr.colspan]="canEditLoad() ? 6 : 5" class="text-center text-muted py-4">No stops added yet</td>
+            </tr>
+            <tr *ngFor="let stop of getSortedStops()">
+              <td><strong>{{ stop.sequenceNo }}</strong></td>
+              <td>{{ stop.location }}</td>
+              <td><span class="badge" [ngClass]="stop.stopType === 'Pickup' ? 'bg-success' : 'bg-primary'">{{ stop.stopType }}</span></td>
+              <td>{{ formatDateAsStored(stop.plannedDateTime) }}</td>
+              <td>{{ stop.notes || '-' }}</td>
+              <td *ngIf="canEditLoad()">
+                <button type="button" class="btn btn-sm btn-outline-danger" (click)="deleteStop(stop)" title="Delete stop">
+                  <i class="fas fa-trash-alt"></i>
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Assignments Tab -->
+  <div *ngIf="!loading && activeTab === 'assignments'" class="assignments-tab">
+    <div class="assignments-header">
+      <div class="assignments-header-left">
+        <h3 class="assignments-title">
+          <i class="fas fa-user-tie"></i>
+          Load Assignment
+        </h3>
+        <span class="assignments-subtitle">Only one assignee per load is allowed</span>
+      </div>
+      <button *ngIf="canEditLoad() && !hasAssignment()" class="btn-assign-new" (click)="openAssignmentModal()">
+        <i class="fas fa-plus"></i>
+        Assign Driver &amp; Equipment
+      </button>
+    </div>
+
+    <!-- Validation error for single assignment restriction -->
+    <div *ngIf="assignmentValidationError && !showAssignmentModal" class="assignment-restriction-alert">
+      <i class="fas fa-info-circle"></i>
+      <span>{{ assignmentValidationError }}</span>
+      <button class="alert-dismiss" (click)="assignmentValidationError = ''">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+
+    <!-- Assignment Card (single) -->
+    <div *ngIf="load.assignments.length > 0" class="assignment-detail-card">
+      <div *ngFor="let assignment of load.assignments">
+        <div class="assignment-card-header">
+          <div class="assignment-card-header-left">
+            <span class="assignment-badge" [ngClass]="'badge-' + assignment.status.toLowerCase()">
+              <i class="fas fa-circle"></i>
+              {{ assignment.status }}
+            </span>
+            <span class="assignment-id">ID #{{ assignment.assignmentId }}</span>
+          </div>
+          <div class="assignment-card-actions" *ngIf="canEditLoad()">
+            <button class="btn-action-edit" (click)="openEditAssignmentModal(assignment)" title="Edit Assignment">
+              <i class="fas fa-pen"></i>
+              Edit
+            </button>
+            <button class="btn-action-delete" (click)="confirmDeleteAssignment(assignment.assignmentId)" title="Remove Assignment">
+              <i class="fas fa-trash-alt"></i>
+              Remove
+            </button>
+          </div>
+        </div>
+
+        <div class="assignment-card-body">
+          <div class="assignment-info-grid">
+            <div class="assignment-info-item">
+              <div class="info-item-icon driver-icon">
+                <i class="fas fa-user"></i>
+              </div>
+              <div class="info-item-content">
+                <span class="info-item-label">Owner Operator</span>
+                <span class="info-item-value">{{ assignment.driverName || 'Not assigned' }}</span>
+              </div>
+            </div>
+
+            <div class="assignment-info-item">
+              <div class="info-item-icon equipment-icon">
+                <i class="fas fa-truck"></i>
+              </div>
+              <div class="info-item-content">
+                <span class="info-item-label">Equipment</span>
+                <span class="info-item-value">{{ assignment.equipmentPlateNumber || 'Not assigned' }}</span>
+              </div>
+            </div>
+
+            <div class="assignment-info-item">
+              <div class="info-item-icon etd-icon">
+                <i class="fas fa-clock"></i>
+              </div>
+              <div class="info-item-content">
+                <span class="info-item-label">ETD (Departure)</span>
+                <span class="info-item-value">{{ formatDate(assignment.etd) }}</span>
+              </div>
+            </div>
+
+            <div class="assignment-info-item">
+              <div class="info-item-icon eta-icon">
+                <i class="fas fa-flag-checkered"></i>
+              </div>
+              <div class="info-item-content">
+                <span class="info-item-label">ETA (Arrival)</span>
+                <span class="info-item-value">{{ formatDate(assignment.eta) }}</span>
+              </div>
+            </div>
+
+            <div class="assignment-info-item">
+              <div class="info-item-icon date-icon">
+                <i class="fas fa-calendar-check"></i>
+              </div>
+              <div class="info-item-content">
+                <span class="info-item-label">Assigned Date</span>
+                <span class="info-item-value">{{ formatDate(assignment.assignedAt) }}</span>
+              </div>
+            </div>
+
+            <div class="assignment-info-item" *ngIf="assignment.notes">
+              <div class="info-item-icon notes-icon">
+                <i class="fas fa-sticky-note"></i>
+              </div>
+              <div class="info-item-content">
+                <span class="info-item-label">Notes</span>
+                <span class="info-item-value notes-value">{{ assignment.notes }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Empty State -->
+    <div *ngIf="load.assignments.length === 0" class="assignment-empty-state">
+      <div class="empty-state-icon">
+        <i class="fas fa-user-plus"></i>
+      </div>
+      <h4>No Assignment Yet</h4>
+      <p>Assign a driver and equipment to this load to get started.</p>
+      <button *ngIf="canEditLoad()" class="btn-assign-empty" (click)="openAssignmentModal()">
+        <i class="fas fa-plus"></i>
+        Assign Driver &amp; Equipment
+      </button>
+    </div>
+  </div>
+
+  <!-- Delete Assignment Confirmation Modal -->
+  <div class="modal fade" [class.show]="showDeleteAssignmentConfirm" [style.display]="showDeleteAssignmentConfirm ? 'block' : 'none'" style="background: rgba(0,0,0,0.5);" *ngIf="showDeleteAssignmentConfirm">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content delete-confirm-modal">
+        <div class="modal-body text-center py-4">
+          <div class="delete-confirm-icon">
+            <i class="fas fa-exclamation-triangle"></i>
+          </div>
+          <h5 class="mt-3 mb-2">Remove Assignment?</h5>
+          <p class="text-muted mb-4">This will unassign the driver and equipment from this load. The load status will revert to "Created".</p>
+          <div class="d-flex justify-content-center gap-3">
+            <button class="btn btn-secondary px-4" (click)="cancelDeleteAssignment()">Cancel</button>
+            <button class="btn btn-danger px-4" (click)="deleteAssignment()">
+              <i class="fas fa-trash-alt me-2"></i>Remove
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Documents Tab -->
+  <div *ngIf="!loading && activeTab === 'documents'" class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+      <h5 class="mb-0">Load Documents</h5>
+      <button *ngIf="canEditLoad()" class="btn btn-sm btn-primary" (click)="openDocumentModal()">
+        <i class="fas fa-upload me-2"></i>Upload Document
+      </button>
+    </div>
+    <div class="card-body">
+      <div class="table-responsive">
+        <table class="table table-hover">
+          <thead>
+            <tr>
+              <th>Document Type</th>
+              <th>File Name</th>
+              <th>Uploaded At</th>
+              <th class="text-end">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngIf="load.documents.length === 0">
+              <td colspan="4" class="text-center text-muted py-4">No documents uploaded</td>
+            </tr>
+            <tr *ngFor="let doc of load.documents">
+              <td><span class="badge bg-info">{{ doc.documentType }}</span></td>
+              <td>{{ doc.filePath.split('/').pop() }}</td>
+              <td>{{ formatDate(doc.uploadedAt) }}</td>
+              <td class="text-end">
+                <div class="btn-group btn-group-sm">
+                  <button 
+                    *ngIf="canViewDocument(doc)"
+                    class="btn btn-outline-info" 
+                    (click)="viewDocument(doc)"
+                    title="View Document">
+                    <i class="fas fa-eye"></i>
+                  </button>
+                  <button 
+                    class="btn btn-outline-primary" 
+                    (click)="downloadDocument(doc)"
+                    title="Download Document">
+                    <i class="fas fa-download"></i>
+                  </button>
+                  <button 
+                    *ngIf="canEditLoad()" 
+                    class="btn btn-outline-danger" 
+                    (click)="deleteDocument(doc.loadDocumentId)"
+                    title="Delete Document">
+                    <i class="fas fa-trash"></i>
+                  </button>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Accessorials Tab -->
+  <div *ngIf="!loading && activeTab === 'accessorials'" class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+      <h5 class="mb-0">Accessorial Charges</h5>
+      <button *ngIf="canEditLoad()" class="btn btn-sm btn-primary" (click)="openAccessorialModal()">
+        <i class="fas fa-plus me-2"></i>Add Accessorial
+      </button>
+    </div>
+    <div class="card-body">
+      <div class="table-responsive">
+        <table class="table table-hover">
+          <thead>
+            <tr>
+              <th>Type</th>
+              <th>Amount</th>
+              <th>Notes</th>
+              <th class="text-end">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngIf="!load.accessorials || load.accessorials.length === 0">
+              <td colspan="4" class="text-center text-muted py-4">No accessorials added</td>
+            </tr>
+            <tr *ngFor="let accessorial of load.accessorials">
+              <td>{{ accessorial.accessorialTypeName || 'Custom' }}</td>
+              <td>{{ formatCurrency(accessorial.amount, load.currency) }}</td>
+              <td>{{ accessorial.notes || '-' }}</td>
+              <td class="text-end">
+                <button *ngIf="canEditLoad()" class="btn btn-sm btn-outline-danger" (click)="deleteAccessorial(accessorial.accessorialId)">
+                  <i class="fas fa-trash"></i>
+                </button>
+              </td>
+            </tr>
+            <tr *ngIf="load.accessorials && load.accessorials.length > 0" class="table-light">
+              <td><strong>Total Accessorials</strong></td>
+              <td><strong>{{ formatCurrency(getTotalAccessorials(), load.currency) }}</strong></td>
+              <td colspan="2"></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Route Tab -->
+  <div *ngIf="!loading && activeTab === 'route'" class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+      <h5 class="mb-0">
+        <i class="fas fa-route me-2"></i>Route Visualization
+      </h5>
+      <button class="btn btn-sm btn-primary" (click)="optimizeRoute()" [disabled]="!load || !mapsApiLoaded">
+        <i class="fas fa-route me-2"></i>
+        {{ routeOptimized ? 'Recalculate Route' : 'Calculate Route' }}
+      </button>
+    </div>
+    <div class="card-body">
+      <!-- Loading state for map -->
+      <div *ngIf="!mapsApiLoaded" class="text-center py-5">
+        <div class="spinner-border text-primary mb-3" role="status">
+          <span class="visually-hidden">Loading map...</span>
+        </div>
+        <p class="text-muted">Loading Google Maps...</p>
+      </div>
+
+      <!-- Route information -->
+      <div *ngIf="routeOptimized && routeData" class="alert alert-success mb-3">
+        <div class="row">
+          <div class="col-md-4">
+            <h6><i class="fas fa-check-circle me-2"></i>Route Calculated</h6>
+          </div>
+          <div class="col-md-4">
+            <strong>Total Distance:</strong> {{ routeData.distance }} miles
+          </div>
+          <div class="col-md-4">
+            <strong>Estimated Time:</strong> {{ routeData.duration }} minutes
+          </div>
+        </div>
+      </div>
+
+      <!-- Route details -->
+      <div *ngIf="routeOptimized && routeData && routeData.legs" class="mb-3">
+        <h6 class="mb-3">Route Details</h6>
+        <div class="table-responsive">
+          <table class="table table-sm table-bordered">
+            <thead>
+              <tr>
+                <th>From</th>
+                <th>To</th>
+                <th>Distance</th>
+                <th>Duration</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let leg of routeData.legs">
+                <td>{{ leg.start }}</td>
+                <td>{{ leg.end }}</td>
+                <td>{{ leg.distance }} miles</td>
+                <td>{{ leg.duration }} min</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Map container -->
+      <div *ngIf="mapsApiLoaded" id="route-map" style="height: 600px; width: 100%; border-radius: 8px; overflow: hidden;"></div>
+      
+      <!-- Placeholder when map is not loaded -->
+      <div *ngIf="!mapsApiLoaded && !load" class="bg-light border rounded p-5 text-center mt-3">
+        <i class="fas fa-map fa-3x text-muted mb-3 d-block"></i>
+        <p class="text-muted">Loading route information...</p>
+      </div>
+
+      <!-- Instructions when route not calculated -->
+      <div *ngIf="mapsApiLoaded && !routeOptimized && load" class="text-center py-4">
+        <i class="fas fa-map-marked-alt fa-3x text-muted mb-3 d-block"></i>
+        <p class="text-muted mb-3">Click "Calculate Route" to visualize the route on the map</p>
+        <div class="text-start bg-light p-3 rounded">
+          <h6>Route Information:</h6>
+          <ul class="mb-0">
+            <li><strong>Origin:</strong> {{ load.origin }}</li>
+            <li><strong>Destination:</strong> {{ load.destination }}</li>
+            <li *ngIf="load.deadheadOrigin"><strong>Deadhead from:</strong> {{ load.deadheadOrigin }}</li>
+            <li *ngIf="load.deadheadDestination"><strong>Deadhead to:</strong> {{ load.deadheadDestination }}</li>
+            <li *ngIf="load.deadheadAmount != null"><strong>Deadhead amount:</strong> {{ formatCurrency(load.deadheadAmount, load.currency) }}</li>
+            <li *ngIf="load.stops.length > 0"><strong>Stops:</strong> {{ load.stops.length }}</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Activity Log Tab -->
+  <div *ngIf="!loading && activeTab === 'activity'" class="activity-log-section">
+    <div class="activity-log-header">
+      <h5><i class="fas fa-stream"></i> Activity Log</h5>
+      <span class="activity-count" *ngIf="activityLogTotalCount > 0">{{ activityLogTotalCount }} event{{ activityLogTotalCount !== 1 ? 's' : '' }}</span>
+    </div>
+
+    <!-- Loading State -->
+    <div *ngIf="activityLogsLoading" class="activity-loading">
+      <div class="spinner"></div>
+      <p>Loading activity...</p>
+    </div>
+
+    <!-- Empty State -->
+    <div *ngIf="!activityLogsLoading && activityLogs.length === 0" class="activity-empty">
+      <i class="fas fa-clipboard-list"></i>
+      <h6>No activity recorded yet</h6>
+      <p>Edits to this load appear here: stops, assignments, documents, accessorials, notes, and load fields.</p>
+    </div>
+
+    <!-- Timeline -->
+    <div *ngIf="!activityLogsLoading && activityLogs.length > 0" class="activity-timeline">
+      <div class="timeline-item" *ngFor="let log of activityLogs" [ngClass]="getActivityColor(log.action)">
+        <div class="timeline-marker">
+          <i [class]="getActivityIcon(log.action, log.entityName)"></i>
+        </div>
+        <div class="timeline-content">
+          <div class="timeline-header">
+            <div class="timeline-title">
+              <span class="action-text">{{ formatActivityAction(log.action) }}</span>
+              <span class="entity-badge">{{ getActivityLabel(log.entityName) }}</span>
+            </div>
+            <span class="timeline-time">{{ formatDate(log.timestamp) }}</span>
+          </div>
+          <div class="timeline-meta">
+            <span class="user-name" *ngIf="log.userName">
+              <i class="fas fa-user-circle"></i> {{ log.userName }}
+            </span>
+            <span class="user-name" *ngIf="!log.userName">
+              <i class="fas fa-robot"></i> System
+            </span>
+          </div>
+          <div class="timeline-details" *ngIf="log.details">
+            <div class="detail-rows">
+              <div class="detail-row" *ngFor="let d of parseActivityDetails(log.details)">
+                <span class="row-key">{{ d.key }}</span>
+                <span class="row-value">{{ d.value }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Pagination -->
+    <div *ngIf="activityLogTotalPages > 1" class="activity-pagination">
+      <button class="btn-page" [disabled]="activityLogPage <= 1" (click)="loadActivityLogs(activityLogPage - 1)">
+        <i class="fas fa-chevron-left"></i> Previous
+      </button>
+      <span class="page-info">Page {{ activityLogPage }} of {{ activityLogTotalPages }}</span>
+      <button class="btn-page" [disabled]="activityLogPage >= activityLogTotalPages" (click)="loadActivityLogs(activityLogPage + 1)">
+        Next <i class="fas fa-chevron-right"></i>
+      </button>
+    </div>
+  </div>
+
+  <!-- Billing Tab -->
+  <div *ngIf="!loading && activeTab === 'billing'" class="card">
+    <div class="card-header">
+      <h5 class="mb-0">Billing Information</h5>
+    </div>
+    <div class="card-body">
+      <div class="row g-3">
+        <div class="col-md-6">
+          <label class="form-label text-muted">Base Rate</label>
+          <p class="mb-0"><strong>{{ formatCurrency(load.totalRate, load.currency) }}</strong></p>
+        </div>
+        <div class="col-md-6" *ngIf="load.deadheadAmount != null">
+          <label class="form-label text-muted">Deadhead</label>
+          <p class="mb-0"><strong>{{ formatCurrency(load.deadheadAmount, load.currency) }}</strong></p>
+        </div>
+        <div class="col-md-6">
+          <label class="form-label text-muted">Total Accessorials</label>
+          <p class="mb-0"><strong>{{ formatCurrency(getTotalAccessorials(), load.currency) }}</strong></p>
+        </div>
+        <div class="col-md-6">
+          <label class="form-label text-muted">Total Amount</label>
+          <p class="mb-0"><strong>{{ formatCurrency(calculateTotalWithAccessorials(), load.currency) }}</strong></p>
+        </div>
+        <div class="col-md-6">
+          <label class="form-label text-muted">Status</label>
+          <p class="mb-0"><span class="badge" [ngClass]="getStatusBadgeClass(load.status)">{{ load.status }}</span></p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tracking Tab -->
+  <div *ngIf="!loading && activeTab === 'tracking'" class="card load-tracking-card">
+    <div class="card-header d-flex flex-wrap justify-content-between align-items-center gap-2">
+      <h5 class="mb-0">
+        <i class="fas fa-satellite-dish me-2"></i>Load Tracking
+      </h5>
+      <button
+        type="button"
+        class="btn btn-sm btn-outline-primary"
+        (click)="loadLoadTracking()"
+        [disabled]="trackingLoading || !load">
+        <i class="fas fa-sync-alt" [class.fa-spin]="trackingLoading"></i>
+        Refresh
+      </button>
+    </div>
+    <div class="card-body">
+      <div *ngIf="trackingLoading" class="text-center py-5">
+        <div class="spinner-border text-primary mb-3" role="status">
+          <span class="visually-hidden">Loading tracking...</span>
+        </div>
+        <p class="text-muted mb-0">Loading tracking history…</p>
+      </div>
+
+      <div *ngIf="!trackingLoading && trackingError" class="alert alert-warning mb-0" role="alert">
+        <i class="fas fa-exclamation-triangle me-2"></i>{{ trackingError }}
+      </div>
+
+      <ng-container *ngIf="!trackingLoading && !trackingError && trackingData">
+        <div class="row g-3 mb-3">
+          <div class="col-md-4">
+            <div class="tracking-meta">
+              <div class="text-muted small">Load</div>
+              <div class="fw-semibold">#{{ trackingData.loadNumber }}</div>
+            </div>
+          </div>
+          <div class="col-md-4">
+            <div class="tracking-meta">
+              <div class="text-muted small">Status</div>
+              <div><span class="badge" [ngClass]="getStatusBadgeClass(trackingData.status)">{{ trackingData.status }}</span></div>
+            </div>
+          </div>
+          <div class="col-md-4" *ngIf="trackingData.currentLocation as cur">
+            <div class="tracking-meta" *ngIf="cur.lastUpdate">
+              <div class="text-muted small">Last GPS update</div>
+              <div class="fw-semibold">{{ formatDate(cur.lastUpdate) }}</div>
+            </div>
+          </div>
+        </div>
+
+        <div *ngIf="!mapsApiLoaded" class="alert alert-info">
+          <i class="fas fa-info-circle me-2"></i>Map is loading. If this message persists, check your Google Maps API key.
+        </div>
+
+        <div *ngIf="mapsApiLoaded && hasTrackingMapPoints()" class="load-tracking-map-wrap mb-4">
+          <div id="load-tracking-map" class="load-tracking-map" aria-label="GPS trail map"></div>
+        </div>
+
+        <div *ngIf="mapsApiLoaded && !hasTrackingMapPoints()" class="text-center py-4 border rounded bg-light">
+          <i class="fas fa-location-arrow fa-2x text-muted mb-2 d-block"></i>
+          <p class="text-muted mb-0">
+            No GPS coordinates recorded for this load yet. Points appear when drivers check in/out or when vehicle location is synced from Motive for active loads.
+          </p>
+        </div>
+
+        <h6 class="mb-3"><i class="fas fa-history me-2"></i>Tracking history</h6>
+        <div class="table-responsive" *ngIf="trackingData.history.length > 0">
+          <table class="table table-sm table-hover align-middle">
+            <thead>
+              <tr>
+                <th>Time</th>
+                <th>Event</th>
+                <th>Location type</th>
+                <th>Coordinates</th>
+                <th>Notes</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let ev of trackingData.history">
+                <td>{{ formatDate(ev.recordedAt) }}</td>
+                <td>{{ ev.eventType || '—' }}</td>
+                <td>{{ ev.locationType || '—' }}</td>
+                <td class="font-monospace small">
+                  <ng-container *ngIf="ev.latitude != null && ev.longitude != null; else noCoord">
+                    {{ ev.latitude | number:'1.4-6' }}, {{ ev.longitude | number:'1.4-6' }}
+                  </ng-container>
+                  <ng-template #noCoord>—</ng-template>
+                </td>
+                <td>{{ ev.notes || '—' }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <p *ngIf="trackingData.history.length === 0" class="text-muted mb-0">No tracking events in the log yet.</p>
+      </ng-container>
+    </div>
+  </div>
+</div>
+
+<!-- Modals -->
+<!-- Add Stop Modal -->
+<div class="modal fade" [class.show]="showStopModal" [style.display]="showStopModal ? 'block' : 'none'" style="background: rgba(0,0,0,0.5);" *ngIf="showStopModal">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Add Stop</h5>
+        <button type="button" class="btn-close" (click)="showStopModal = false"></button>
+      </div>
+      <div class="modal-body">
+        <form>
+          <div class="mb-3">
+            <label class="form-label">Sequence Number</label>
+            <input type="number" class="form-control" [(ngModel)]="stopForm.sequenceNo" name="sequenceNo" required>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Location *</label>
+            <input 
+              id="stop-location-input"
+              type="text" 
+              class="form-control" 
+              [(ngModel)]="stopForm.location" 
+              name="location" 
+              placeholder="Start typing city, state..."
+              required
+              autocomplete="off">
+            <small class="text-muted">
+              <i class="fas fa-map-marker-alt me-1"></i>Autocomplete enabled - Worldwide addresses
+            </small>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Stop Type *</label>
+            <select class="form-select" [(ngModel)]="stopForm.stopType" name="stopType" required>
+              <option value="Pickup">Pickup</option>
+              <option value="Dropoff">Dropoff</option>
+            </select>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Planned Date/Time</label>
+            <input
+              type="datetime-local"
+              class="form-control"
+              [(ngModel)]="stopForm.plannedDateTime"
+              name="plannedDateTime"
+              [min]="getMinStopDateTime()"
+              [max]="getMaxStopDateTime()"
+              [disabled]="!load?.pickupDateTime || !load?.deliveryDateTime">
+            @if (!load?.pickupDateTime || !load?.deliveryDateTime) {
+              <small class="text-muted">
+                <i class="fas fa-info-circle me-1"></i>Load must have pickup and delivery dates to set stop date
+              </small>
+            } @else {
+              <small class="text-muted">
+                <i class="fas fa-info-circle me-1"></i>Must be between pickup and delivery dates
+              </small>
+            }
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Notes</label>
+            <textarea class="form-control" rows="3" [(ngModel)]="stopForm.notes" name="notes"></textarea>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" (click)="showStopModal = false">Cancel</button>
+        <button type="button" class="btn btn-primary" (click)="addStop()">Add Stop</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Assignment Modal -->
+<div class="modal fade" [class.show]="showAssignmentModal" [style.display]="showAssignmentModal ? 'block' : 'none'" style="background: rgba(0,0,0,0.6);" *ngIf="showAssignmentModal">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-content assignment-modal-content">
+      <div class="assignment-modal-header">
+        <div class="modal-header-icon">
+          <i class="fas" [ngClass]="isEditingAssignment ? 'fa-pen' : 'fa-user-plus'"></i>
+        </div>
+        <div class="modal-header-text">
+          <h5 class="modal-title">{{ isEditingAssignment ? 'Edit Assignment' : 'Assign Load' }}</h5>
+          <p class="modal-subtitle">{{ isEditingAssignment ? 'Update the driver, equipment, and schedule for this load' : 'Select a driver and equipment to assign to this load' }}</p>
+        </div>
+        <button type="button" class="btn-modal-close" (click)="closeAssignmentModal()">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      <div class="assignment-modal-body">
+        <form>
+          <!-- Validation Error Message -->
+          <div *ngIf="assignmentValidationError" class="assignment-validation-alert" role="alert">
+            <i class="fas fa-exclamation-circle"></i>
+            <span>{{ assignmentValidationError }}</span>
+          </div>
+
+          <!-- Section: Driver & Equipment -->
+          <div class="form-section">
+            <div class="form-section-title">
+              <i class="fas fa-user-tie"></i>
+              <span>Driver &amp; Equipment</span>
+            </div>
+            <div class="form-row-grid">
+              <div class="form-field">
+                <label class="form-field-label">Owner Operator <span class="required">*</span></label>
+                <select 
+                  class="form-field-input" 
+                  [class.has-error]="assignmentFieldErrors['driverId']"
+                  [(ngModel)]="assignmentForm.driverId" 
+                  name="driverId" 
+                  (change)="onDriverSelectionChange(); clearFieldError('driverId')"
+                  required>
+                  <option [value]="undefined">Select Owner Operator</option>
+                  <option *ngFor="let driver of drivers" [value]="driver.driverId">
+                    RO{{ driver.driverId }} - {{ driver.fullName }}
+                  </option>
+                </select>
+                <div *ngIf="assignmentFieldErrors['driverId']" class="field-error">
+                  <i class="fas fa-exclamation-circle"></i>{{ assignmentFieldErrors['driverId'] }}
+                </div>
+                <span class="form-field-hint">Who will handle this load</span>
+              </div>
+              <div class="form-field">
+                <label class="form-field-label">Equipment <span class="required">*</span></label>
+                <select 
+                  class="form-field-input" 
+                  [class.has-error]="assignmentFieldErrors['equipmentId']"
+                  [(ngModel)]="assignmentForm.equipmentId" 
+                  name="equipmentId"
+                  (change)="clearFieldError('equipmentId')"
+                  required>
+                  <option [value]="undefined">Select Equipment</option>
+                  <option *ngFor="let eq of equipment" [value]="eq.equipmentId">
+                    {{ eq.plateNumber || eq.equipmentId }}
+                  </option>
+                </select>
+                <div *ngIf="assignmentFieldErrors['equipmentId']" class="field-error">
+                  <i class="fas fa-exclamation-circle"></i>{{ assignmentFieldErrors['equipmentId'] }}
+                </div>
+                <span class="form-field-hint">Truck, trailer, or reefer for this load</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Section: Schedule -->
+          <div class="form-section">
+            <div class="form-section-title">
+              <i class="fas fa-calendar-alt"></i>
+              <span>Schedule</span>
+            </div>
+            <div class="form-row-grid">
+              <div class="form-field">
+                <label class="form-field-label">ETD (Departure) <span class="required">*</span></label>
+                <input 
+                  type="datetime-local" 
+                  class="form-field-input" 
+                  [class.has-error]="assignmentFieldErrors['etd']"
+                  [(ngModel)]="assignmentForm.etd" 
+                  name="etd"
+                  [min]="getMinDateTime()"
+                  (change)="onETDChange()"
+                  required>
+                <div *ngIf="assignmentFieldErrors['etd']" class="field-error">
+                  <i class="fas fa-exclamation-circle"></i>{{ assignmentFieldErrors['etd'] }}
+                </div>
+                <span class="form-field-hint">When the driver departs from origin</span>
+              </div>
+              <div class="form-field">
+                <label class="form-field-label">ETA (Arrival) <span class="required">*</span></label>
+                <input 
+                  type="datetime-local" 
+                  class="form-field-input" 
+                  [class.has-error]="assignmentFieldErrors['eta']"
+                  [(ngModel)]="assignmentForm.eta" 
+                  name="eta"
+                  [min]="getMinETA()"
+                  (change)="onETAChange()"
+                  required>
+                <div *ngIf="assignmentFieldErrors['eta']" class="field-error">
+                  <i class="fas fa-exclamation-circle"></i>{{ assignmentFieldErrors['eta'] }}
+                </div>
+                <span class="form-field-hint">Expected arrival at destination (after ETD)</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Section: Notes -->
+          <div class="form-section">
+            <div class="form-section-title">
+              <i class="fas fa-sticky-note"></i>
+              <span>Additional Details</span>
+            </div>
+            <div class="form-field">
+              <label class="form-field-label">Notes <span class="required">*</span></label>
+              <textarea 
+                class="form-field-input form-textarea" 
+                [class.has-error]="assignmentFieldErrors['notes']"
+                rows="3" 
+                [(ngModel)]="assignmentForm.notes" 
+                name="notes"
+                placeholder="Special instructions, pickup details, contact info..."
+                (input)="clearFieldError('notes')"
+                required></textarea>
+              <div *ngIf="assignmentFieldErrors['notes']" class="field-error">
+                <i class="fas fa-exclamation-circle"></i>{{ assignmentFieldErrors['notes'] }}
+              </div>
+              <span class="form-field-hint">Any special instructions or important information</span>
+            </div>
+          </div>
+        </form>
+      </div>
+      <div class="assignment-modal-footer">
+        <button type="button" class="btn-modal-cancel" (click)="closeAssignmentModal()">Cancel</button>
+        <button type="button" class="btn-modal-submit" (click)="assignLoad()">
+          <i class="fas" [ngClass]="isEditingAssignment ? 'fa-save' : 'fa-check'"></i>
+          {{ isEditingAssignment ? 'Save Changes' : 'Assign Load' }}
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Document Upload Modal -->
+<div class="modal fade" [class.show]="showDocumentModal" [style.display]="showDocumentModal ? 'block' : 'none'" style="background: rgba(0,0,0,0.5);" *ngIf="showDocumentModal">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Upload Document</h5>
+        <button type="button" class="btn-close" (click)="showDocumentModal = false"></button>
+      </div>
+      <div class="modal-body">
+        <form>
+          <div class="mb-3">
+            <label class="form-label">Document Type *</label>
+            <select class="form-select" [(ngModel)]="documentType" name="documentType" required>
+              <option value="BOL">Bill of Lading (BOL)</option>
+              <option value="POD">Proof of Delivery (POD)</option>
+              <option value="RateConfirmation">Rate Confirmation</option>
+            </select>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">File *</label>
+            <input type="file" class="form-control" (change)="onFileSelected($event)" accept=".pdf,.jpg,.jpeg,.png" required>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" (click)="showDocumentModal = false">Cancel</button>
+        <button type="button" class="btn btn-primary" (click)="uploadDocument()" [disabled]="!documentFile">Upload</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Accessorial Modal -->
+<div class="modal fade" [class.show]="showAccessorialModal" [style.display]="showAccessorialModal ? 'block' : 'none'" style="background: rgba(0,0,0,0.5);" *ngIf="showAccessorialModal">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Add Accessorial Charge</h5>
+        <button type="button" class="btn-close" (click)="showAccessorialModal = false"></button>
+      </div>
+      <div class="modal-body">
+        <form>
+          <div class="mb-3">
+            <label class="form-label">Accessorial Type</label>
+            <select class="form-select" [(ngModel)]="accessorialForm.accessorialTypeId" name="accessorialTypeId">
+              <option [value]="undefined">Custom</option>
+              <option *ngFor="let type of accessorialTypes" [value]="type.accessorialTypeId">
+                {{ type.name }}
+              </option>
+            </select>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Amount *</label>
+            <input type="number" step="0.01" class="form-control" [(ngModel)]="accessorialForm.amount" name="amount" required>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Notes</label>
+            <textarea class="form-control" rows="3" [(ngModel)]="accessorialForm.notes" name="notes"></textarea>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" (click)="showAccessorialModal = false">Cancel</button>
+        <button type="button" class="btn btn-primary" (click)="addAccessorial()">Add Accessorial</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Load overview note (visibility) -->
+<div class="modal fade" [class.show]="showNoteModal" [style.display]="showNoteModal ? 'block' : 'none'" style="background: rgba(0,0,0,0.6);" *ngIf="showNoteModal">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-content assignment-modal-content">
+      <div class="assignment-modal-header">
+        <div class="modal-header-icon">
+          <i class="fas fa-sticky-note"></i>
+        </div>
+        <div class="modal-header-text">
+          <h5 class="modal-title">Add load note</h5>
+          <p class="modal-subtitle">Choose who can see this note on load {{ load?.loadNumber }}</p>
+        </div>
+        <button type="button" class="btn-modal-close" (click)="closeNoteModal()">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      <div class="assignment-modal-body">
+        <div *ngIf="noteFormError" class="assignment-validation-alert" role="alert">
+          <i class="fas fa-exclamation-circle"></i>
+          <span>{{ noteFormError }}</span>
+        </div>
+        <form>
+          <div class="form-section">
+            <div class="form-section-title">
+              <i class="fas fa-eye"></i>
+              <span>Visibility</span>
+            </div>
+            <div class="form-field">
+              <label class="form-field-label">Who can see this note?</label>
+              <select class="form-field-input" [(ngModel)]="noteForm.visibility" name="noteVisibility">
+                <option *ngFor="let opt of noteVisibilityOptions" [value]="opt.value">
+                  {{ opt.label }} — {{ opt.hint }}
+                </option>
+              </select>
+            </div>
+          </div>
+          <div class="form-section">
+            <div class="form-section-title">
+              <i class="fas fa-align-left"></i>
+              <span>Note</span>
+            </div>
+            <div class="form-field">
+              <label class="form-field-label">Content <span class="required">*</span></label>
+              <textarea
+                class="form-field-input form-textarea"
+                rows="5"
+                [(ngModel)]="noteForm.content"
+                name="noteContent"
+                placeholder="Enter your note..."
+              ></textarea>
+            </div>
+          </div>
+        </form>
+      </div>
+      <div class="assignment-modal-footer">
+        <button type="button" class="btn-modal-cancel" (click)="closeNoteModal()" [disabled]="noteSaving">Cancel</button>
+        <button type="button" class="btn-modal-submit" (click)="submitLoadNote()" [disabled]="noteSaving">
+          <i class="fas" [ngClass]="noteSaving ? 'fa-spinner fa-spin' : 'fa-check'"></i>
+          {{ noteSaving ? 'Saving…' : 'Save note' }}
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

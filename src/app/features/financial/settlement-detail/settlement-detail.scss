@@ -1,0 +1,174 @@
+// Settlement detail styles
+
+.card {
+  border: 1px solid #dee2e6;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  
+  .card-header {
+    background-color: #f8f9fa;
+    border-bottom: 1px solid #dee2e6;
+    padding: 1rem 1.5rem;
+    
+    h5 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: #212529;
+      margin: 0;
+      
+      i {
+        color: #6c757d;
+      }
+    }
+  }
+  
+  .card-body {
+    padding: 1.5rem;
+  }
+}
+
+.settlement-info {
+  .info-row {
+    display: flex;
+    align-items: flex-start;
+    padding: 0.875rem 0;
+    border-bottom: 1px solid #f0f0f0;
+    
+    &:last-child {
+      border-bottom: none;
+    }
+    
+    .info-label {
+      width: 35%;
+      min-width: 200px;
+      display: flex;
+      align-items: center;
+      color: #495057;
+      font-size: 0.95rem;
+      
+      i {
+        width: 20px;
+        text-align: center;
+      }
+      
+      strong {
+        font-weight: 600;
+        color: #212529;
+      }
+    }
+    
+    .info-value {
+      flex: 1;
+      color: #212529;
+      font-size: 0.95rem;
+      
+      &.notes-text {
+        white-space: pre-wrap;
+        word-wrap: break-word;
+        line-height: 1.6;
+      }
+    }
+  }
+}
+
+.badge {
+  padding: 0.5em 0.75em;
+  font-size: 0.875rem;
+  font-weight: 500;
+  border-radius: 0.375rem;
+  
+  &.bg-secondary {
+    background-color: #6c757d !important;
+  }
+  
+  &.bg-warning {
+    background-color: #ffc107 !important;
+    color: #000 !important;
+  }
+  
+  &.bg-info {
+    background-color: #0dcaf0 !important;
+    color: #000 !important;
+  }
+  
+  &.bg-success {
+    background-color: #198754 !important;
+  }
+  
+  &.bg-dark {
+    background-color: #212529 !important;
+  }
+}
+
+.settlement-summary-card {
+  border: 2px solid #e9ecef;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+
+  .card-header {
+    border-bottom: 2px solid #e9ecef;
+    padding: 1rem 1.5rem;
+    
+    h5 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: #212529;
+    }
+  }
+
+  .card-body {
+    padding: 1.5rem;
+  }
+}
+
+.settlement-summary {
+  .summary-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.75rem 0;
+    
+    .summary-label {
+      display: flex;
+      align-items: center;
+      font-size: 0.95rem;
+      color: #495057;
+      
+      i {
+        font-size: 0.85rem;
+      }
+    }
+    
+    .summary-value {
+      font-size: 1rem;
+      font-weight: 500;
+      min-width: 120px;
+      text-align: right;
+    }
+    
+    &.summary-total {
+      padding-top: 1rem;
+      margin-top: 0.5rem;
+      
+      .summary-label {
+        font-size: 1.1rem;
+        color: #212529;
+      }
+      
+      .summary-value {
+        font-size: 1.25rem;
+      }
+    }
+  }
+  
+  .summary-divider {
+    height: 1px;
+    background: linear-gradient(to right, transparent, #dee2e6, transparent);
+    margin: 0.5rem 0;
+  }
+  
+  .net-pay {
+    color: #0d6efd;
+    font-size: 1.35rem !important;
+    font-weight: 700 !important;
+  }
+}
+

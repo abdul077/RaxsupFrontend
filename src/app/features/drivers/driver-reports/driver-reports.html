@@ -1,0 +1,383 @@
+<div class="container-fluid">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+      <h4 class="mb-1">Driver Reports & Analytics</h4>
+      <p class="text-muted mb-0">Comprehensive driver management reports</p>
+    </div>
+  </div>
+
+  <!-- Loading State -->
+  @if (loading) {
+    <div class="text-center py-5">
+      <div class="spinner-border text-primary" role="status">
+        <span class="visually-hidden">Loading...</span>
+      </div>
+    </div>
+  }
+
+  <!-- Reports -->
+  @if (!loading && reports) {
+    <div>
+    <!-- Tabs -->
+    <ul class="nav nav-tabs mb-4">
+      <li class="nav-item">
+        <a class="nav-link" [class.active]="activeTab === 'overview'" (click)="setTab('overview')" href="javascript:void(0)">
+          <i class="fas fa-chart-pie me-2"></i>Overview
+        </a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" [class.active]="activeTab === 'status'" (click)="setTab('status')" href="javascript:void(0)">
+          <i class="fas fa-users me-2"></i>Active/Inactive
+        </a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" [class.active]="activeTab === 'performance'" (click)="setTab('performance')" href="javascript:void(0)">
+          <i class="fas fa-chart-line me-2"></i>Performance
+        </a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" [class.active]="activeTab === 'compliance'" (click)="setTab('compliance')" href="javascript:void(0)">
+          <i class="fas fa-check-circle me-2"></i>Compliance
+        </a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" [class.active]="activeTab === 'expirations'" (click)="setTab('expirations')" href="javascript:void(0)">
+          <i class="fas fa-exclamation-triangle me-2"></i>License Expirations
+        </a>
+      </li>
+    </ul>
+
+    <!-- Overview Tab -->
+    @if (activeTab === 'overview') {
+      <div class="row">
+      <div class="col-md-3">
+        <div class="card bg-gradient-primary text-white mb-4">
+          <div class="card-body">
+            <h3>{{ reports.activeInactive.activeCount }}</h3>
+            <p class="mb-0">Active Drivers</p>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="card bg-gradient-success text-white mb-4">
+          <div class="card-body">
+            <h3>{{ reports.performance.averageOnTimeRate.toFixed(1) }}%</h3>
+            <p class="mb-0">Avg On-Time Rate</p>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="card bg-gradient-warning text-white mb-4">
+          <div class="card-body">
+            <h3>{{ reports.compliance.expiringSoonCount }}</h3>
+            <p class="mb-0">Expiring Soon</p>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="card bg-gradient-danger text-white mb-4">
+          <div class="card-body">
+            <h3>{{ reports.compliance.expiredCount }}</h3>
+            <p class="mb-0">Expired</p>
+          </div>
+        </div>
+      </div>
+      </div>
+    }
+
+    <!-- Active/Inactive Tab -->
+    @if (activeTab === 'status') {
+      <div class="row">
+      <div class="col-12">
+        <div class="card mb-4">
+          <div class="card-header">
+            <h5 class="mb-0">Driver Status Summary</h5>
+          </div>
+          <div class="card-body">
+            <div class="row mb-4">
+              <div class="col-md-3">
+                <div class="text-center p-3 bg-light rounded">
+                  <h4 class="text-success">{{ reports.activeInactive.activeCount }}</h4>
+                  <p class="mb-0">Active</p>
+                </div>
+              </div>
+              <div class="col-md-3">
+                <div class="text-center p-3 bg-light rounded">
+                  <h4 class="text-secondary">{{ reports.activeInactive.inactiveCount }}</h4>
+                  <p class="mb-0">Inactive</p>
+                </div>
+              </div>
+              <div class="col-md-3">
+                <div class="text-center p-3 bg-light rounded">
+                  <h4 class="text-primary">{{ reports.activeInactive.onTripCount }}</h4>
+                  <p class="mb-0">On Trip</p>
+                </div>
+              </div>
+              <div class="col-md-3">
+                <div class="text-center p-3 bg-light rounded">
+                  <h4 class="text-info">{{ reports.activeInactive.availableCount }}</h4>
+                  <p class="mb-0">Available</p>
+                </div>
+              </div>
+            </div>
+            <div class="table-responsive">
+              <table class="table table-hover">
+                <thead>
+                  <tr>
+                    <th>Driver Name</th>
+                    <th>Status</th>
+                    <th>Type</th>
+                    <th>Hire Date</th>
+                    <th>Termination Date</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (driver of reports.activeInactive.drivers; track driver.driverId) {
+                    <tr>
+                      <td>{{ driver.fullName }}</td>
+                      <td><span class="badge" [class.bg-success]="driver.status === 'Active'" [class.bg-secondary]="driver.status === 'Inactive'" [class.bg-primary]="driver.status === 'OnTrip'" [class.bg-info]="driver.status === 'Available'">{{ driver.status }}</span></td>
+                      <td>{{ driver.type }}</td>
+                      <td>{{ formatDate(driver.hireDate) }}</td>
+                      <td>{{ formatDate(driver.terminationDate) }}</td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+      </div>
+    }
+
+    <!-- Performance Tab -->
+    @if (activeTab === 'performance') {
+      <div class="row">
+      <div class="col-12">
+        <div class="card mb-4">
+          <div class="card-header">
+            <h5 class="mb-0">Performance Dashboard</h5>
+          </div>
+          <div class="card-body">
+            <div class="row mb-4">
+              <div class="col-md-4">
+                <div class="card bg-primary text-white">
+                  <div class="card-body text-center">
+                    <h3>{{ reports.performance.averageOnTimeRate.toFixed(1) }}%</h3>
+                    <p class="mb-0">Average On-Time Rate</p>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-4">
+                <div class="card bg-info text-white">
+                  <div class="card-body text-center">
+                    <h3>{{ reports.performance.totalDrivers }}</h3>
+                    <p class="mb-0">Total Drivers</p>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-4">
+                <div class="card bg-danger text-white">
+                  <div class="card-body text-center">
+                    <h3>{{ reports.performance.driversWithIncidents }}</h3>
+                    <p class="mb-0">Drivers with Incidents</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <h6 class="mb-3">Top Performers</h6>
+            <div class="table-responsive mb-4">
+              <table class="table table-hover">
+                <thead>
+                  <tr>
+                    <th>Driver</th>
+                    <th>On-Time Rate</th>
+                    <th>Total Deliveries</th>
+                    <th>Rating</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (performer of reports.performance.topPerformers; track performer.driverId) {
+                    <tr>
+                      <td>{{ performer.fullName }}</td>
+                      <td>{{ performer.onTimeRate.toFixed(1) }}%</td>
+                      <td>{{ performer.totalDeliveries }}</td>
+                      <td>{{ performer.rating ? performer.rating.toFixed(1) : '-' }}</td>
+                    </tr>
+                  }
+                  @if (reports.performance.topPerformers.length === 0) {
+                    <tr>
+                      <td colspan="4" class="text-center text-muted py-4">No performance data available</td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+
+            <h6 class="mb-3">All Driver Performance</h6>
+            <div class="table-responsive">
+              <table class="table table-hover">
+                <thead>
+                  <tr>
+                    <th>Driver</th>
+                    <th>On-Time Deliveries</th>
+                    <th>Total Deliveries</th>
+                    <th>On-Time Rate</th>
+                    <th>Incidents</th>
+                    <th>Rating</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (summary of reports.performance.driverSummaries; track summary.driverId) {
+                    <tr>
+                      <td>{{ summary.fullName }}</td>
+                      <td>{{ summary.onTimeDeliveries }}</td>
+                      <td>{{ summary.totalDeliveries }}</td>
+                      <td>{{ summary.onTimeRate.toFixed(1) }}%</td>
+                      <td>{{ summary.incidents }}</td>
+                      <td>{{ summary.rating ? summary.rating.toFixed(1) : '-' }}</td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+      </div>
+    }
+
+    <!-- Compliance Tab -->
+    @if (activeTab === 'compliance') {
+      <div class="row">
+      <div class="col-12">
+        <div class="card mb-4">
+          <div class="card-header">
+            <h5 class="mb-0">Compliance Dashboard</h5>
+          </div>
+          <div class="card-body">
+            <div class="row mb-4">
+              <div class="col-md-3">
+                <div class="text-center p-3 bg-warning bg-opacity-25 rounded">
+                  <h4 class="text-warning">{{ reports.compliance.expiringSoonCount }}</h4>
+                  <p class="mb-0">Expiring Soon</p>
+                </div>
+              </div>
+              <div class="col-md-3">
+                <div class="text-center p-3 bg-danger bg-opacity-25 rounded">
+                  <h4 class="text-danger">{{ reports.compliance.expiredCount }}</h4>
+                  <p class="mb-0">Expired</p>
+                </div>
+              </div>
+              <div class="col-md-3">
+                <div class="text-center p-3 bg-success bg-opacity-25 rounded">
+                  <h4 class="text-success">{{ reports.compliance.dqfCompleteCount }}</h4>
+                  <p class="mb-0">DQF Complete</p>
+                </div>
+              </div>
+              <div class="col-md-3">
+                <div class="text-center p-3 bg-info bg-opacity-25 rounded">
+                  <h4 class="text-info">{{ reports.compliance.dqfIncompleteCount }}</h4>
+                  <p class="mb-0">DQF Incomplete</p>
+                </div>
+              </div>
+            </div>
+
+            <h6 class="mb-3">Compliance Issues</h6>
+            <div class="table-responsive">
+              <table class="table table-hover">
+                <thead>
+                  <tr>
+                    <th>Driver</th>
+                    <th>Issue Type</th>
+                    <th>Expiry Date</th>
+                    <th>Days Until Expiry</th>
+                    <th>Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (issue of reports.compliance.complianceIssues; track issue.driverId + issue.issueType) {
+                    <tr>
+                      <td>{{ issue.driverName }}</td>
+                      <td>{{ issue.issueType }}</td>
+                      <td>{{ formatDate(issue.expiryDate) }}</td>
+                      <td>{{ issue.daysUntilExpiry }}</td>
+                      <td>
+                        <span [class]="getExpiryBadgeClass(issue.isExpired, issue.daysUntilExpiry <= 30 && !issue.isExpired)">
+                          {{ issue.isExpired ? 'Expired' : issue.daysUntilExpiry <= 30 ? 'Expiring Soon' : 'Valid' }}
+                        </span>
+                      </td>
+                    </tr>
+                  }
+                  @if (reports.compliance.complianceIssues.length === 0) {
+                    <tr>
+                      <td colspan="5" class="text-center text-muted py-4">No compliance issues found</td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+      </div>
+    }
+
+    <!-- License Expirations Tab -->
+    @if (activeTab === 'expirations') {
+      <div class="row">
+      <div class="col-12">
+        <div class="card mb-4">
+          <div class="card-header">
+            <h5 class="mb-0">License & Certificate Expirations</h5>
+          </div>
+          <div class="card-body">
+            <div class="table-responsive">
+              <table class="table table-hover">
+                <thead>
+                  <tr>
+                    <th>Driver</th>
+                    <th>License Number</th>
+                    <th>License State</th>
+                    <th>License Expiry</th>
+                    <th>Medical Expiry</th>
+                    <th>Insurance Expiry</th>
+                    <th>Days Until Expiry</th>
+                    <th>Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (exp of licenseExpirations; track exp.driverId) {
+                    <tr [class.table-danger]="exp.isExpired" [class.table-warning]="exp.isExpiringSoon">
+                      <td>{{ exp.driverName }}</td>
+                      <td>{{ exp.licenseNumber || '-' }}</td>
+                      <td>{{ exp.licenseState || '-' }}</td>
+                      <td>{{ formatDate(exp.licenseExpiry) }}</td>
+                      <td>{{ formatDate(exp.medicalCardExpiry) }}</td>
+                      <td>{{ formatDate(exp.insuranceExpiry) }}</td>
+                      <td>{{ exp.daysUntilExpiry }}</td>
+                      <td>
+                        <span [class]="getExpiryBadgeClass(exp.isExpired, exp.isExpiringSoon)">
+                          {{ exp.isExpired ? 'Expired' : exp.isExpiringSoon ? 'Expiring Soon' : 'Valid' }}
+                        </span>
+                      </td>
+                    </tr>
+                  }
+                  @if (licenseExpirations.length === 0) {
+                    <tr>
+                      <td colspan="8" class="text-center text-muted py-4">No expirations found</td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+      </div>
+    }
+    </div>
+  }
+</div>
+

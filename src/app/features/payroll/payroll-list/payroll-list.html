@@ -1,0 +1,135 @@
+<div class="container-fluid">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>Payroll Management</h2>
+    <div>
+      <button class="btn btn-primary me-2" (click)="router.navigate(['/payroll/create'])">
+        <i class="fas fa-plus me-2"></i>Create Payroll
+      </button>
+      <button class="btn btn-info me-2" (click)="router.navigate(['/payroll/sync-management'])">
+        <i class="fas fa-sync me-2"></i>Sync Management
+      </button>
+      <button class="btn btn-secondary" (click)="syncAllFromEveree()">
+        <i class="fas fa-download me-2"></i>Sync All from Everee
+      </button>
+    </div>
+  </div>
+
+  <!-- Filters -->
+  <div class="card mb-4">
+    <div class="card-body">
+      <div class="row g-3">
+        <div class="col-md-3">
+          <label class="form-label">Search</label>
+          <input type="text" class="form-control" [(ngModel)]="searchTerm" (ngModelChange)="applyFilters()" 
+                 placeholder="Search by number, driver...">
+        </div>
+        <div class="col-md-2">
+          <label class="form-label">Driver</label>
+          <select class="form-select" [(ngModel)]="driverFilter" (ngModelChange)="onFilterChange()">
+            <option [value]="null">All Drivers</option>
+            <option *ngFor="let driver of drivers" [value]="driver.driverId">{{ driver.fullName }}</option>
+          </select>
+        </div>
+        <div class="col-md-2">
+          <label class="form-label">Status</label>
+          <select class="form-select" [(ngModel)]="statusFilter" (ngModelChange)="onFilterChange()">
+            <option value="">All Statuses</option>
+            <option *ngFor="let status of statusOptions" [value]="status">{{ status }}</option>
+          </select>
+        </div>
+        <div class="col-md-2">
+          <label class="form-label">Sync Status</label>
+          <select class="form-select" [(ngModel)]="syncStatusFilter" (ngModelChange)="onFilterChange()">
+            <option value="">All Sync Statuses</option>
+            <option *ngFor="let status of syncStatusOptions" [value]="status">{{ status }}</option>
+          </select>
+        </div>
+        <div class="col-md-3">
+          <label class="form-label">Date Range</label>
+          <div class="input-group">
+            <input type="date" class="form-control" [(ngModel)]="startDate" (ngModelChange)="onFilterChange()" placeholder="Start">
+            <input type="date" class="form-control" [(ngModel)]="endDate" (ngModelChange)="onFilterChange()" placeholder="End">
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Payroll List -->
+  <div class="card">
+    <div class="card-body">
+      <div *ngIf="filteredPayrolls.length === 0" class="text-center py-5">
+        <p class="text-muted">No payrolls found</p>
+      </div>
+
+      <div *ngIf="filteredPayrolls.length > 0" class="table-responsive">
+        <table class="table table-hover">
+          <thead>
+            <tr>
+              <th>Payroll #</th>
+              <th>Worker</th>
+              <th>Period</th>
+              <th>Gross Pay</th>
+              <th>Deductions</th>
+              <th>Net Pay</th>
+              <th>Status</th>
+              <th>Sync Status</th>
+              <th>Everee ID</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let payroll of filteredPayrolls">
+              <td>
+                <a [routerLink]="['/payroll', payroll.payrollId]" class="text-decoration-none">
+                  {{ payroll.payrollNumber }}
+                </a>
+              </td>
+              <td>{{ payroll.driverName || payroll.ownerOperatorName || 'N/A' }}</td>
+              <td>
+                {{ payroll.payPeriodStart | date:'shortDate' }} - 
+                {{ payroll.payPeriodEnd | date:'shortDate' }}
+              </td>
+              <td>${{ payroll.grossPay | number:'1.2-2' }}</td>
+              <td>${{ payroll.totalDeductions | number:'1.2-2' }}</td>
+              <td><strong>${{ payroll.netPay | number:'1.2-2' }}</strong></td>
+              <td>
+                <span class="badge" [ngClass]="getStatusClass(payroll.status)">
+                  {{ payroll.status }}
+                </span>
+              </td>
+              <td>
+                <span class="badge" [ngClass]="getSyncStatusClass(payroll.evereeSyncStatus)">
+                  {{ payroll.evereeSyncStatus }}
+                </span>
+                <small *ngIf="payroll.lastSyncedAt" class="d-block text-muted">
+                  {{ payroll.lastSyncedAt | date:'short' }}
+                </small>
+              </td>
+              <td>
+                <small *ngIf="payroll.evereePayrollId" class="text-muted">{{ payroll.evereePayrollId }}</small>
+                <span *ngIf="!payroll.evereePayrollId" class="text-muted">-</span>
+              </td>
+              <td>
+                <div class="btn-group btn-group-sm">
+                  <button class="btn btn-sm btn-outline-primary" 
+                          [routerLink]="['/payroll', payroll.payrollId]"
+                          title="View Details">
+                    <i class="fas fa-eye"></i>
+                  </button>
+                  <button *ngIf="payroll.evereeSyncStatus !== 'Synced'" 
+                          class="btn btn-sm btn-outline-success" 
+                          (click)="syncToEveree(payroll.payrollId)"
+                          title="Sync to Everee">
+                    <i class="fas fa-sync"></i>
+                  </button>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+

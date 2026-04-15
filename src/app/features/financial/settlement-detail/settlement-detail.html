@@ -1,0 +1,347 @@
+<div class="container-fluid">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <div class="d-flex align-items-center gap-3">
+      <button class="btn btn-outline-secondary" (click)="navigateBack()">
+        <i class="fas fa-arrow-left me-2"></i>Back
+      </button>
+      <div>
+        <h4 class="mb-1">{{ settlement?.settlementNumber || 'Loading...' }}</h4>
+        <p class="text-muted mb-0">Settlement Details</p>
+      </div>
+    </div>
+    @if (!loading && settlement) {
+      <div class="d-flex gap-2">
+        @if (settlement.status === 'Draft') {
+          <button class="btn btn-primary" (click)="submitForApproval()" [disabled]="processing">
+            <i class="fas fa-paper-plane me-2"></i>Submit for Approval
+          </button>
+          <button class="btn btn-outline-danger" (click)="openCancelModal()" [disabled]="processing">
+            <i class="fas fa-times me-2"></i>Cancel
+          </button>
+        }
+        @if (settlement.status === 'PendingApproval') {
+          <button class="btn btn-success" (click)="approveSettlement()" [disabled]="processing">
+            <i class="fas fa-check me-2"></i>Approve
+          </button>
+          <button class="btn btn-outline-danger" (click)="openCancelModal()" [disabled]="processing">
+            <i class="fas fa-times me-2"></i>Cancel
+          </button>
+        }
+        @if (settlement.status === 'Approved') {
+          <button class="btn btn-success" (click)="openMarkPaidModal()" [disabled]="processing">
+            <i class="fas fa-money-bill-wave me-2"></i>Mark as Paid
+          </button>
+          <button class="btn btn-outline-danger" (click)="openCancelModal()" [disabled]="processing">
+            <i class="fas fa-times me-2"></i>Cancel
+          </button>
+        }
+      </div>
+    }
+  </div>
+
+  @if (loading) {
+    <div class="text-center py-5">
+      <div class="spinner-border text-primary" role="status">
+        <span class="visually-hidden">Loading...</span>
+      </div>
+    </div>
+  }
+
+  @if (!loading && settlement) {
+    <div class="row">
+      <div class="col-md-8">
+        <div class="card mb-4">
+          <div class="card-header bg-white">
+            <h5 class="mb-0"><i class="fas fa-info-circle me-2"></i>Settlement Information</h5>
+          </div>
+          <div class="card-body">
+            <div class="settlement-info">
+              <div class="info-row">
+                <div class="info-label">
+                  <i class="fas fa-hashtag me-2 text-muted"></i>
+                  <strong>Settlement Number:</strong>
+                </div>
+                <div class="info-value">{{ settlement.settlementNumber }}</div>
+              </div>
+              <div class="info-row">
+                <div class="info-label">
+                  <i class="fas fa-user me-2 text-muted"></i>
+                  <strong>Owner Operator:</strong>
+                </div>
+                <div class="info-value">{{ settlement.driverName }}</div>
+              </div>
+              <div class="info-row">
+                <div class="info-label">
+                  <i class="fas fa-calendar-alt me-2 text-muted"></i>
+                  <strong>Period:</strong>
+                </div>
+                <div class="info-value">{{ formatDate(settlement.periodStart) }} - {{ formatDate(settlement.periodEnd) }}</div>
+              </div>
+              <div class="info-row">
+                <div class="info-label">
+                  <i class="fas fa-tag me-2 text-muted"></i>
+                  <strong>Type:</strong>
+                </div>
+                <div class="info-value">{{ settlement.settlementType }}</div>
+              </div>
+              <div class="info-row">
+                <div class="info-label">
+                  <i class="fas fa-info-circle me-2 text-muted"></i>
+                  <strong>Status:</strong>
+                </div>
+                <div class="info-value">
+                  <span [class]="getStatusBadgeClass(settlement.status)">{{ settlement.status }}</span>
+                </div>
+              </div>
+              <div class="info-row">
+                <div class="info-label">
+                  <i class="fas fa-clock me-2 text-muted"></i>
+                  <strong>Created:</strong>
+                </div>
+                <div class="info-value">{{ formatDate(settlement.createdAt) }}</div>
+              </div>
+              @if (settlement.approvedAt) {
+                <div class="info-row">
+                  <div class="info-label">
+                    <i class="fas fa-check-circle me-2 text-muted"></i>
+                    <strong>Approved:</strong>
+                  </div>
+                  <div class="info-value">{{ formatDate(settlement.approvedAt) }}</div>
+                </div>
+              }
+              @if (settlement.paidAt) {
+                <div class="info-row">
+                  <div class="info-label">
+                    <i class="fas fa-money-check me-2 text-muted"></i>
+                    <strong>Paid:</strong>
+                  </div>
+                  <div class="info-value">{{ formatDate(settlement.paidAt) }}</div>
+                </div>
+              }
+              @if (settlement.paymentMethod) {
+                <div class="info-row">
+                  <div class="info-label">
+                    <i class="fas fa-credit-card me-2 text-muted"></i>
+                    <strong>Payment Method:</strong>
+                  </div>
+                  <div class="info-value">{{ settlement.paymentMethod }}</div>
+                </div>
+              }
+              @if (settlement.paymentReference) {
+                <div class="info-row">
+                  <div class="info-label">
+                    <i class="fas fa-receipt me-2 text-muted"></i>
+                    <strong>Payment Reference:</strong>
+                  </div>
+                  <div class="info-value">{{ settlement.paymentReference }}</div>
+                </div>
+              }
+              @if (settlement.notes) {
+                <div class="info-row">
+                  <div class="info-label">
+                    <i class="fas fa-sticky-note me-2 text-muted"></i>
+                    <strong>Notes:</strong>
+                  </div>
+                  <div class="info-value notes-text">{{ settlement.notes }}</div>
+                </div>
+              }
+            </div>
+          </div>
+        </div>
+
+        <div class="card mb-4">
+          <div class="card-header">
+            <h5 class="mb-0">Settlement Items</h5>
+          </div>
+          <div class="card-body">
+            <div class="table-responsive">
+              <table class="table">
+                <thead>
+                  <tr>
+                    <th>Load ID</th>
+                    <th>Description</th>
+                    <th>Rate</th>
+                    <th>Miles</th>
+                    <th>Amount</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (item of settlement.items; track item.settlementItemId || $index) {
+                    <tr>
+                      <td>{{ item.loadId }}</td>
+                      <td>{{ item.description }}</td>
+                      <td>{{ formatCurrency(item.rate) }}</td>
+                      <td>{{ item.miles.toLocaleString() }}</td>
+                      <td>{{ formatCurrency(item.amount) }}</td>
+                    </tr>
+                  }
+                  @if (settlement.items.length === 0) {
+                    <tr>
+                      <td colspan="5" class="text-center text-muted py-4">No items found</td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <div class="card mb-4">
+          <div class="card-header">
+            <h5 class="mb-0">Deductions</h5>
+          </div>
+          <div class="card-body">
+            <div class="table-responsive">
+              <table class="table">
+                <thead>
+                  <tr>
+                    <th>Type</th>
+                    <th>Description</th>
+                    <th>Amount</th>
+                    <th>Reference</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (deduction of settlement.deductions; track deduction.deductionId || $index) {
+                    <tr>
+                      <td>{{ deduction.deductionType }}</td>
+                      <td>{{ deduction.description }}</td>
+                      <td class="text-danger">{{ formatCurrency(deduction.amount) }}</td>
+                      <td>{{ deduction.reference || '-' }}</td>
+                    </tr>
+                  }
+                  @if (settlement.deductions.length === 0) {
+                    <tr>
+                      <td colspan="4" class="text-center text-muted py-4">No deductions found</td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-md-4">
+        <div class="card mb-4 settlement-summary-card">
+          <div class="card-header bg-light">
+            <h5 class="mb-0">
+              <i class="fas fa-calculator me-2"></i>Settlement Summary
+            </h5>
+          </div>
+          <div class="card-body">
+            <div class="settlement-summary">
+              <div class="summary-row">
+                <div class="summary-label">
+                  <i class="fas fa-dollar-sign me-2 text-success"></i>
+                  <span>Total Earnings:</span>
+                </div>
+                <div class="summary-value text-success">
+                  {{ formatCurrency(settlement.totalEarnings) }}
+                </div>
+              </div>
+              <div class="summary-row">
+                <div class="summary-label">
+                  <i class="fas fa-minus-circle me-2 text-danger"></i>
+                  <span>Total Deductions:</span>
+                </div>
+                <div class="summary-value text-danger">
+                  -{{ formatCurrency(settlement.totalDeductions) }}
+                </div>
+              </div>
+              <div class="summary-divider"></div>
+              <div class="summary-row summary-total">
+                <div class="summary-label">
+                  <i class="fas fa-wallet me-2 text-primary"></i>
+                  <strong>Net Pay:</strong>
+                </div>
+                <div class="summary-value net-pay">
+                  <strong>{{ formatCurrency(settlement.netPay) }}</strong>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- Cancel Settlement Modal -->
+  @if (showCancelModal) {
+    <div class="modal fade show" [style.display]="'block'" style="background-color: rgba(0,0,0,0.5);">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">Cancel Settlement</h5>
+            <button type="button" class="btn-close" (click)="closeCancelModal()"></button>
+          </div>
+          <div class="modal-body">
+            <p>Are you sure you want to cancel this settlement?</p>
+            <div class="mb-3">
+              <label class="form-label">Cancellation Reason (Optional)</label>
+              <textarea class="form-control" rows="3" 
+                        [(ngModel)]="cancelReason" 
+                        placeholder="Enter reason for cancellation..."></textarea>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" (click)="closeCancelModal()">Close</button>
+            <button type="button" class="btn btn-danger" (click)="cancelSettlement()" [disabled]="processing">
+              @if (processing) {
+                <span class="spinner-border spinner-border-sm me-2"></span>
+              }
+              Cancel Settlement
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- Mark as Paid Modal -->
+  @if (showMarkPaidModal) {
+    <div class="modal fade show" [style.display]="'block'" style="background-color: rgba(0,0,0,0.5);">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">Mark Settlement as Paid</h5>
+            <button type="button" class="btn-close" (click)="closeMarkPaidModal()"></button>
+          </div>
+          <div class="modal-body">
+            <div class="mb-3">
+              <label class="form-label">Payment Method <span class="text-danger">*</span></label>
+              <select class="form-select" [(ngModel)]="paymentMethod" required>
+                <option value="ACH">ACH</option>
+                <option value="Check">Check</option>
+                <option value="Wire">Wire Transfer</option>
+                <option value="Cash">Cash</option>
+                <option value="Other">Other</option>
+              </select>
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Payment Reference (Optional)</label>
+              <input type="text" class="form-control" 
+                     [(ngModel)]="paymentReference" 
+                     placeholder="Check number, transaction ID, etc.">
+            </div>
+            @if (settlement) {
+              <div class="alert alert-info">
+                <strong>Net Pay:</strong> {{ formatCurrency(settlement.netPay) }}
+              </div>
+            }
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" (click)="closeMarkPaidModal()">Close</button>
+            <button type="button" class="btn btn-success" (click)="markAsPaid()" [disabled]="processing">
+              @if (processing) {
+                <span class="spinner-border spinner-border-sm me-2"></span>
+              }
+              Mark as Paid
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  }
+</div>
+

@@ -1,0 +1,430 @@
+<div class="container-fluid">
+  <!-- Header -->
+  <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap">
+    <div class="d-flex align-items-center gap-3 flex-wrap">
+      <button class="btn btn-outline-secondary" (click)="cancel()">
+        <i class="fas fa-arrow-left me-2"></i>Back
+      </button>
+      <div>
+        <h4 class="mb-1">Create New Load</h4>
+        <p class="text-muted mb-0">Fill in the details to create a new load</p>
+      </div>
+    </div>
+    <!-- Action Buttons floated right at top -->
+    <div class="d-flex gap-2 ms-auto">
+      <button class="btn btn-outline-secondary" (click)="cancel()" [disabled]="submitting">
+        <i class="fas fa-times me-2"></i>Cancel
+      </button>
+      <button 
+        class="btn"
+        style="background-color: #1a365d; color: #fff; border-color: #1a365d;"
+        (click)="onSubmit()" 
+        [disabled]="submitting">
+        <span *ngIf="submitting" class="spinner-border spinner-border-sm me-2"></span>
+        <i *ngIf="!submitting" class="fas fa-save me-2"></i>
+        {{ submitting ? 'Creating...' : 'Create Load' }}
+      </button>
+    </div>
+  </div>
+
+  <!-- Loading State -->
+  <div *ngIf="loading" class="text-center py-5">
+    <div class="spinner-border text-primary" role="status">
+      <span class="visually-hidden">Loading...</span>
+    </div>
+  </div>
+
+  <!-- Form -->
+  <div *ngIf="!loading" class="row">
+    <div class="col-lg-8">
+      <div class="card">
+        <div class="card-header">
+          <h5 class="mb-0">
+            <i class="fas fa-info-circle me-2"></i>Load Information
+          </h5>
+        </div>
+        <div class="card-body">
+          <form (ngSubmit)="onSubmit()">
+            <!-- Validation Error Message -->
+            <div *ngIf="validationError" class="alert alert-danger validation-error-message mb-3" role="alert">
+              <i class="fas fa-exclamation-circle me-2"></i>{{ validationError }}
+            </div>
+            <div class="row g-3">
+              <div class="col-md-6">
+                <label class="form-label">Load Number *</label>
+                <input 
+                  type="text" 
+                  class="form-control" 
+                  [(ngModel)]="formData.loadNumber" 
+                  name="loadNumber"
+                  (input)="clearValidationError()"
+                  required
+                  readonly>
+                <small class="text-muted">Auto-generated load number</small>
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">Broker *</label>
+                <select 
+                  class="form-select" 
+                  [(ngModel)]="formData.customerId" 
+                  name="customerId"
+                  (change)="clearValidationError()"
+                  required>
+                  <option [value]="undefined">Select Broker</option>
+                  <option *ngFor="let customer of customers" [value]="customer.customerId">
+                    {{ customer.customerId }} - {{ customer.name }}
+                  </option>
+                </select>
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">Origin *</label>
+                <input 
+                  id="origin-input"
+                  type="text" 
+                  class="form-control" 
+                  [(ngModel)]="formData.origin" 
+                  name="origin"
+                  placeholder="Start typing address..."
+                  (input)="clearValidationError()"
+                  required
+                  autocomplete="off">
+                <small class="text-muted">
+                  <i class="fas fa-map-marker-alt me-1"></i>Autocomplete enabled - Worldwide addresses
+                </small>
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">Destination *</label>
+                <input 
+                  id="destination-input"
+                  type="text" 
+                  class="form-control" 
+                  [(ngModel)]="formData.destination" 
+                  name="destination"
+                  placeholder="Start typing address..."
+                  (input)="clearValidationError()"
+                  required
+                  autocomplete="off">
+                <small class="text-muted">
+                  <i class="fas fa-map-marker-alt me-1"></i>Autocomplete enabled - Worldwide addresses
+                </small>
+              </div>
+              <div class="col-12">
+                <hr class="my-2">
+                <p class="text-muted small mb-2 mb-md-0">
+                  <i class="fas fa-truck-loading me-1"></i><strong>Deadhead</strong> (optional) — empty miles before/after the paid load
+                </p>
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">Deadhead origin</label>
+                <input
+                  id="deadhead-origin-input"
+                  type="text"
+                  class="form-control"
+                  [(ngModel)]="formData.deadheadOrigin"
+                  name="deadheadOrigin"
+                  placeholder="e.g. where empty reposition starts"
+                  autocomplete="off"
+                  (input)="clearValidationError()">
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">Deadhead destination</label>
+                <input
+                  id="deadhead-destination-input"
+                  type="text"
+                  class="form-control"
+                  [(ngModel)]="formData.deadheadDestination"
+                  name="deadheadDestination"
+                  placeholder="e.g. where empty reposition ends"
+                  autocomplete="off"
+                  (input)="clearValidationError()">
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">Pickup Date/Time *</label>
+                <input 
+                  type="datetime-local" 
+                  class="form-control" 
+                  [(ngModel)]="formData.pickupDateTime" 
+                  name="pickupDateTime"
+                  [min]="getMinDateTime()"
+                  (change)="onPickupDateTimeChange(); clearValidationError()"
+                  required>
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">Delivery Date/Time *</label>
+                <input 
+                  type="datetime-local" 
+                  class="form-control" 
+                  [(ngModel)]="formData.deliveryDateTime" 
+                  name="deliveryDateTime"
+                  [min]="getMinDeliveryDateTime()"
+                  (change)="clearInvalidStopDates(); clearValidationError()"
+                  required>
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">Total Rate *</label>
+                <div class="input-group">
+                  <span class="input-group-text">$</span>
+                  <input 
+                    type="number" 
+                    step="0.01" 
+                    min="0"
+                    class="form-control" 
+                    [(ngModel)]="formData.totalRate" 
+                    name="totalRate"
+                    placeholder="0.00"
+                    (input)="onTotalRateChange(); clearValidationError()"
+                    required>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">Deadhead amount</label>
+                <div class="input-group">
+                  <span class="input-group-text">$</span>
+                  <input
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    class="form-control"
+                    [(ngModel)]="formData.deadheadAmount"
+                    name="deadheadAmount"
+                    placeholder="0.00"
+                    (input)="onDeadheadAmountChange(); clearValidationError()">
+                </div>
+                <small class="text-muted">Compensation for deadhead; uses load currency below.</small>
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">Currency *</label>
+                <select 
+                  class="form-select" 
+                  [(ngModel)]="formData.currency" 
+                  name="currency"
+                  (change)="clearValidationError()"
+                  required>
+                  <option value="USD">USD - US Dollar</option>
+                  <option value="CAD">CAD - Canadian Dollar</option>
+                  <option value="EUR">EUR - Euro</option>
+                </select>
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">Load Type</label>
+                <select 
+                  class="form-select" 
+                  [(ngModel)]="formData.loadType" 
+                  name="loadType"
+                  (change)="clearValidationError()">
+                  <option [value]="undefined">Select Load Type</option>
+                  <option value="DRY VAN">DRY VAN</option>
+                  <option value="REEFER">REEFER</option>
+                  <option value="FLAT BED">FLAT BED</option>
+                  <option value="LTL">LTL</option>
+                  <option value="HOTSHOT">HOTSHOT</option>
+                  <option value="INTERMODAL">INTERMODAL</option>
+                </select>
+              </div>
+              <div class="col-12">
+                <label class="form-label">Notes *</label>
+                <textarea 
+                  class="form-control" 
+                  rows="4" 
+                  [(ngModel)]="formData.notes" 
+                  name="notes"
+                  placeholder="Additional notes or special instructions..."
+                  (input)="clearValidationError()"
+                  required></textarea>
+              </div>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- Sidebar -->
+    <div class="col-lg-4">
+      <div class="card">
+        <div class="card-header">
+          <h5 class="mb-0">
+            <i class="fas fa-tasks me-2"></i>Completion
+          </h5>
+        </div>
+        <div class="card-body">
+          <div class="mb-2">
+            <div class="d-flex justify-content-between align-items-center">
+              <span class="fw-semibold">{{ getCompletionPercent() }}%</span>
+              <small class="text-muted">complete</small>
+            </div>
+            <div class="progress mt-2" style="height: 10px;">
+              <div 
+                class="progress-bar" 
+                [style.width.%]="getCompletionPercent()"
+                [class.bg-success]="getCompletionPercent() === 100"
+                [class.bg-primary]="getCompletionPercent() < 100"
+                role="progressbar"
+                [attr.aria-valuenow]="getCompletionPercent()"
+                aria-valuemin="0"
+                aria-valuemax="100">
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Moved Stops Section to Sidebar, under Completion -->
+      <div class="card mt-3">
+        <div class="card-header d-flex justify-content-between align-items-center">
+          <h5 class="mb-0">
+            <i class="fas fa-map-marker-alt me-2"></i>Route Stops ({{ stops.length }})
+          </h5>
+          <button type="button" 
+            class="btn btn-sm"
+            style="background-color: #1a365d; color: #fff; border-color: #1a365d;"
+            (click)="openStopModal()">
+            <i class="fas fa-plus me-2"></i>New Stop
+          </button>
+        </div>
+        <div class="card-body">
+          <div *ngIf="stops.length === 0" class="text-center text-muted py-4">
+            <i class="fas fa-map-marked-alt fa-2x mb-3 d-block"></i>
+            <p>No stops added yet. Add stops to create a multi-leg route.</p>
+          </div>
+          <div *ngIf="stops.length > 0" class="table-responsive">
+            <table class="table table-hover">
+              <thead>
+                <tr>
+                  <th>Sequence</th>
+                  <th>Location</th>
+                  <th>Type</th>
+                  <th>Planned Date/Time</th>
+                  <th>Notes</th>
+                  <th class="text-end">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let stop of stops; let i = index">
+                  <td><strong>{{ stop.sequenceNo }}</strong></td>
+                  <td>{{ stop.location }}</td>
+                  <td>
+                    <span class="badge" [ngClass]="stop.stopType === 'Pickup' ? 'bg-success' : 'bg-primary'">
+                      {{ stop.stopType }}
+                    </span>
+                  </td>
+                  <td>{{ formatDate(stop.plannedDateTime) || '-' }}</td>
+                  <td>{{ stop.notes || '-' }}</td>
+                  <td class="text-end">
+                    <div class="btn-group">
+                      <button class="btn btn-sm btn-outline-primary" (click)="openStopModal(i)" title="Edit">
+                        <i class="fas fa-edit"></i>
+                      </button>
+                      <button class="btn btn-sm btn-outline-danger" (click)="deleteStop(i)" title="Delete">
+                        <i class="fas fa-trash"></i>
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <div class="card mt-3">
+        <div class="card-header">
+          <h5 class="mb-0">
+            <i class="fas fa-lightbulb me-2"></i>Tips
+          </h5>
+        </div>
+        <div class="card-body">
+          <ul class="mb-0 small">
+            <li>Fill in at least Load Number, Origin, and Destination</li>
+            <li>Add stops to create multi-leg routes</li>
+            <li>You can assign owner operators and equipment after creating the load</li>
+            <li>Documents can be uploaded from the load detail page</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Add/Edit Stop Modal -->
+<div class="modal fade" [class.show]="showStopModal" [style.display]="showStopModal ? 'block' : 'none'" [style.z-index]="showStopModal ? '1300' : '0'" style="background: rgba(0,0,0,0.5);" *ngIf="showStopModal" (click)="$event.stopPropagation()">
+  <div class="modal-dialog" (click)="$event.stopPropagation()">
+    <div class="modal-content" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h5 class="modal-title">{{ editingStopIndex !== null ? 'Edit Stop' : 'Add Stop' }}</h5>
+        <button type="button" class="btn-close" (click)="showStopModal = false; resetStopForm()"></button>
+      </div>
+      <div class="modal-body" style="overflow: visible;">
+        <form>
+          <div class="mb-3">
+            <label class="form-label">Sequence Number *</label>
+            <input 
+              type="number" 
+              class="form-control" 
+              [(ngModel)]="stopForm.sequenceNo" 
+              name="sequenceNo" 
+              required
+              min="1">
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Location *</label>
+            <input 
+              id="stop-location-input"
+              type="text" 
+              class="form-control" 
+              [(ngModel)]="stopForm.location" 
+              name="location" 
+              placeholder="Start typing address..."
+              required
+              autocomplete="off">
+            <small class="text-muted">
+              <i class="fas fa-map-marker-alt me-1"></i>Autocomplete enabled - Worldwide addresses
+            </small>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Stop Type *</label>
+            <select 
+              class="form-select" 
+              [(ngModel)]="stopForm.stopType" 
+              name="stopType" 
+              required>
+              <option value="Pickup">Pickup</option>
+              <option value="Dropoff">Dropoff</option>
+            </select>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Planned Date/Time</label>
+            <input 
+              type="datetime-local" 
+              class="form-control" 
+              [(ngModel)]="stopForm.plannedDateTime" 
+              name="plannedDateTime"
+              [min]="getMinStopDateTime()"
+              [max]="getMaxStopDateTime()"
+              [disabled]="!formData.pickupDateTime || !formData.deliveryDateTime">
+            @if (!formData.pickupDateTime || !formData.deliveryDateTime) {
+              <small class="text-muted">
+                <i class="fas fa-info-circle me-1"></i>Set pickup and delivery dates first to enable stop date selection
+              </small>
+            } @else {
+              <small class="text-muted">
+                <i class="fas fa-info-circle me-1"></i>Must be between pickup and delivery dates
+              </small>
+            }
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Notes</label>
+            <textarea 
+              class="form-control" 
+              rows="3" 
+              [(ngModel)]="stopForm.notes" 
+              name="notes"></textarea>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" (click)="showStopModal = false; resetStopForm()">Cancel</button>
+        <button type="button" class="btn btn-primary" (click)="saveStop()">Save Stop</button>
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,201 @@
+<div class="container-fluid">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <div class="d-flex align-items-center gap-3">
+      <button class="btn btn-outline-secondary" (click)="navigateBack()">
+        <i class="fas fa-arrow-left me-2"></i>Back
+      </button>
+      <div>
+        <h4 class="mb-1">{{ invoice?.invoiceNumber || 'Loading...' }}</h4>
+        <p class="text-muted mb-0">Invoice Details</p>
+      </div>
+    </div>
+    <div>
+      @if (invoice) {
+        <button class="btn btn-outline-primary me-2" (click)="downloadInvoicePdf()">
+          <i class="fas fa-file-pdf me-2"></i>Download PDF
+        </button>
+      }
+      @if (invoice && invoice.status === 'Draft') {
+        <button class="btn btn-primary me-2" (click)="navigateToEdit()">
+          <i class="fas fa-edit me-2"></i>Edit
+        </button>
+      }
+      @if (invoice && invoice.status === 'Sent' && invoice.balance > 0) {
+        <button class="btn btn-success me-2" (click)="openPaymentModal()">
+          <i class="fas fa-money-bill-wave me-2"></i>Record Payment
+        </button>
+      }
+      @if (invoice && invoice.status === 'Draft') {
+        <button class="btn btn-info" (click)="sendInvoice()">
+          <i class="fas fa-paper-plane me-2"></i>Send Invoice
+        </button>
+      }
+    </div>
+  </div>
+
+  @if (loading) {
+    <div class="text-center py-5">
+      <div class="spinner-border text-primary" role="status">
+        <span class="visually-hidden">Loading...</span>
+      </div>
+    </div>
+  }
+
+  @if (!loading && invoice) {
+    <div class="row">
+      <div class="col-md-8">
+        <div class="card mb-4">
+          <div class="card-header">
+            <h5 class="mb-0">Invoice Information</h5>
+          </div>
+          <div class="card-body">
+            <table class="table table-borderless mb-0">
+              <tr>
+                <td width="30%"><strong>Invoice Number:</strong></td>
+                <td>{{ invoice.invoiceNumber }}</td>
+              </tr>
+              <tr>
+                <td><strong>Customer:</strong></td>
+                <td>{{ invoice.customerName }}</td>
+              </tr>
+              <tr>
+                <td><strong>Issue Date:</strong></td>
+                <td>{{ formatDate(invoice.issueDate) }}</td>
+              </tr>
+              <tr>
+                <td><strong>Due Date:</strong></td>
+                <td>{{ formatDate(invoice.dueDate) }}</td>
+              </tr>
+              <tr>
+                <td><strong>Status:</strong></td>
+                <td><span [class]="getStatusBadgeClass(invoice.status)">{{ invoice.status }}</span></td>
+              </tr>
+            </table>
+          </div>
+        </div>
+
+        <div class="card mb-4">
+          <div class="card-header">
+            <h5 class="mb-0">Line Items</h5>
+          </div>
+          <div class="card-body">
+            <div class="table-responsive">
+              <table class="table">
+                <thead>
+                  <tr>
+                    <th>Description</th>
+                    <th>Quantity</th>
+                    <th>Unit Price</th>
+                    <th>Amount</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (item of invoice.lineItems; track item.lineItemId || $index) {
+                    <tr>
+                      <td>{{ item.description }}</td>
+                      <td>{{ item.quantity }}</td>
+                      <td>{{ formatCurrency(item.unitPrice) }}</td>
+                      <td>{{ formatCurrency(item.amount) }}</td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-md-4">
+        <div class="card mb-4">
+          <div class="card-header">
+            <h5 class="mb-0">Summary</h5>
+          </div>
+          <div class="card-body">
+            <table class="table table-borderless mb-0">
+              <tr>
+                <td><strong>Subtotal:</strong></td>
+                <td class="text-end">{{ formatCurrency(invoice.subTotal) }}</td>
+              </tr>
+              <tr>
+                <td><strong>Tax:</strong></td>
+                <td class="text-end">{{ formatCurrency(invoice.taxAmount) }}</td>
+              </tr>
+              <tr>
+                <td><strong>Total:</strong></td>
+                <td class="text-end"><strong>{{ formatCurrency(invoice.totalAmount) }}</strong></td>
+              </tr>
+              <tr class="table-info">
+                <td><strong>RaxsUp Commission (15%):</strong></td>
+                <td class="text-end"><strong class="text-info">{{ formatCurrency(invoice.raxUpCommission || 0) }}</strong></td>
+              </tr>
+              <tr>
+                <td><strong>Paid:</strong></td>
+                <td class="text-end text-success">{{ formatCurrency(invoice.paidAmount) }}</td>
+              </tr>
+              <tr>
+                <td><strong>Balance:</strong></td>
+                <td class="text-end"><strong [class.text-danger]="invoice.balance > 0">{{ formatCurrency(invoice.balance) }}</strong></td>
+              </tr>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- Payment Modal -->
+  @if (showPaymentModal && invoice) {
+    <div class="modal fade show" style="display: block;" tabindex="-1">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">Record Payment</h5>
+            <button type="button" class="btn-close" (click)="showPaymentModal = false"></button>
+          </div>
+          <div class="modal-body">
+            <div class="mb-3">
+              <label class="form-label">Payment Date</label>
+              <input type="date" class="form-control" [(ngModel)]="paymentForm.paymentDate" name="paymentDate">
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Amount</label>
+              <input type="number" step="0.01" class="form-control" [(ngModel)]="paymentForm.amount" name="amount" required>
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Payment Method</label>
+              <select class="form-select" [(ngModel)]="paymentForm.method" name="method">
+                <option value="ACH">ACH</option>
+                <option value="Wire">Wire</option>
+                <option value="Check">Check</option>
+                <option value="CreditCard">Credit Card</option>
+                <option value="Cash">Cash</option>
+              </select>
+            </div>
+            @if (paymentForm.method === 'Check') {
+              <div class="mb-3">
+                <label class="form-label">Check Number <span class="text-danger">*</span></label>
+                <input type="text" class="form-control" [(ngModel)]="paymentForm.checkNumber" name="checkNumber" required>
+              </div>
+            }
+            @if (paymentForm.method === 'CreditCard') {
+              <div class="mb-3">
+                <label class="form-label">Credit Card Number <span class="text-danger">*</span></label>
+                <input type="text" class="form-control" [(ngModel)]="paymentForm.creditCardNumber" name="creditCardNumber" placeholder="Last 4 digits or full card number" required>
+              </div>
+            }
+            <div class="mb-3">
+              <label class="form-label">Reference</label>
+              <input type="text" class="form-control" [(ngModel)]="paymentForm.reference" name="reference" placeholder="Optional payment reference">
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" (click)="showPaymentModal = false">Cancel</button>
+            <button type="button" class="btn btn-primary" (click)="recordPayment()">Record Payment</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-backdrop fade show"></div>
+  }
+</div>
+

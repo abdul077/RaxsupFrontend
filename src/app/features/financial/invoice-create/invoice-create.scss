@@ -1,0 +1,463 @@
+// Invoice Create/Edit Component Styles
+
+.invoice-edit-container {
+  padding: 1.5rem;
+  max-width: 1400px;
+  margin: 0 auto;
+
+  // Page Header
+  .page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    padding: 1.5rem 0;
+    border-bottom: 2px solid #e9ecef;
+    margin-bottom: 2rem;
+
+    .header-content {
+      flex: 1;
+
+      .btn-back {
+        border-radius: 8px;
+        padding: 0.5rem 1rem;
+        font-weight: 500;
+        transition: all 0.2s ease;
+        border: 1px solid #dee2e6;
+
+        &:hover {
+          transform: translateX(-2px);
+          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+          background-color: #f8f9fa;
+        }
+
+        &:disabled {
+          opacity: 0.6;
+          cursor: not-allowed;
+        }
+      }
+
+      .page-title {
+        font-size: 2rem;
+        font-weight: 700;
+        color: #2c3e50;
+        margin: 0.5rem 0 0.25rem 0;
+      }
+
+      .page-subtitle {
+        color: #6c757d;
+        font-size: 0.95rem;
+        margin: 0;
+      }
+    }
+
+    .status-badge {
+      padding: 0.5rem 1rem;
+      border-radius: 20px;
+      font-weight: 600;
+      font-size: 0.875rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      white-space: nowrap;
+
+      &.status-draft {
+        background-color: #e3f2fd;
+        color: #1976d2;
+      }
+
+      &.status-sent {
+        background-color: #fff3e0;
+        color: #f57c00;
+      }
+
+      &.status-paid {
+        background-color: #e8f5e9;
+        color: #388e3c;
+      }
+
+      &.status-overdue {
+        background-color: #ffebee;
+        color: #d32f2f;
+      }
+
+      &.status-cancelled {
+        background-color: #fafafa;
+        color: #616161;
+      }
+    }
+  }
+
+  // Loading State
+  .loading-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 4rem 2rem;
+    text-align: center;
+
+    .spinner-border {
+      width: 3rem;
+      height: 3rem;
+      border-width: 0.3rem;
+    }
+  }
+
+  // Form Cards
+  .form-card {
+    border: 1px solid #e9ecef;
+    border-radius: 12px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    transition: box-shadow 0.2s ease;
+    margin-bottom: 1.5rem;
+
+    &:hover {
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    }
+
+    .card-header {
+      background-color: #f8f9fa;
+      border-bottom: 2px solid #e9ecef;
+      padding: 1rem 1.5rem;
+      border-radius: 12px 12px 0 0;
+
+      .card-title {
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: #2c3e50;
+        margin: 0;
+        display: flex;
+        align-items: center;
+
+        i {
+          color: #0d6efd;
+        }
+      }
+    }
+
+    .card-body {
+      padding: 1.5rem;
+    }
+  }
+
+  // Form Controls
+  .form-label {
+    font-weight: 500;
+    color: #495057;
+    margin-bottom: 0.5rem;
+    font-size: 0.9rem;
+
+    .text-danger {
+      color: #dc3545;
+    }
+  }
+
+  .form-control,
+  .form-select {
+    border-radius: 6px;
+    border: 1px solid #ced4da;
+    padding: 0.625rem 0.75rem;
+    transition: all 0.2s ease;
+
+    &:focus {
+      border-color: #0d6efd;
+      box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.15);
+    }
+
+    &.is-invalid {
+      border-color: #dc3545;
+    }
+
+    &[readonly] {
+      background-color: #f8f9fa;
+      cursor: not-allowed;
+    }
+  }
+
+  .form-text {
+    font-size: 0.8rem;
+    margin-top: 0.25rem;
+  }
+
+  // Line Items Table
+  .line-items-table {
+    margin-bottom: 0;
+
+    thead {
+      background-color: #f8f9fa;
+
+      th {
+        font-weight: 600;
+        color: #495057;
+        font-size: 0.875rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        padding: 0.75rem;
+        border-bottom: 2px solid #dee2e6;
+      }
+    }
+
+    tbody {
+      tr {
+        transition: background-color 0.2s ease;
+
+        &:hover {
+          background-color: #f8f9fa;
+        }
+
+        td {
+          padding: 0.75rem;
+          vertical-align: middle;
+
+          .form-control-sm,
+          .form-select-sm {
+            font-size: 0.875rem;
+          }
+
+          .amount-display {
+            color: #2c3e50;
+            font-size: 0.95rem;
+          }
+        }
+      }
+    }
+
+    .input-group-sm {
+      .input-group-text {
+        background-color: #f8f9fa;
+        border-color: #ced4da;
+        color: #6c757d;
+        font-weight: 500;
+      }
+    }
+  }
+
+  // Empty State
+  .empty-state {
+    text-align: center;
+    padding: 3rem 2rem;
+    color: #6c757d;
+
+    i {
+      opacity: 0.5;
+    }
+  }
+
+  // Summary Card
+  .summary-card {
+    border: 2px solid #0d6efd;
+    background: linear-gradient(to bottom, #ffffff 0%, #f8f9fa 100%);
+    height: fit-content;
+
+    &.sticky-summary {
+      position: sticky;
+      top: 1.5rem;
+      z-index: 10;
+    }
+
+    .card-header {
+      background: linear-gradient(135deg, #0d6efd 0%, #0056b3 100%);
+      color: white;
+      border-bottom: none;
+
+      .card-title {
+        color: white;
+        font-size: 1rem;
+
+        i {
+          color: white;
+        }
+      }
+    }
+
+    .card-body {
+      padding: 1.5rem;
+    }
+
+    .summary-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.75rem 0;
+      border-bottom: 1px solid #e9ecef;
+
+      &:last-child {
+        border-bottom: none;
+      }
+
+      .summary-label {
+        font-size: 0.95rem;
+        color: #495057;
+        flex: 1;
+      }
+
+      .summary-value {
+        font-size: 0.95rem;
+        font-weight: 500;
+        color: #2c3e50;
+        text-align: right;
+        min-width: 100px;
+      }
+
+      &.summary-total {
+        margin-top: 0.5rem;
+        padding-top: 1rem;
+        border-top: 2px solid #0d6efd;
+
+        .summary-label {
+          font-size: 1.1rem;
+        }
+
+        .summary-value.total-amount {
+          font-size: 1.5rem;
+          color: #0d6efd;
+        }
+      }
+    }
+
+    .summary-divider {
+      height: 1px;
+      background: linear-gradient(to right, transparent, #dee2e6, transparent);
+      margin: 0.5rem 0;
+    }
+  }
+
+  // Action Bar
+  .action-bar {
+    display: flex;
+    justify-content: flex-end;
+    gap: 1rem;
+    padding: 1.5rem 0;
+    border-top: 2px solid #e9ecef;
+    margin-top: 1rem;
+
+    .btn {
+      border-radius: 8px;
+      padding: 0.75rem 1.5rem;
+      font-weight: 500;
+      transition: all 0.2s ease;
+      min-width: 140px;
+
+      &.btn-primary {
+        box-shadow: 0 2px 8px rgba(13, 110, 253, 0.3);
+
+        &:hover:not(:disabled) {
+          transform: translateY(-2px);
+          box-shadow: 0 4px 12px rgba(13, 110, 253, 0.4);
+        }
+
+        &:disabled {
+          opacity: 0.6;
+          cursor: not-allowed;
+        }
+      }
+
+      &.btn-outline-secondary {
+        &:hover:not(:disabled) {
+          background-color: #f8f9fa;
+          border-color: #adb5bd;
+        }
+      }
+
+      &.btn-lg {
+        padding: 0.875rem 2rem;
+        font-size: 1rem;
+      }
+    }
+  }
+
+  // Badge Styles
+  .badge {
+    font-size: 0.75rem;
+    padding: 0.35em 0.65em;
+    border-radius: 6px;
+  }
+
+  // Responsive Design
+  @media (max-width: 991px) {
+    .summary-card.sticky-summary {
+      position: relative;
+      top: 0;
+      margin-top: 1rem;
+    }
+  }
+
+  @media (max-width: 768px) {
+    padding: 1rem;
+
+    .page-header {
+      flex-direction: column;
+      gap: 1rem;
+      align-items: flex-start;
+
+      .status-badge {
+        align-self: flex-start;
+      }
+    }
+
+    .page-title {
+      font-size: 1.5rem !important;
+    }
+
+    .line-items-table {
+      font-size: 0.85rem;
+
+      thead {
+        display: none;
+      }
+
+      tbody {
+        tr {
+          display: block;
+          margin-bottom: 1rem;
+          border: 1px solid #dee2e6;
+          border-radius: 8px;
+          padding: 0.75rem;
+
+          td {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.5rem 0;
+            border: none;
+
+            &::before {
+              content: attr(data-label);
+              font-weight: 600;
+              color: #6c757d;
+              margin-right: 1rem;
+            }
+          }
+        }
+      }
+    }
+
+    .summary-card {
+      margin-top: 1rem;
+    }
+
+    .action-bar {
+      flex-direction: column-reverse;
+
+      .btn {
+        width: 100%;
+      }
+    }
+  }
+
+  // Animation for form submission
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .form-card {
+    animation: fadeIn 0.3s ease-out;
+  }
+}

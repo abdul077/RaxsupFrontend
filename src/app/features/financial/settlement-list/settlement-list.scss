@@ -1,0 +1,61 @@
+// Settlement list styles
+
+// Typography improvements
+h4 {
+  font-weight: 600;
+  color: #212529;
+  font-size: 1.5rem;
+}
+
+.card {
+  .card-body {
+    font-size: 0.95rem;
+    color: #495057;
+    
+    table {
+      font-size: 0.9rem;
+      
+      th {
+        font-weight: 600;
+        color: #495057;
+        font-size: 0.85rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        border-bottom: 2px solid #dee2e6;
+        padding: 0.75rem;
+      }
+      
+      tr {
+        border-bottom: 1px solid #f0f0f0;
+        
+        &:hover {
+          background-color: #f8f9fa;
+        }
+      }
+      
+      td {
+        color: #212529;
+        vertical-align: middle;
+        padding: 0.75rem;
+        
+        strong {
+          font-weight: 600;
+          color: #212529;
+        }
+      }
+    }
+  }
+}
+
+.badge {
+  font-weight: 500;
+  font-size: 0.75rem;
+  padding: 0.35em 0.65em;
+}
+
+// Ensure consistent font rendering
+* {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}

@@ -1,0 +1,190 @@
+$navy: #1a365d;
+$gray-light: #f8f9fa;
+$gray-border: #e9ecef;
+$gray-muted: #6c757d;
+$gray-dark: #212529;
+$white: #ffffff;
+
+.driver-my-vehicles-container {
+  padding: 0.5rem 1.5rem 1.5rem 1.5rem;
+  background: $gray-light;
+  min-height: calc(100vh - 60px);
+}
+
+.tms-dashboard-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1rem;
+  padding: 1rem 1.5rem;
+  background: $white;
+  border-radius: 12px;
+  border: 1px solid $gray-border;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+
+  .tms-header-left {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+  }
+
+  .tms-header-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 10px;
+    background: rgba($navy, 0.1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    color: $navy;
+  }
+
+  .tms-title {
+    font-weight: 700;
+    font-size: 1.5rem;
+    margin: 0;
+    color: $gray-dark;
+  }
+
+  .tms-subtitle {
+    margin: 0.25rem 0 0 0;
+    color: $gray-muted;
+    font-size: 0.9rem;
+  }
+}
+
+.load-list-card-with-sticky .load-list-card-body {
+  overflow: visible;
+  max-height: none;
+}
+
+.load-list-card-with-sticky ::ng-deep .data-table-container {
+  .table-responsive {
+    overflow: visible;
+  }
+  thead {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    background: $white;
+    th {
+      background: $white;
+      box-shadow: 0 1px 0 $gray-border;
+    }
+  }
+}
+
+.load-list-card {
+  background: $white;
+  border-radius: 12px;
+  border: 1px solid $gray-border;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+
+  .load-list-card-header {
+    padding: 1rem 1.25rem;
+    background: $gray-light;
+    border-bottom: 1px solid $gray-border;
+    h5 {
+      margin: 0;
+      font-size: 1rem;
+      font-weight: 600;
+      color: $gray-dark;
+      i {
+        color: $navy;
+      }
+    }
+  }
+  .load-list-card-body.p-0 {
+    padding: 0;
+  }
+}
+
+.load-list-card ::ng-deep .data-table-container {
+  background: $white;
+  box-shadow: none;
+  border: none;
+  border-radius: 0;
+  .table-responsive table {
+    thead th {
+      font-weight: 600;
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: $gray-muted;
+      border-bottom: 1px solid $gray-border;
+      padding: 0.75rem 1rem;
+    }
+    tbody tr {
+      border-bottom: 1px solid $gray-border;
+      td {
+        padding: 0.75rem 1rem;
+        border: none;
+        color: $gray-dark;
+        vertical-align: middle;
+      }
+    }
+  }
+  .pagination-container {
+    border-top: 1px solid $gray-border;
+    background: $gray-light;
+  }
+}
+
+.tms-actions-btn {
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: $white;
+  border: 1px solid $gray-border;
+  border-radius: 6px;
+  color: $gray-muted;
+  cursor: pointer;
+  &:hover {
+    background: $gray-light;
+    border-color: $gray-muted;
+    color: $gray-dark;
+    .tms-actions-dots {
+      color: $gray-dark;
+    }
+  }
+  .tms-actions-dots {
+    font-size: 0.875rem;
+    font-weight: 700;
+    line-height: 1;
+    color: $gray-muted;
+  }
+}
+
+.tms-actions-dropdown {
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  padding: 0.55rem 0.25rem;
+  border: 1px solid $gray-border;
+}
+
+.badge {
+  padding: 0.25rem 0.75rem;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  &.badge-type {
+    &.badge-truck {
+      background: #dbeafe;
+      color: #1e40af;
+    }
+    &.badge-trailer {
+      background: #e0e7ff;
+      color: #3730a3;
+    }
+    &.badge-reefer {
+      background: #dcfce7;
+      color: #166534;
+    }
+  }
+}

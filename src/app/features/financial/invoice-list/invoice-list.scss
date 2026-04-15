@@ -1,0 +1,498 @@
+// Match /loads page: same palette and structure
+$navy: #1a365d;
+$gray-light: #f8f9fa;
+$gray-border: #e9ecef;
+$gray-muted: #6c757d;
+$gray-dark: #212529;
+$white: #ffffff;
+
+.invoice-list-container {
+  padding: 0.5rem 1.5rem 1.5rem 1.5rem;
+  background: $gray-light;
+  min-height: calc(100vh - 60px);
+}
+
+// Page Header - same as /loads
+.tms-dashboard-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1rem;
+  padding: 1rem 1.5rem;
+  background: $white;
+  border-radius: 12px;
+  border: 1px solid $gray-border;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+
+  .tms-header-left {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+  }
+
+  .tms-header-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 10px;
+    background: rgba($navy, 0.1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    color: $navy;
+  }
+
+  .tms-title {
+    font-weight: 700;
+    font-size: 1.5rem;
+    margin: 0;
+    color: $gray-dark;
+  }
+
+  .tms-subtitle {
+    margin: 0.25rem 0 0 0;
+    color: $gray-muted;
+    font-size: 0.9rem;
+  }
+}
+
+.btn-tms-primary {
+  background: $navy;
+  border: none;
+  color: $white;
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  font-weight: 600;
+  transition: all 0.2s;
+  cursor: pointer;
+
+  &:hover {
+    background: darken($navy, 8%);
+    color: $white;
+    transform: translateY(-1px);
+  }
+}
+
+.btn-tms-outline {
+  border: 1px solid $navy;
+  color: $navy;
+  background: $white;
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  font-weight: 500;
+  transition: all 0.2s;
+  cursor: pointer;
+
+  &:hover {
+    background: $navy;
+    color: $white;
+  }
+}
+
+// KPI row - same as /loads
+.load-list-kpi-row {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.load-list-kpi-card {
+  flex: 1 1 140px;
+  min-width: 120px;
+  max-width: 220px;
+  padding: 1rem 1.25rem;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  gap: 0.875rem;
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+  transition: transform 0.2s, box-shadow 0.2s, background 0.2s, color 0.2s;
+  overflow: hidden;
+  background: $white;
+  color: $gray-dark;
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    background: $navy;
+    color: $white;
+
+    .load-list-kpi-icon {
+      color: $white;
+    }
+  }
+
+  .load-list-kpi-icon {
+    font-size: 1.5rem;
+    opacity: 0.9;
+    flex-shrink: 0;
+  }
+
+  .load-list-kpi-content {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    min-width: 0;
+    flex: 1;
+    overflow: hidden;
+  }
+
+  .load-list-kpi-value {
+    font-size: 1.25rem;
+    font-weight: 700;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    line-height: 1.2;
+  }
+
+  .load-list-kpi-label {
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    opacity: 0.9;
+    line-height: 1.2;
+  }
+}
+
+.load-list-kpi-blue .load-list-kpi-icon {
+  color: $navy;
+}
+
+// Status/Date tabs - same as /loads
+.status-tabs-container {
+  background: $white;
+  border-radius: 12px;
+  border: 1px solid $gray-border;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+  padding: 0;
+  overflow-x: auto;
+
+  .status-tabs {
+    display: flex;
+    gap: 0;
+    border-bottom: 2px solid $gray-border;
+    min-width: fit-content;
+
+    .status-tab {
+      padding: 0.875rem 1.5rem;
+      background: transparent;
+      border: none;
+      border-bottom: 3px solid transparent;
+      cursor: pointer;
+      font-size: 0.875rem;
+      font-weight: 500;
+      color: $gray-muted;
+      white-space: nowrap;
+      transition: all 0.2s ease;
+      position: relative;
+      display: flex;
+      align-items: center;
+
+      &:hover {
+        color: $navy;
+        background: $gray-light;
+      }
+
+      &.active {
+        color: $navy;
+        border-bottom-color: $navy;
+        background: $gray-light;
+        font-weight: 600;
+      }
+    }
+  }
+}
+
+// Filters card - match load-list card style
+.filters-card {
+  background: $white;
+  border-radius: 12px;
+  border: 1px solid $gray-border;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+  padding: 1.25rem 1.5rem;
+
+  .filters-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid $gray-border;
+
+    h3 {
+      margin: 0;
+      font-size: 1rem;
+      font-weight: 600;
+      color: $gray-dark;
+      display: flex;
+      align-items: center;
+
+      i {
+        color: $navy;
+      }
+    }
+  }
+
+  .filters-body .filters-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 1rem;
+    align-items: end;
+
+    .form-group {
+      .form-label {
+        margin-bottom: 0.35rem;
+        font-weight: 600;
+        font-size: 0.8125rem;
+        color: $gray-dark;
+
+        i {
+          color: $gray-muted;
+          font-size: 0.75rem;
+        }
+      }
+
+      .form-control,
+      .form-select {
+        padding: 0.5rem 0.75rem;
+        border: 1px solid $gray-border;
+        border-radius: 6px;
+        font-size: 0.875rem;
+        background: $white;
+      }
+
+      &.filter-actions .filter-buttons {
+        display: flex;
+        gap: 0.5rem;
+      }
+    }
+  }
+}
+
+// Card with table - same as /loads
+.load-list-card {
+  background: $white;
+  border-radius: 12px;
+  border: 1px solid $gray-border;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+  transition: box-shadow 0.2s;
+
+  &:hover {
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+  }
+
+  .load-list-card-header {
+    padding: 1rem 1.25rem;
+    background: $gray-light;
+    border-bottom: 1px solid $gray-border;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    h5 {
+      margin: 0;
+      font-size: 1rem;
+      font-weight: 600;
+      color: $gray-dark;
+
+      i {
+        color: $navy;
+      }
+    }
+
+    .load-list-card-actions {
+      display: flex;
+      gap: 0.5rem;
+      align-items: center;
+    }
+  }
+
+  .load-list-card-body.p-0 {
+    padding: 0;
+  }
+}
+
+.load-list-card-with-sticky ::ng-deep .data-table-container {
+  .table-responsive {
+    overflow: visible;
+  }
+
+  thead {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    background: $white;
+
+    th {
+      background: $white;
+      box-shadow: 0 1px 0 $gray-border;
+    }
+  }
+}
+
+// Table inside card - match /loads
+.load-list-card ::ng-deep .data-table-container {
+  background: $white;
+  box-shadow: none;
+  border: none;
+  border-radius: 0;
+
+  .table-responsive table {
+    thead {
+      background: $white;
+
+      th {
+        font-weight: 600;
+        font-size: 0.7rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        color: $gray-muted;
+        border-bottom: 1px solid $gray-border;
+        border-top: none;
+        padding: 0.75rem 1rem;
+      }
+    }
+
+    tbody tr {
+      border-bottom: 1px solid $gray-border;
+
+      &:last-child {
+        border-bottom: none;
+      }
+
+      td {
+        padding: 0.75rem 1rem;
+        border: none;
+        color: $gray-dark;
+        vertical-align: middle;
+      }
+
+      &.invoice-row-overdue {
+        background-color: rgba(220, 53, 69, 0.06);
+
+        &:hover {
+          background-color: rgba(220, 53, 69, 0.1);
+        }
+      }
+    }
+  }
+
+  .pagination-container {
+    border-top: 1px solid $gray-border;
+    background: $gray-light;
+  }
+}
+
+// Status badges - invoice colors (override neutral for status column)
+.load-list-card ::ng-deep .badge {
+  padding: 0.35em 0.65em;
+  font-weight: 500;
+  font-size: 0.7rem;
+  border-radius: 6px;
+}
+
+// Actions column - same as /loads
+.tms-actions-btn {
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: $white;
+  border: 1px solid $gray-border;
+  border-radius: 6px;
+  color: $gray-muted;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+
+  &:hover {
+    background: $gray-light;
+    border-color: $gray-muted;
+    color: $gray-dark;
+
+    .tms-actions-dots {
+      color: $gray-dark;
+    }
+  }
+
+  .tms-actions-dots {
+    font-size: 0.875rem;
+    font-weight: 700;
+    line-height: 1;
+    display: block;
+    color: $gray-muted;
+  }
+}
+
+.tms-actions-dropdown {
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  padding: 0.55rem 0.25rem;
+  border: 1px solid $gray-border;
+
+  .dropdown-item {
+    padding: 0.2rem 0.75rem;
+  }
+}
+
+// Settings modal
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1050;
+  padding: 1rem;
+}
+
+.modal-dialog {
+  width: 100%;
+  max-width: 480px;
+  background: $white;
+  border-radius: 12px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+  border: 1px solid $gray-border;
+}
+
+.settings-modal {
+  .modal-header {
+    padding: 1.25rem 1.5rem;
+    border-bottom: 1px solid $gray-border;
+
+    .modal-title {
+      font-weight: 600;
+      font-size: 1.125rem;
+      color: $gray-dark;
+
+      i {
+        color: $navy;
+      }
+    }
+  }
+
+  .modal-body {
+    padding: 1.5rem;
+  }
+
+  .modal-footer {
+    padding: 1rem 1.5rem;
+    border-top: 1px solid $gray-border;
+    background: $gray-light;
+    border-radius: 0 0 12px 12px;
+  }
+
+  .settings-description {
+    margin: 1rem 0 0;
+    font-size: 0.875rem;
+    color: $gray-muted;
+    line-height: 1.5;
+  }
+}

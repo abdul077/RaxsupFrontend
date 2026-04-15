@@ -1,0 +1,266 @@
+<div class="container-fluid">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+      <h4 class="mb-1">All Payments</h4>
+      <p class="text-muted mb-0">View all payment transactions across the system</p>
+    </div>
+    <button class="btn btn-primary" (click)="loadAllPayments()">
+      <i class="fas fa-sync-alt me-2"></i>Refresh
+    </button>
+  </div>
+
+  <!-- Summary Cards -->
+  <div class="row mb-4">
+    <div class="col-md-3">
+      <div class="card bg-primary text-white">
+        <div class="card-body">
+          <h5 class="card-title">Total Payments</h5>
+          <h3>{{ formatCurrency(getTotalAmount()) }}</h3>
+          <small>{{ filteredPayments.length }} transactions</small>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="card bg-success text-white">
+        <div class="card-body">
+          <h5 class="card-title">Settlements</h5>
+          <h3>{{ formatCurrency(getSettlementsTotal()) }}</h3>
+          <small>{{ getSettlementsCount() }} payments</small>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="card bg-info text-white">
+        <div class="card-body">
+          <h5 class="card-title">MLM Commissions</h5>
+          <h3>{{ formatCurrency(getReferralEarningsTotal()) }}</h3>
+          <small>{{ getReferralEarningsCount() }} payments</small>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="card bg-warning text-white">
+        <div class="card-body">
+          <h5 class="card-title">Vendor Payments</h5>
+          <h3>{{ formatCurrency(getPayablePaymentsTotal()) }}</h3>
+          <small>{{ getPayablePaymentsCount() }} payments</small>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Filters -->
+  <div class="card mb-4">
+    <div class="card-body">
+      <div class="row g-3">
+        <div class="col-md-2">
+          <label class="form-label">Payment Type</label>
+          <select class="form-select" [(ngModel)]="typeFilter">
+            @for (type of typeOptions; track type) {
+              <option [value]="type === 'All' ? '' : type">{{ type }}</option>
+            }
+          </select>
+        </div>
+        <div class="col-md-2">
+          <label class="form-label">Status</label>
+          <select class="form-select" [(ngModel)]="statusFilter">
+            @for (status of statusOptions; track status) {
+              <option [value]="status === 'All' ? '' : status">{{ status }}</option>
+            }
+          </select>
+        </div>
+        <div class="col-md-2">
+          <label class="form-label">Date From</label>
+          <input type="date" class="form-control" [(ngModel)]="dateFrom">
+        </div>
+        <div class="col-md-2">
+          <label class="form-label">Date To</label>
+          <input type="date" class="form-control" [(ngModel)]="dateTo">
+        </div>
+        <div class="col-md-2">
+          <label class="form-label">Search</label>
+          <input type="text" class="form-control" placeholder="Search by recipient, payer, reference..." 
+                 [(ngModel)]="searchTerm">
+        </div>
+        <div class="col-md-2 d-flex align-items-end gap-2">
+          <button class="btn btn-primary flex-fill" (click)="onApplyFilters()" title="Apply Filters">
+            <i class="fas fa-filter me-1"></i>Apply
+          </button>
+          <button class="btn btn-outline-secondary flex-fill" (click)="onClearFilters()" title="Clear Filters">
+            <i class="fas fa-times me-1"></i>Clear
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  @if (allPayments) {
+    <!-- Table View -->
+      <div class="card">
+        <div class="card-body">
+          <div class="table-responsive">
+          <table class="table table-hover">
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>Type</th>
+                <th>Recipient</th>
+                <th>Payer</th>
+                <th>Amount</th>
+                <th>Reference</th>
+                <th>Status</th>
+                <th>Description</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (payment of filteredPayments; track payment.id) {
+                <tr class="payment-row" (click)="viewDetails(payment)" style="cursor: pointer;">
+                  <td>{{ formatDate(payment.date) }}</td>
+                  <td>
+                    <span [class]="getTypeBadgeClass(payment.type)">{{ payment.type }}</span>
+                  </td>
+                  <td>{{ payment.recipient }}</td>
+                  <td>{{ payment.payer }}</td>
+                  <td><strong>{{ formatCurrency(payment.amount) }}</strong></td>
+                  <td>
+                    <a (click)="viewDetails(payment); $event.stopPropagation()" class="text-primary text-decoration-none" style="cursor: pointer;">
+                      {{ payment.reference }}
+                    </a>
+                  </td>
+                  <td>
+                    <span [class]="getStatusBadgeClass(payment.status)">{{ payment.status }}</span>
+                  </td>
+                  <td>
+                    <small class="text-muted">{{ payment.description }}</small>
+                  </td>
+                  <td>
+                    <div class="btn-group" role="group">
+                      <button class="btn btn-sm btn-outline-primary" (click)="viewDetails(payment); $event.stopPropagation()" title="View Details">
+                        <i class="fas fa-eye"></i>
+                      </button>
+                      @if (payment.type === 'ReferralEarning' && payment.status === 'Pending') {
+                        <button class="btn btn-sm btn-success" (click)="markReferralEarningAsPaid(payment); $event.stopPropagation()" title="Mark as Paid">
+                          <i class="fas fa-check"></i>
+                        </button>
+                      }
+                    </div>
+                  </td>
+                </tr>
+              }
+              @if (filteredPayments.length === 0) {
+                <tr>
+                  <td colspan="9" class="text-center text-muted py-4">No payments found</td>
+                </tr>
+              }
+            </tbody>
+            <tfoot>
+              <tr>
+                <td colspan="4"><strong>Total</strong></td>
+                <td><strong>{{ formatCurrency(getTotalAmount()) }}</strong></td>
+                <td colspan="4"></td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- Referral Earning Details Modal -->
+  @if (showDetailsModal && selectedPayment && selectedPayment.type === 'ReferralEarning') {
+    <div class="modal fade show" style="display: block; background-color: rgba(0,0,0,0.5);" tabindex="-1" (click)="closeDetailsModal()">
+      <div class="modal-dialog modal-dialog-centered" (click)="$event.stopPropagation()">
+        <div class="modal-content">
+          <div class="modal-header text-white" style="background: linear-gradient(180deg, #1e1b4b 0%, #2d1b69 50%, #3b2b7a 100%);">
+            <h5 class="modal-title">
+              <i class="fas fa-dollar-sign me-2"></i>Referral Earning Details
+            </h5>
+            <button type="button" class="btn-close btn-close-white" (click)="closeDetailsModal()"></button>
+          </div>
+          <div class="modal-body">
+            @if (selectedPayment.details) {
+              @let earning = selectedPayment.details;
+              <div class="row">
+                <div class="col-md-6 mb-3">
+                  <strong>Referrer Driver:</strong>
+                  <p class="mb-0">{{ selectedPayment.recipient }}</p>
+                </div>
+                <div class="col-md-6 mb-3">
+                  <strong>Referred Driver:</strong>
+                  <p class="mb-0">{{ earning.referredDriverName || 'N/A' }}</p>
+                </div>
+                <div class="col-md-6 mb-3">
+                  <strong>Referral Level:</strong>
+                  <p class="mb-0">
+                    <span class="badge bg-info">Level {{ earning.referralLevel }}</span>
+                  </p>
+                </div>
+                <div class="col-md-6 mb-3">
+                  <strong>Commission Rate:</strong>
+                  <p class="mb-0">{{ (earning.commissionRate * 100).toFixed(0) }}%</p>
+                </div>
+                <div class="col-md-6 mb-3">
+                  <strong>Base Amount (15% RaxsUp Cut):</strong>
+                  <p class="mb-0">{{ formatCurrency(earning.baseAmount) }}</p>
+                </div>
+                <div class="col-md-6 mb-3">
+                  <strong>Commission Amount:</strong>
+                  <p class="mb-0"><strong class="text-success">{{ formatCurrency(earning.commissionAmount) }}</strong></p>
+                </div>
+                <div class="col-md-6 mb-3">
+                  <strong>Period Start:</strong>
+                  <p class="mb-0">{{ formatDate(earning.periodStart) }}</p>
+                </div>
+                <div class="col-md-6 mb-3">
+                  <strong>Period End:</strong>
+                  <p class="mb-0">{{ formatDate(earning.periodEnd) }}</p>
+                </div>
+                <div class="col-md-6 mb-3">
+                  <strong>Status:</strong>
+                  <p class="mb-0">
+                    <span [class]="earning.status === 'Paid' ? 'badge bg-success' : earning.status === 'Pending' ? 'badge bg-warning' : 'badge bg-secondary'">
+                      {{ earning.status }}
+                    </span>
+                  </p>
+                </div>
+                <div class="col-md-6 mb-3">
+                  <strong>Created Date:</strong>
+                  <p class="mb-0">{{ formatDate(earning.createdAt) }}</p>
+                </div>
+                @if (earning.paidAt) {
+                  <div class="col-md-6 mb-3">
+                    <strong>Paid Date:</strong>
+                    <p class="mb-0">{{ formatDate(earning.paidAt) }}</p>
+                  </div>
+                }
+                <div class="col-md-6 mb-3">
+                  <strong>Settlement ID:</strong>
+                  <p class="mb-0">#{{ earning.settlementId }}</p>
+                </div>
+                <div class="col-md-6 mb-3">
+                  <strong>Reference:</strong>
+                  <p class="mb-0">{{ selectedPayment.reference }}</p>
+                </div>
+              </div>
+              <hr>
+              <div class="alert alert-info mb-0">
+                <i class="fas fa-info-circle me-2"></i>
+                <strong>Note:</strong> This commission was calculated from the 15% RaxsUp commission cut from the invoice related to the referred driver's settlement.
+              </div>
+            }
+          </div>
+          <div class="modal-footer">
+            @if (selectedPayment.status === 'Pending') {
+              <button type="button" class="btn btn-success" (click)="markReferralEarningAsPaid(selectedPayment); closeDetailsModal()">
+                <i class="fas fa-check me-2"></i>Mark as Paid
+              </button>
+            }
+            <button type="button" class="btn btn-secondary" (click)="closeDetailsModal()">Close</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  }
+</div>
+

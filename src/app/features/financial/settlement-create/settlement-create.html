@@ -1,0 +1,341 @@
+<div class="settlement-create-page">
+  <!-- Page Header -->
+  <div class="page-header">
+    <div class="page-header-content">
+      <a routerLink="/financial/settlements" class="back-link">
+        <i class="fas fa-arrow-left me-2"></i>Back to Settlements
+      </a>
+      <h1 class="page-title">Create Settlement</h1>
+      <p class="page-subtitle">Create a new owner operator settlement with earnings and deductions</p>
+    </div>
+    <div class="page-actions">
+      <button class="btn btn-outline-secondary btn-cancel" (click)="cancel()">
+        <i class="fas fa-times me-2"></i>Cancel
+      </button>
+    </div>
+  </div>
+
+  <form (ngSubmit)="onSubmit()" class="settlement-form">
+    @if (showErrors && validationErrors.length > 0) {
+      <div class="alert alert-danger validation-alert">
+        <i class="fas fa-exclamation-triangle me-2"></i>
+        <strong>Please correct the following errors:</strong>
+        <ul class="mb-0 mt-2">
+          @for (error of validationErrors; track $index) {
+            <li>{{ error }}</li>
+          }
+        </ul>
+      </div>
+    }
+
+    <div class="form-sections">
+      <!-- Settlement Information + Summary (side by side) -->
+      <div class="info-summary-row">
+        <div class="form-card form-card-primary form-card-info">
+          <div class="form-card-header">
+            <div class="form-card-icon">
+              <i class="fas fa-money-bill-wave"></i>
+            </div>
+            <div>
+              <h2 class="form-card-title">Settlement Information</h2>
+              <p class="form-card-subtitle">Select owner operator and settlement period</p>
+            </div>
+          </div>
+          <div class="form-card-body">
+            <div class="form-grid">
+            <div class="form-group form-group-wide">
+              <label class="form-label">Owner Operator <span class="required">*</span></label>
+              <select class="form-select" 
+                      [class.is-invalid]="showErrors && (!formData.driverId || formData.driverId === 0)"
+                      [(ngModel)]="formData.driverId" name="driverId" required
+                      (ngModelChange)="onDriverChange()"
+                      title="Select the owner operator for this settlement">
+                <option [value]="0">Select Owner Operator</option>
+                @for (driver of drivers; track driver.driverId) {
+                  <option [value]="driver.driverId">{{ driver.fullName }}</option>
+                }
+              </select>
+              <small class="form-hint">Select the owner operator who will receive this settlement</small>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Period Start <span class="required">*</span></label>
+              <input type="date" class="form-control" 
+                     [class.is-invalid]="showErrors && !formData.periodStart"
+                     [(ngModel)]="formData.periodStart" name="periodStart" required
+                     title="Start date of the settlement period">
+              <small class="form-hint">First day of the period</small>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Period End <span class="required">*</span></label>
+              <input type="date" class="form-control" 
+                     [class.is-invalid]="showErrors && !formData.periodEnd"
+                     [(ngModel)]="formData.periodEnd" name="periodEnd" required
+                     title="End date of the settlement period">
+              <small class="form-hint">Last day of the period</small>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Type</label>
+              <select class="form-select" [(ngModel)]="formData.settlementType" name="settlementType"
+                      title="Settlement frequency type">
+                <option value="Weekly">Weekly</option>
+                <option value="BiWeekly">Bi-Weekly</option>
+                <option value="Monthly">Monthly</option>
+              </select>
+              <small class="form-hint">Settlement frequency</small>
+            </div>
+          </div>
+        </div>
+        </div>
+        <div class="summary-card summary-card-top">
+          <div class="summary-header">
+            <i class="fas fa-calculator"></i>
+            <h3>Settlement Summary</h3>
+          </div>
+          <div class="summary-body">
+            <div class="summary-row">
+              <span class="summary-label">
+                <i class="fas fa-dollar-sign text-success"></i>
+                Total Earnings
+              </span>
+              <span class="summary-value summary-earnings">{{ formatCurrency(getTotalEarnings()) }}</span>
+            </div>
+            <div class="summary-row">
+              <span class="summary-label">
+                <i class="fas fa-minus-circle text-danger"></i>
+                Total Deductions
+              </span>
+              <span class="summary-value summary-deductions">-{{ formatCurrency(getTotalDeductions()) }}</span>
+            </div>
+            <div class="summary-divider"></div>
+            <div class="summary-row summary-total">
+              <span class="summary-label">
+                <i class="fas fa-wallet text-primary"></i>
+                <strong>Net Pay</strong>
+              </span>
+              <span class="summary-value summary-net-pay">{{ formatCurrency(getNetPay()) }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Settlement Items -->
+      <div class="form-card">
+        <div class="form-card-header form-card-header-with-action">
+          <div>
+            <div class="form-card-icon form-card-icon-success">
+              <i class="fas fa-list"></i>
+            </div>
+            <div>
+              <h2 class="form-card-title">Settlement Items</h2>
+              <p class="form-card-subtitle">Add earnings items for loads, bonuses, or other payments</p>
+            </div>
+          </div>
+          <button type="button" class="btn btn-primary btn-add" (click)="addSettlementItem()">
+            <i class="fas fa-plus me-2"></i>Add Item
+          </button>
+        </div>
+        <div class="form-card-body">
+          @if (formData.items.length > 0) {
+            <div class="table-wrapper">
+              <table class="items-table">
+                <thead>
+                  <tr>
+                    <th>Load <span class="required">*</span></th>
+                    <th>Description <span class="required">*</span></th>
+                    <th>Rate <small>($/mile)</small></th>
+                    <th>Miles</th>
+                    <th>Amount</th>
+                    <th class="th-actions"></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (item of formData.items; track $index) {
+                    <tr>
+                      <td>
+                        <select class="form-select form-select-sm" 
+                                [class.is-invalid]="showErrors && (!item.loadId || item.loadId === 0)"
+                                [(ngModel)]="item.loadId" name="load{{$index}}" required
+                                [disabled]="formData.driverId === 0 || loading"
+                                title="Select the associated load">
+                          @if (formData.driverId === 0) {
+                            <option [value]="0">Select Owner Operator first</option>
+                          } @else if (loading) {
+                            <option [value]="0">Loading loads...</option>
+                          } @else if (loads.length === 0) {
+                            <option [value]="0">No delivered loads available</option>
+                          } @else {
+                            <option [value]="0">Select Load *</option>
+                          }
+                          @for (load of loads; track load.loadId) {
+                            <option [value]="load.loadId">{{ load.loadNumber }}</option>
+                          }
+                        </select>
+                      </td>
+                      <td>
+                        <input type="text" class="form-control form-control-sm" 
+                               [class.is-invalid]="showErrors && (!item.description || item.description.trim() === '')"
+                               [(ngModel)]="item.description" name="desc{{$index}}" 
+                               placeholder="e.g., Load payment, Bonus" required
+                               title="Enter a description for this item">
+                      </td>
+                      <td>
+                        <div class="input-group input-group-sm">
+                          <span class="input-group-text">$</span>
+                          <input type="number" step="0.01" min="0.01" class="form-control" 
+                                 [class.is-invalid]="showErrors && item.rate <= 0"
+                                 [(ngModel)]="item.rate" (ngModelChange)="updateSettlementItem($index)" 
+                                 name="rate{{$index}}" placeholder="0.00" required
+                                 title="Rate per mile">
+                        </div>
+                      </td>
+                      <td>
+                        <input type="number" step="0.01" min="0.01" class="form-control form-control-sm" 
+                               [class.is-invalid]="showErrors && item.miles <= 0"
+                               [(ngModel)]="item.miles" (ngModelChange)="updateSettlementItem($index)" 
+                               name="miles{{$index}}" placeholder="0.00" required
+                               title="Number of miles">
+                      </td>
+                      <td class="amount-cell">{{ formatCurrency(item.amount) }}</td>
+                      <td>
+                        <button type="button" class="btn btn-icon btn-icon-danger" (click)="removeSettlementItem($index)" title="Remove item">
+                          <i class="fas fa-trash"></i>
+                        </button>
+                      </td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+            <p class="form-note">
+              <i class="fas fa-info-circle me-1"></i>
+              Amount is auto-calculated as Rate × Miles. Load must be selected from loads assigned to the owner operator.
+            </p>
+          } @else {
+            <div class="empty-state">
+              <div class="empty-state-icon">
+                <i class="fas fa-receipt"></i>
+              </div>
+              <h3 class="empty-state-title">No items added yet</h3>
+              <p class="empty-state-text">Click "Add Item" to start adding settlement items. Each item represents earnings for a load or other payment.</p>
+              <button type="button" class="btn btn-primary" (click)="addSettlementItem()">
+                <i class="fas fa-plus me-2"></i>Add First Item
+              </button>
+            </div>
+          }
+        </div>
+      </div>
+
+      <!-- Deductions -->
+      <div class="form-card">
+        <div class="form-card-header form-card-header-with-action">
+          <div>
+            <div class="form-card-icon form-card-icon-danger">
+              <i class="fas fa-minus-circle"></i>
+            </div>
+            <div>
+              <h2 class="form-card-title">Deductions</h2>
+              <p class="form-card-subtitle">Fuel advances, insurance, maintenance, fines, or other charges</p>
+            </div>
+          </div>
+          <button type="button" class="btn btn-outline-primary btn-add" (click)="addDeduction()">
+            <i class="fas fa-plus me-2"></i>Add Deduction
+          </button>
+        </div>
+        <div class="form-card-body">
+          @if (formData.deductions.length > 0) {
+            <div class="table-wrapper">
+              <table class="items-table">
+                <thead>
+                  <tr>
+                    <th>Type</th>
+                    <th>Description</th>
+                    <th>Amount ($)</th>
+                    <th>Reference</th>
+                    <th class="th-actions"></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (deduction of formData.deductions; track $index) {
+                    <tr>
+                      <td>
+                        <select class="form-select form-select-sm" [(ngModel)]="deduction.deductionType" name="dedType{{$index}}"
+                                title="Select the type of deduction">
+                          <option value="FuelAdvance">Fuel Advance</option>
+                          <option value="Insurance">Insurance</option>
+                          <option value="Maintenance">Maintenance</option>
+                          <option value="Fine">Fine</option>
+                          <option value="Other">Other</option>
+                        </select>
+                      </td>
+                      <td>
+                        <input type="text" class="form-control form-control-sm" 
+                               [class.is-invalid]="showErrors && (!deduction.description || deduction.description.trim() === '')"
+                               [(ngModel)]="deduction.description" name="dedDesc{{$index}}" 
+                               placeholder="Deduction description" required
+                               title="Enter a description">
+                      </td>
+                      <td>
+                        <div class="input-group input-group-sm">
+                          <span class="input-group-text">$</span>
+                          <input type="number" step="0.01" min="0" class="form-control" 
+                                 [class.is-invalid]="showErrors && deduction.amount < 0"
+                                 [(ngModel)]="deduction.amount" (ngModelChange)="calculateTotals()" 
+                                 name="dedAmount{{$index}}" placeholder="0.00"
+                                 title="Enter the deduction amount">
+                        </div>
+                      </td>
+                      <td>
+                        <input type="text" class="form-control form-control-sm" 
+                               [(ngModel)]="deduction.reference" name="dedRef{{$index}}"
+                               placeholder="Optional reference"
+                               title="Optional reference number or code">
+                      </td>
+                      <td>
+                        <button type="button" class="btn btn-icon btn-icon-danger" (click)="removeDeduction($index)" title="Remove deduction">
+                          <i class="fas fa-trash"></i>
+                        </button>
+                      </td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+            <p class="form-note">
+              <i class="fas fa-info-circle me-1"></i>
+              Deductions are subtracted from total earnings. Use Reference for invoice numbers or tracking info.
+            </p>
+          } @else {
+            <div class="empty-state empty-state-compact">
+              <div class="empty-state-icon">
+                <i class="fas fa-minus-circle"></i>
+              </div>
+              <h3 class="empty-state-title">No deductions added</h3>
+              <p class="empty-state-text">Add fuel advances, insurance, maintenance, fines, or other charges to deduct from the settlement.</p>
+              <button type="button" class="btn btn-outline-primary" (click)="addDeduction()">
+                <i class="fas fa-plus me-2"></i>Add Deduction
+              </button>
+            </div>
+          }
+        </div>
+      </div>
+
+      <!-- Form Actions -->
+      <div class="form-footer">
+        <div class="form-actions">
+          <button type="button" class="btn btn-outline-secondary" (click)="cancel()" [disabled]="submitting">
+            Cancel
+          </button>
+          <button type="submit" class="btn btn-primary btn-submit" [disabled]="submitting">
+            @if (submitting) {
+              <span class="spinner-border spinner-border-sm me-2"></span>
+            }
+            @if (!submitting) {
+              <i class="fas fa-save me-2"></i>
+            }
+            Create Settlement
+          </button>
+        </div>
+      </div>
+    </div>
+  </form>
+</div>

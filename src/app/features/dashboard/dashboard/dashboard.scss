@@ -1,0 +1,707 @@
+// TMS Dashboard - Three-color palette: White, Gray, Navy Blue
+$navy: #1a365d;
+$gray-light: #f8f9fa;
+$gray-mid: #e9ecef;
+$gray-border: #dee2e6;
+$gray-muted: #6c757d;
+$gray-text: #495057;
+$gray-dark: #212529;
+$white: #ffffff;
+
+// Override Bootstrap semantic colors to use palette
+.tms-dashboard-dark {
+  .text-danger { color: $navy !important; }
+  .text-warning { color: $gray-dark !important; }
+  .text-success { color: $navy !important; }
+  .text-info { color: $gray-muted !important; }
+}
+
+.tms-dashboard-dark {
+  padding: 1.5rem;
+  min-height: calc(100vh - 60px);
+  background: $gray-light;
+}
+
+// Header
+.tms-dashboard-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  padding: 1rem 1.5rem;
+  background: $white;
+  border-radius: 12px;
+  border: 1px solid $gray-border;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+
+  .tms-header-left {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+  }
+
+  .tms-header-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 10px;
+    background: rgba($navy, 0.1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    color: $navy;
+  }
+
+  .tms-title {
+    font-weight: 700;
+    font-size: 1.5rem;
+    margin: 0;
+    color: $gray-dark;
+  }
+
+  .tms-subtitle {
+    margin: 0.25rem 0 0 0;
+    color: $gray-muted;
+    font-size: 0.9rem;
+  }
+}
+
+// KPI Row
+.tms-kpi-row {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-bottom: 1.5rem;
+}
+
+.tms-kpi-card {
+  flex: 1 1 140px;
+  min-width: 120px;
+  max-width: 220px;
+  padding: 1rem 1.25rem;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  gap: 0.875rem;
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+  transition: transform 0.2s, box-shadow 0.2s, background 0.2s, color 0.2s;
+  overflow: hidden;
+  background: $white;
+  color: $gray-dark;
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    background: $navy;
+    color: $white;
+
+    .tms-kpi-icon {
+      color: $white;
+    }
+  }
+
+  .tms-kpi-icon {
+    font-size: 1.5rem;
+    opacity: 0.9;
+    flex-shrink: 0;
+  }
+
+  .tms-kpi-content {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    min-width: 0;
+    flex: 1;
+    overflow: hidden;
+  }
+
+  .tms-kpi-value {
+    font-size: 1.25rem;
+    font-weight: 700;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    line-height: 1.2;
+  }
+
+  // Currency values need smaller font to fit large numbers
+  &.tms-kpi-gold .tms-kpi-value,
+  &.tms-kpi-amber .tms-kpi-value {
+    font-size: 1rem;
+    font-weight: 700;
+  }
+
+  .tms-kpi-label {
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    opacity: 0.9;
+    line-height: 1.2;
+  }
+}
+
+// KPI cards - White bg, black text by default; Navy on hover (like card 4 & 5)
+.tms-kpi-blue,
+.tms-kpi-red,
+.tms-kpi-green,
+.tms-kpi-yellow,
+.tms-kpi-orange,
+.tms-kpi-gold,
+.tms-kpi-amber {
+  background: $white;
+  color: $gray-dark;
+}
+
+.tms-kpi-blue .tms-kpi-icon,
+.tms-kpi-red .tms-kpi-icon,
+.tms-kpi-green .tms-kpi-icon,
+.tms-kpi-yellow .tms-kpi-icon,
+.tms-kpi-orange .tms-kpi-icon,
+.tms-kpi-gold .tms-kpi-icon,
+.tms-kpi-amber .tms-kpi-icon {
+  color: $gray-dark;
+}
+
+// Dashboard Grid (Two-column layout)
+.tms-dashboard-grid {
+  display: grid;
+  grid-template-columns: 1fr 380px;
+  gap: 1.5rem;
+  align-items: start;
+
+  @media (max-width: 1200px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.tms-left-col {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+// Current Trips + Trip Status side-by-side (like reference image)
+.tms-trips-row {
+  display: grid;
+  grid-template-columns: 1fr 320px;
+  gap: 1.5rem;
+  align-items: start;
+
+  .tms-trips-card {
+    min-width: 0;
+  }
+
+  .tms-chart-card {
+    min-width: 0;
+  }
+
+  @media (max-width: 992px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.tms-trips-footer {
+  display: flex;
+  gap: 0.5rem;
+  padding: 0.75rem 1.25rem;
+  border-top: 1px solid $gray-border;
+  background: $gray-light;
+}
+
+.tms-right-col {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+// Cards
+.tms-card {
+  background: $white;
+  border-radius: 12px;
+  border: 1px solid $gray-border;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+  transition: box-shadow 0.2s;
+
+  &:hover {
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+  }
+
+  .tms-card-header {
+    padding: 1rem 1.25rem;
+    background: $gray-light;
+    border-bottom: 1px solid $gray-border;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    h5 {
+      margin: 0;
+      font-size: 1rem;
+      font-weight: 600;
+      color: $gray-dark;
+
+      i {
+        color: $navy;
+      }
+    }
+  }
+
+  .tms-card-body {
+    padding: 1.25rem;
+    color: $gray-dark;
+  }
+}
+
+// Map body (Live Fleet Map)
+.tms-map-card .tms-map-body {
+  height: 400px;
+  padding: 1rem;
+}
+
+// Light table (inside white cards)
+.tms-table-dark {
+  --bs-table-bg: #{$white};
+  --bs-table-color: #{$gray-dark};
+  --bs-table-border-color: #{$gray-border};
+  --bs-table-hover-bg: #{$gray-light};
+
+  th {
+    font-weight: 600;
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: $gray-muted;
+    border-bottom: 1px solid $gray-border;
+    padding: 0.75rem 1rem;
+  }
+
+  td {
+    padding: 0.75rem 1rem;
+    vertical-align: middle;
+    border-bottom: 1px solid $gray-border;
+    color: $gray-dark;
+  }
+
+  tbody tr:hover {
+    background: $gray-light;
+  }
+
+  .dropdown-menu {
+    z-index: 1060;
+  }
+
+  // List view actions - white square button with three dots (reference style)
+  .tms-actions-btn {
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: $white;
+    border: 1px solid $gray-border;
+    border-radius: 6px;
+    color: $gray-muted;
+    cursor: pointer;
+    transition: background 0.15s, border-color 0.15s;
+
+    &:hover {
+      background: $gray-light;
+      border-color: $gray-muted;
+      color: $gray-dark;
+    }
+
+    .fa-ellipsis-h {
+      font-size: 0.875rem;
+    }
+  }
+
+  .tms-actions-dropdown {
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    padding: 0.25rem 0;
+    border: 1px solid $gray-border;
+  }
+}
+
+// Current Trips table - improved layout (ETA removed)
+.tms-current-trips-table {
+  th {
+    white-space: nowrap;
+  }
+
+  .tms-trip-id {
+    width: 90px;
+    white-space: nowrap;
+  }
+
+  .tms-trip-route {
+    min-width: 180px;
+  }
+
+  .tms-route-text {
+    font-size: 0.9rem;
+    color: $gray-dark;
+    display: block;
+  }
+
+  .tms-trip-vehicle,
+  .tms-trip-driver {
+    width: 110px;
+  }
+
+  .tms-trip-status {
+    width: 100px;
+    white-space: nowrap;
+  }
+
+  .tms-trip-actions {
+    width: 50px;
+  }
+}
+
+// Status badges for trips - White, Gray, Navy only
+.status-in-transit {
+  background: $navy !important;
+  color: $white !important;
+}
+
+.status-delayed {
+  background: $gray-dark !important;
+  color: $white !important;
+}
+
+.status-delivered {
+  background: $gray-muted !important;
+  color: $white !important;
+}
+
+.status-cancelled {
+  background: $gray-mid !important;
+  color: $gray-dark !important;
+}
+
+// Alerts
+.tms-alerts-card .tms-alert-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid $gray-border;
+  text-decoration: none;
+  color: $gray-dark;
+  transition: background 0.2s;
+
+  &:last-child {
+    border-bottom: none;
+  }
+
+  &:hover {
+    background: $gray-light;
+  }
+
+  .tms-alert-text {
+    font-size: 0.875rem;
+    flex: 1;
+    min-width: 0;
+  }
+}
+
+// HOS rows
+.tms-hos-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem 0;
+  border-bottom: 1px solid $gray-border;
+  font-size: 0.9rem;
+  color: $gray-dark;
+
+  &:last-child {
+    border-bottom: none;
+  }
+
+  &.tms-hos-violations .text-danger {
+    font-weight: 600;
+    color: $navy !important;
+  }
+}
+
+// Maintenance rows
+.tms-maint-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 0.5rem 0;
+  font-size: 0.9rem;
+}
+
+// Latest Audit Logs - single line format: "RaxUp Admin Created Load 30 min ago"
+.tms-audit-logs-list {
+  .tms-audit-log-item {
+    padding: 0.875rem 1.25rem;
+    border-bottom: 1px solid $gray-border;
+    font-size: 0.9rem;
+    color: $gray-dark;
+
+    &:last-child {
+      border-bottom: none;
+    }
+  }
+
+  .tms-audit-log-row {
+    display: block;
+    line-height: 1.4;
+
+    strong {
+      color: $gray-dark;
+      font-weight: 600;
+    }
+  }
+}
+
+// Charts
+.chart-container-sm {
+  height: 220px;
+  position: relative;
+}
+
+.chart-empty {
+  text-align: center;
+  padding: 2rem;
+  color: $gray-muted;
+
+  i {
+    opacity: 0.4;
+    display: block;
+    margin-bottom: 0.5rem;
+  }
+
+  p {
+    margin: 0;
+    font-size: 0.875rem;
+  }
+}
+
+// Driver content
+.tms-driver-content {
+  margin-top: 1rem;
+}
+
+.tms-list {
+  .tms-list-item {
+    padding: 0.75rem 0;
+    border-bottom: 1px solid $gray-border;
+
+    &:last-child {
+      border-bottom: none;
+    }
+
+    a {
+      color: $navy;
+      text-decoration: none;
+      font-weight: 600;
+
+      &:hover {
+        text-decoration: underline;
+      }
+    }
+
+    small {
+      color: $gray-muted;
+    }
+  }
+}
+
+.dispatcher-loads-header {
+  align-items: flex-start !important;
+}
+
+.dispatcher-loads-controls {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  align-items: center;
+
+  .form-select {
+    min-width: 120px;
+  }
+
+  .btn.active {
+    background: $navy;
+    color: $white;
+  }
+}
+
+.dispatcher-custom-range {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  margin-bottom: 0.75rem;
+
+  .form-control {
+    max-width: 170px;
+  }
+}
+
+.dispatcher-loads-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.dispatcher-load-row {
+  width: 100%;
+  border: 1px solid $gray-border;
+  background: $white;
+  border-radius: 10px;
+  padding: 0.75rem;
+  text-align: left;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 0.5rem 0.75rem;
+  align-items: center;
+  cursor: pointer;
+  transition: box-shadow 0.2s, transform 0.2s;
+
+  &:hover {
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
+    transform: translateY(-1px);
+  }
+}
+
+.dispatcher-meta {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.dispatcher-avatar,
+.dispatcher-avatar-img {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.dispatcher-avatar {
+  background: $navy;
+  color: $white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  font-size: 0.85rem;
+}
+
+.dispatcher-avatar-img {
+  object-fit: cover;
+}
+
+.dispatcher-name {
+  font-weight: 600;
+  color: $gray-dark;
+}
+
+.dispatcher-stats {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.dispatcher-progress {
+  grid-column: 1 / -1;
+  height: 7px;
+  background: $gray-mid;
+}
+
+.dispatcher-workload-high {
+  background: #dc3545 !important;
+  color: $white;
+}
+
+.dispatcher-workload-medium {
+  background: #f0ad4e !important;
+  color: $gray-dark;
+}
+
+.dispatcher-workload-low {
+  background: #198754 !important;
+  color: $white;
+}
+
+// Buttons
+.btn-tms-primary {
+  background: $navy;
+  border: none;
+  color: $white;
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  font-weight: 600;
+  transition: all 0.2s;
+
+  &:hover {
+    background: darken($navy, 8%);
+    color: $white;
+    transform: translateY(-1px);
+  }
+}
+
+.btn-tms-outline {
+  border: 1px solid $navy;
+  color: $navy;
+  background: transparent;
+  padding: 0.35rem 0.75rem;
+  border-radius: 6px;
+  font-weight: 500;
+  font-size: 0.8rem;
+  text-decoration: none;
+  display: inline-block;
+  transition: all 0.2s;
+
+  &:hover {
+    background: $navy;
+    color: $white;
+  }
+}
+
+.badge {
+  padding: 0.35em 0.65em;
+  font-weight: 500;
+  font-size: 0.7rem;
+  border-radius: 6px;
+}
+
+// Responsive
+@media (max-width: 992px) {
+  .tms-kpi-row .tms-kpi-card {
+    min-width: calc(50% - 0.5rem);
+  }
+}
+
+@media (max-width: 768px) {
+  .tms-dashboard-dark {
+    padding: 1rem;
+  }
+
+  .tms-kpi-row {
+    flex-direction: column;
+  }
+
+  .tms-kpi-row .tms-kpi-card {
+    max-width: none;
+  }
+
+  .tms-dashboard-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .dispatcher-load-row {
+    grid-template-columns: 1fr;
+  }
+}

@@ -1,0 +1,278 @@
+<div class="equipment-detail container-fluid">
+  <!-- Header -->
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <div class="d-flex align-items-center gap-3">
+      <button class="btn btn-outline-secondary" (click)="goBack()">
+        <i class="fas fa-arrow-left me-2"></i>Back
+      </button>
+      <div>
+        <h4 class="mb-1">Equipment Details</h4>
+        <p class="text-muted mb-0" *ngIf="equipment">
+          <span class="badge" [ngClass]="getStatusBadgeClass(equipment.status)">
+            <i class="fas" [ngClass]="getStatusIcon(equipment.status)"></i>
+            {{ equipment.status }}
+          </span>
+          <span class="ms-2">
+            {{ equipment.equipmentType }}{{ equipment.plateNumber ? ' - ' + equipment.plateNumber : '' }}
+          </span>
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Loading -->
+  <div *ngIf="loading" class="text-center py-5">
+    <div class="spinner-border text-primary" role="status">
+      <span class="visually-hidden">Loading...</span>
+    </div>
+  </div>
+
+  <!-- Not Found -->
+  <div *ngIf="!loading && notFound" class="card">
+    <div class="card-body text-center py-5">
+      <i class="fas fa-exclamation-triangle fa-2x text-muted mb-3"></i>
+      <h5 class="mb-2">Equipment not found</h5>
+      <p class="text-muted mb-3">This equipment may have been deleted or you don’t have access.</p>
+      <button class="btn btn-primary" (click)="goBack()">{{ backButtonLabel }}</button>
+    </div>
+  </div>
+
+  <!-- Details -->
+  <div *ngIf="!loading && equipment" class="row g-4">
+    <div class="col-lg-8">
+      <div class="card">
+        <div class="card-header">
+          <h5 class="mb-0">Equipment Information</h5>
+        </div>
+        <div class="card-body">
+          <div class="row g-3">
+            <div class="col-md-4">
+              <label class="form-label text-muted">Type</label>
+              <p class="mb-0"><strong>{{ equipment.equipmentType }}</strong></p>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label text-muted">Plate Number</label>
+              <p class="mb-0"><strong>{{ equipment.plateNumber || '-' }}</strong></p>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label text-muted">VIN</label>
+              <p class="mb-0">{{ equipment.vin || '-' }}</p>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label text-muted">Make</label>
+              <p class="mb-0">{{ equipment.make || '-' }}</p>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label text-muted">Model</label>
+              <p class="mb-0">{{ equipment.model || '-' }}</p>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label text-muted">Year</label>
+              <p class="mb-0">{{ equipment.yearManufactured ?? '-' }}</p>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label text-muted">Odometer</label>
+              <p class="mb-0">{{ formatOdometer(equipment.currentOdometer) }}</p>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label text-muted">Assigned Driver</label>
+              <p class="mb-0">
+                <span *ngIf="equipment.assignedDriverName">{{ equipment.assignedDriverName }}</span>
+                <span *ngIf="!equipment.assignedDriverName && equipment.assignedToDriverId">Driver #{{ equipment.assignedToDriverId }}</span>
+                <span *ngIf="!equipment.assignedDriverName && !equipment.assignedToDriverId">-</span>
+              </p>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label text-muted">Created</label>
+              <p class="mb-0">{{ formatDate(equipment.createdAt) }}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card mt-4">
+        <div class="card-header d-flex justify-content-between align-items-center">
+          <h5 class="mb-0">Maintenance Logs</h5>
+          <span class="text-muted small">{{ maintenanceLogs.length }} log(s)</span>
+        </div>
+        <div class="card-body">
+          <div *ngIf="loadingLogs" class="text-center py-4">
+            <div class="spinner-border spinner-border-sm text-primary me-2" role="status"></div>
+            Loading maintenance logs...
+          </div>
+
+          <div *ngIf="!loadingLogs" class="table-responsive">
+            <table class="table table-hover mb-0">
+              <thead>
+                <tr>
+                  <th>Service Date</th>
+                  <th>Service Type</th>
+                  <th>Vendor</th>
+                  <th>Odometer</th>
+                  <th>Cost</th>
+                  <th>Remarks</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngIf="maintenanceLogs.length === 0">
+                  <td colspan="6" class="text-center text-muted py-4">No maintenance logs found</td>
+                </tr>
+                <tr *ngFor="let log of maintenanceLogs">
+                  <td>{{ formatDate(log.serviceDate) }}</td>
+                  <td><strong>{{ log.serviceType }}</strong></td>
+                  <td>{{ log.vendor || '-' }}</td>
+                  <td>{{ log.odometerAtService ? (log.odometerAtService | number) + ' mi' : '-' }}</td>
+                  <td>{{ formatCurrency(log.cost) }}</td>
+                  <td>{{ log.remarks || '-' }}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-lg-4">
+      <div class="card">
+        <div class="card-header">
+          <h5 class="mb-0">Status</h5>
+        </div>
+        <div class="card-body">
+          <div class="d-flex align-items-center gap-2">
+            <span class="badge" [ngClass]="getStatusBadgeClass(equipment.status)">
+              <i class="fas" [ngClass]="getStatusIcon(equipment.status)"></i>
+              {{ equipment.status }}
+            </span>
+          </div>
+          <p class="text-muted small mb-0 mt-3">
+            This page is read-only. Use the Edit icon on the Equipment list to update details.
+          </p>
+        </div>
+      </div>
+
+      <div class="card mt-3">
+        <div class="card-header d-flex justify-content-between align-items-center">
+          <h5 class="mb-0">Motive</h5>
+          <span class="text-muted small" *ngIf="motiveInfo">({{ motiveInfo.entityType }})</span>
+        </div>
+        <div class="card-body">
+          <div *ngIf="loadingMotive" class="text-center py-3">
+            <div class="spinner-border spinner-border-sm text-primary me-2" role="status"></div>
+            Loading Motive...
+          </div>
+
+          <div *ngIf="!loadingMotive && motiveError" class="alert alert-warning mb-0" role="alert">
+            <i class="fas fa-exclamation-triangle me-2"></i>{{ motiveError }}
+          </div>
+
+          <div *ngIf="motiveSuccess" class="alert alert-success mb-0" role="status">
+            <i class="fas fa-check-circle me-2"></i>{{ motiveSuccess }}
+          </div>
+
+          <div *ngIf="!loadingMotive && motiveInfo">
+            <div *ngIf="!motiveInfo.configured" class="alert alert-info mb-0" role="alert">
+              <i class="fas fa-info-circle me-2"></i>Motive is not configured on the server.
+            </div>
+
+            <div *ngIf="motiveInfo.configured">
+              <div class="mb-3" *ngIf="!motiveInfo.motiveId && !motiveInfo.mapping?.motiveId">
+                <button type="button" class="btn btn-primary btn-sm" (click)="pushToMotive()" [disabled]="pushingToMotive">
+                  <span *ngIf="pushingToMotive" class="spinner-border spinner-border-sm me-1" role="status"></span>
+                  <i *ngIf="!pushingToMotive" class="fas fa-cloud-upload-alt me-1"></i>
+                  {{ pushingToMotive ? 'Creating in Motive...' : 'Create in Motive' }}
+                </button>
+                <p class="text-muted small mb-0 mt-1">No Motive record yet. Click to create this equipment in Motive (as a vehicle for Trucks or asset for Trailers/Reefers) and link it.</p>
+                <div class="mt-3 pt-3 border-top">
+                  <p class="text-muted small mb-1"><strong>Or link manually:</strong> If Motive did not return an id, get the vehicle/asset ID from Motive and paste it below.</p>
+                  <div class="d-flex gap-2 align-items-center flex-wrap">
+                    <input type="text" class="form-control form-control-sm" style="max-width: 12rem;"
+                           [(ngModel)]="manualMotiveId" name="manualMotiveId"
+                           placeholder="Motive vehicle/asset ID"
+                           (keydown.enter)="linkWithMotiveId()">
+                    <button type="button" class="btn btn-outline-primary btn-sm" (click)="linkWithMotiveId()"
+                            [disabled]="pushingToMotive || !manualMotiveId?.trim()">
+                      <span *ngIf="pushingToMotive" class="spinner-border spinner-border-sm me-1" role="status"></span>
+                      <i *ngIf="!pushingToMotive" class="fas fa-link me-1"></i>
+                      Link with Motive ID
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <div class="mb-2">
+                <small class="text-muted">Integration</small>
+                <div><strong>{{ motiveInfo.integrationName }}</strong></div>
+              </div>
+
+              <div class="mb-2">
+                <small class="text-muted">External ID</small>
+                <div><strong>{{ motiveInfo.externalId || '-' }}</strong></div>
+              </div>
+
+              <div class="mb-2">
+                <small class="text-muted">Motive ID</small>
+                <div><strong>{{ motiveInfo.motiveId || motiveInfo.mapping?.motiveId || '-' }}</strong></div>
+              </div>
+
+              <div class="mb-2" *ngIf="motiveInfo.mapping">
+                <small class="text-muted">Sync Status</small>
+                <div>{{ motiveInfo.mapping.syncStatus || '-' }}</div>
+              </div>
+
+              <div class="mb-2" *ngIf="motiveInfo.mapping?.lastSyncedAt">
+                <small class="text-muted">Last Synced</small>
+                <div>{{ formatDate(motiveInfo.mapping?.lastSyncedAt || undefined) }}</div>
+              </div>
+
+              <div class="mb-2" *ngIf="motiveInfo.lastSync">
+                <small class="text-muted">Last Sync Result</small>
+                <div>
+                  <strong>{{ motiveInfo.lastSync.status }}</strong>
+                  <span class="text-muted">({{ motiveInfo.lastSync.syncType }})</span>
+                </div>
+              </div>
+
+              <div class="mt-3" *ngIf="motiveInfo.lastLocation as loc">
+                <hr class="my-3" />
+                <h6 class="mb-2">
+                  <i class="fas fa-map-marker-alt me-2"></i>Last Known Location
+                </h6>
+                <div class="small text-muted mb-1">Source: {{ loc.source }}</div>
+                <div class="mb-2">
+                  <strong>{{ loc.address || (loc.city && loc.state ? (loc.city + ', ' + loc.state) : null) || 'Coordinates' }}</strong>
+                  <div class="text-muted small" *ngIf="loc.locatedAt">Located: {{ formatDate(loc.locatedAt || undefined) }}</div>
+                </div>
+                <div class="text-muted small mb-2">
+                  {{ loc.latitude }}, {{ loc.longitude }}
+                </div>
+                <a class="btn btn-sm btn-outline-primary"
+                   [href]="getGoogleMapsLink(loc.latitude, loc.longitude)"
+                   target="_blank"
+                   rel="noopener">
+                  <i class="fas fa-external-link-alt me-1"></i>Open in Google Maps
+                </a>
+
+                <div class="mt-3 motive-map" *ngIf="loc.latitude && loc.longitude">
+                  <iframe
+                    [src]="getGoogleMapsEmbedUrl(loc.latitude, loc.longitude)"
+                    width="100%"
+                    height="220"
+                    style="border:0; border-radius: 8px;"
+                    loading="lazy"
+                    referrerpolicy="no-referrer-when-downgrade">
+                  </iframe>
+                </div>
+              </div>
+
+              <details class="mt-3" *ngIf="motiveInfo.motiveEntity">
+                <summary>Raw Motive payload</summary>
+                <pre class="motive-json mt-2 mb-0">{{ motiveInfo.motiveEntity | json }}</pre>
+              </details>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+

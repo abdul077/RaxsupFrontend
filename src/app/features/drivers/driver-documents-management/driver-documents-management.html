@@ -1,0 +1,347 @@
+<div class="driver-documents-management-container">
+  <div class="page-header">
+    <div class="header-content">
+      <h1 class="page-title">Driver Documents Management</h1>
+      <p class="page-subtitle">Manage all driver documents across the system</p>
+    </div>
+    <div class="header-actions">
+      <button class="btn btn-primary" (click)="exportDocuments()">
+        <i class="fas fa-download me-2"></i>Export
+      </button>
+    </div>
+  </div>
+
+  @if (loading) {
+    <div class="loading-container">
+      <div class="spinner-border text-primary" role="status">
+        <span class="visually-hidden">Loading...</span>
+      </div>
+    </div>
+  }
+
+  @if (!loading && summary) {
+    <div class="row g-4 mb-4">
+      <div class="col-md-2 col-sm-6">
+        <div class="card text-center stat-card">
+          <div class="card-body">
+            <h4 class="mb-1">{{ summary.totalDocuments }}</h4>
+            <small class="text-muted">Total</small>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-2 col-sm-6">
+        <div class="card text-center stat-card bg-success text-white">
+          <div class="card-body">
+            <h4 class="mb-1">{{ summary.approvedDocuments }}</h4>
+            <small>Approved</small>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-2 col-sm-6">
+        <div class="card text-center stat-card bg-warning">
+          <div class="card-body">
+            <h4 class="mb-1">{{ summary.pendingDocuments }}</h4>
+            <small>Pending</small>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-2 col-sm-6">
+        <div class="card text-center stat-card bg-danger text-white">
+          <div class="card-body">
+            <h4 class="mb-1">{{ summary.rejectedDocuments }}</h4>
+            <small>Rejected</small>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-2 col-sm-6">
+        <div class="card text-center stat-card bg-danger text-white">
+          <div class="card-body">
+            <h4 class="mb-1">{{ summary.expiredDocuments }}</h4>
+            <small>Expired</small>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-2 col-sm-6">
+        <div class="card text-center stat-card bg-warning">
+          <div class="card-body">
+            <h4 class="mb-1">{{ summary.expiringSoonDocuments }}</h4>
+            <small>Expiring Soon</small>
+          </div>
+        </div>
+      </div>
+    </div>
+  }
+
+  <div class="card mb-4">
+    <div class="card-header">
+      <h5 class="mb-0">Filters</h5>
+    </div>
+    <div class="card-body">
+      <div class="row g-3">
+        <div class="col-md-3">
+          <label class="form-label">Driver ID</label>
+          <input type="number" class="form-control" [(ngModel)]="driverIdFilter" placeholder="Filter by driver ID">
+        </div>
+        <div class="col-md-2">
+          <label class="form-label">Document Type</label>
+          <select class="form-select" [(ngModel)]="documentTypeFilter">
+            <option value="">All Types</option>
+            @for (type of documentTypes; track type) {
+              <option [value]="type">{{ type }}</option>
+            }
+          </select>
+        </div>
+        <div class="col-md-2">
+          <label class="form-label">Approval Status</label>
+          <select class="form-select" [(ngModel)]="approvalStatusFilter">
+            @for (status of approvalStatusOptions; track status) {
+              <option [value]="status">{{ status }}</option>
+            }
+          </select>
+        </div>
+        <div class="col-md-2">
+          <label class="form-label">Expiry Status</label>
+          <select class="form-select" [(ngModel)]="expiryStatusFilter">
+            @for (status of expiryStatusOptions; track status) {
+              <option [value]="status">{{ status }}</option>
+            }
+          </select>
+        </div>
+        <div class="col-md-2 d-flex align-items-end gap-2">
+          <button class="btn btn-primary" (click)="applyFilters()">Apply</button>
+          <button class="btn btn-outline-secondary" (click)="clearFilters()">Clear</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+      <h5 class="mb-0">Documents ({{ totalCount }})</h5>
+      <div class="d-flex gap-2">
+        @if (selectedDocuments.size > 0) {
+          <button class="btn btn-sm btn-success" (click)="bulkApprove()">
+            <i class="fas fa-check me-1"></i>Approve Selected ({{ selectedDocuments.size }})
+          </button>
+          <button class="btn btn-sm btn-danger" (click)="bulkReject()">
+            <i class="fas fa-times me-1"></i>Reject Selected ({{ selectedDocuments.size }})
+          </button>
+        }
+        <select class="form-select form-select-sm" style="width: auto;" [(ngModel)]="pageSize" (change)="onPageSizeChange()">
+          <option [value]="20">20</option>
+          <option [value]="50">50</option>
+          <option [value]="100">100</option>
+        </select>
+      </div>
+    </div>
+    <div class="card-body">
+      <div class="table-responsive">
+        <table class="table table-hover">
+          <thead>
+            <tr>
+              <th style="width: 40px;">
+                <input type="checkbox" (change)="toggleSelectAll()" [checked]="selectedDocuments.size === documents.length && documents.length > 0">
+              </th>
+              <th>Driver</th>
+              <th>Document Type</th>
+              <th>Uploaded</th>
+              <th>Expiry Date</th>
+              <th>Days Until Expiry</th>
+              <th>Approval Status</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (doc of documents; track doc.docId) {
+              <tr [class.table-warning]="!doc.isApproved && !doc.isRejected"
+                  [class.table-danger]="doc.isRejected || doc.isExpired"
+                  [class.table-warning]="doc.isExpiringSoon && !doc.isExpired">
+                <td>
+                  <input type="checkbox" [checked]="selectedDocuments.has(doc.docId)" (change)="toggleDocumentSelection(doc.docId)">
+                </td>
+                <td>
+                  <a href="javascript:void(0)" (click)="navigateToDriver(doc.driverId)" class="text-primary">
+                    {{ doc.driverName }} (ID: {{ doc.driverId }})
+                  </a>
+                </td>
+                <td>{{ doc.documentType }}</td>
+                <td>{{ formatDate(doc.uploadedAt) }}</td>
+                <td>
+                  <span [class.text-danger]="doc.isExpired" [class.text-warning]="doc.isExpiringSoon">
+                    {{ formatDate(doc.expiryDate) }}
+                  </span>
+                </td>
+                <td>
+                  @if (doc.daysUntilExpiry !== undefined && doc.daysUntilExpiry !== null) {
+                    @if (doc.isExpired) {
+                      <span class="badge bg-danger">Expired {{ Math.abs(doc.daysUntilExpiry) }} days ago</span>
+                    } @else if (doc.isExpiringSoon) {
+                      <span class="badge bg-warning">{{ doc.daysUntilExpiry }} days</span>
+                    } @else {
+                      <span class="badge bg-success">{{ doc.daysUntilExpiry }} days</span>
+                    }
+                  } @else {
+                    <span class="text-muted">N/A</span>
+                  }
+                </td>
+                <td>
+                  @if (doc.isApproved) {
+                    <span class="badge bg-success">Approved</span>
+                  } @else if (doc.isRejected) {
+                    <span class="badge bg-danger">Rejected</span>
+                  } @else {
+                    <span class="badge bg-warning">Pending</span>
+                  }
+                </td>
+                <td>
+                  <div class="btn-group btn-group-sm">
+                    @if (doc.filePath) {
+                      <button class="btn btn-outline-primary" (click)="viewDocument(doc)" title="View">
+                        <i class="fas fa-eye"></i>
+                      </button>
+                    }
+                    @if (doc.isExpired) {
+                      <button class="btn btn-outline-warning" (click)="openReuploadModal(doc)" title="Reupload Document">
+                        <i class="fas fa-upload"></i>
+                      </button>
+                    }
+                    @if (!doc.isApproved && !doc.isRejected) {
+                      <button class="btn btn-outline-success" (click)="approveDocument(doc.docId)" title="Approve">
+                        <i class="fas fa-check"></i>
+                      </button>
+                      <button class="btn btn-outline-danger" (click)="rejectDocument(doc.docId)" title="Reject">
+                        <i class="fas fa-times"></i>
+                      </button>
+                    }
+                  </div>
+                </td>
+              </tr>
+            }
+            @if (documents.length === 0) {
+              <tr>
+                <td colspan="8" class="text-center text-muted py-4">No documents found</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+
+      @if (totalPages > 1) {
+        <nav aria-label="Documents pagination">
+          <ul class="pagination justify-content-center">
+            <li class="page-item" [class.disabled]="pageNumber === 1">
+              <a class="page-link" href="javascript:void(0)" (click)="onPageChange(pageNumber - 1)">Previous</a>
+            </li>
+            @for (page of getPageNumbers(); track page) {
+              <li class="page-item" [class.active]="page === pageNumber">
+                <a class="page-link" href="javascript:void(0)" (click)="onPageChange(page)">{{ page }}</a>
+              </li>
+            }
+            <li class="page-item" [class.disabled]="pageNumber === totalPages">
+              <a class="page-link" href="javascript:void(0)" (click)="onPageChange(pageNumber + 1)">Next</a>
+            </li>
+          </ul>
+        </nav>
+      }
+    </div>
+  </div>
+</div>
+
+<!-- Document Reupload Modal -->
+@if (showDocumentModal) {
+  <div class="modal fade" [class.show]="showDocumentModal" [style.display]="showDocumentModal ? 'block' : 'none'">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">{{ isReuploading ? 'Reupload Document' : 'Add Document' }}</h5>
+          <button type="button" class="btn-close" (click)="showDocumentModal = false; isReuploading = false"></button>
+        </div>
+        <div class="modal-body">
+          <div class="mb-3">
+            <label class="form-label">Document Type</label>
+            <select class="form-select" [(ngModel)]="documentForm.documentType" name="documentType" [disabled]="isReuploading" required>
+              <option value="">Select Type</option>
+              @for (type of documentTypes; track type) {
+                <option [value]="type">{{ type }}</option>
+              }
+            </select>
+            @if (isReuploading) {
+              <small class="text-muted d-block mt-1">
+                <i class="fas fa-info-circle me-1"></i>
+                Document type is pre-filled for reupload
+              </small>
+            }
+          </div>
+
+          <!-- Upload Mode Toggle -->
+          <div class="mb-3">
+            <label class="form-label">Upload Method</label>
+            <div class="btn-group w-100" role="group">
+              <input type="radio" class="btn-check" id="uploadFile" [(ngModel)]="uploadMode" value="file" name="uploadMode" checked>
+              <label class="btn btn-outline-primary" for="uploadFile">
+                <i class="fas fa-upload me-2"></i>Upload from Device
+              </label>
+              
+              <input type="radio" class="btn-check" id="uploadUrl" [(ngModel)]="uploadMode" value="url" name="uploadMode">
+              <label class="btn btn-outline-primary" for="uploadUrl">
+                <i class="fas fa-link me-2"></i>Enter URL
+              </label>
+            </div>
+          </div>
+
+          <!-- File Upload -->
+          @if (uploadMode === 'file') {
+            <div class="mb-3">
+              <label class="form-label">Select File</label>
+              <input 
+                type="file" 
+                class="form-control" 
+                (change)="onFileSelected($event)"
+                accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
+                required>
+              @if (selectedFile) {
+                <small class="text-muted d-block mt-2">
+                  <i class="fas fa-file me-1"></i>
+                  Selected: {{ selectedFile.name }} ({{ (selectedFile.size / 1024 / 1024).toFixed(2) }} MB)
+                </small>
+              }
+              <small class="text-muted d-block mt-1">
+                <i class="fas fa-info-circle me-1"></i>
+                Allowed formats: PDF, JPG, JPEG, PNG, DOC, DOCX (Max 10MB)
+              </small>
+            </div>
+          }
+
+          <!-- URL Input -->
+          @if (uploadMode === 'url') {
+            <div class="mb-3">
+              <label class="form-label">File Path/URL</label>
+              <input type="text" class="form-control" [(ngModel)]="documentForm.filePath" name="filePath" required>
+            </div>
+          }
+
+          <div class="mb-3">
+            <label class="form-label">Expiry Date (Optional)</label>
+            <input type="date" class="form-control" [(ngModel)]="documentForm.expiryDate" name="expiryDate">
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" (click)="showDocumentModal = false; isReuploading = false" [disabled]="uploading">Cancel</button>
+          <button type="button" class="btn btn-primary" (click)="addDocument()" [disabled]="uploading || !documentForm.documentType">
+            @if (uploading) {
+              <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+              Uploading...
+            } @else {
+              @if (isReuploading) {
+                <i class="fas fa-upload me-2"></i>Reupload Document
+              } @else {
+                <i class="fas fa-plus me-2"></i>Add Document
+              }
+            }
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+}
+

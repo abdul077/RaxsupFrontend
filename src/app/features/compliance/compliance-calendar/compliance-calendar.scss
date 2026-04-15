@@ -1,0 +1,162 @@
+:host {
+  display: block;
+}
+
+.compliance-calendar {
+  padding: 2rem;
+
+  .page-header {
+    margin-bottom: 2rem;
+
+    h1 {
+      font-size: 2rem;
+      font-weight: 600;
+    }
+  }
+
+  .filters {
+    background: white;
+    padding: 1rem;
+    border-radius: 8px;
+    margin-bottom: 1rem;
+    display: flex;
+    gap: 1rem;
+    align-items: flex-end;
+    flex-wrap: wrap;
+
+    .form-group {
+      flex: 1;
+      min-width: 150px;
+
+      label {
+        display: block;
+        margin-bottom: 0.5rem;
+        font-weight: 500;
+        font-size: 0.875rem;
+      }
+
+      select, input {
+        width: 100%;
+        padding: 0.5rem;
+        border: 1px solid #d1d5db;
+        border-radius: 4px;
+        font-size: 0.875rem;
+      }
+    }
+  }
+
+  .calendar-table {
+    background: white;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+
+      thead {
+        background: #f9fafb;
+
+        th {
+          padding: 1rem;
+          text-align: left;
+          font-weight: 600;
+          font-size: 0.875rem;
+          color: #374151;
+        }
+      }
+
+      tbody {
+        tr {
+          border-bottom: 1px solid #e5e7eb;
+
+          &:hover {
+            background: #f9fafb;
+          }
+
+          &.overdue-row {
+            background: #fef3c7;
+          }
+
+          td {
+            padding: 1rem;
+            font-size: 0.875rem;
+          }
+        }
+      }
+    }
+
+    .empty-state {
+      padding: 2rem;
+      text-align: center;
+      color: #9ca3af;
+    }
+  }
+
+  .badge {
+    padding: 0.25rem 0.75rem;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 500;
+
+    &.badge-success {
+      background: #d1fae5;
+      color: #065f46;
+    }
+
+    &.badge-warning {
+      background: #fef3c7;
+      color: #92400e;
+    }
+
+    &.badge-danger {
+      background: #fee2e2;
+      color: #991b1b;
+    }
+
+    &.badge-info {
+      background: #dbeafe;
+      color: #1e40af;
+    }
+
+    &.badge-secondary {
+      background: #f3f4f6;
+      color: #374151;
+    }
+  }
+
+  .text-danger {
+    color: #ef4444;
+  }
+}
+
+.btn {
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  border: none;
+  cursor: pointer;
+  font-size: 0.875rem;
+  font-weight: 500;
+
+  &.btn-secondary {
+    background: #e5e7eb;
+    color: #374151;
+
+    &:hover {
+      background: #d1d5db;
+    }
+  }
+}
+
+.loading {
+  padding: 2rem;
+  text-align: center;
+  color: #6c757d;
+}
+
+// Ensure modal dialog appears above backdrop (backdrop is z-index 1290 globally)
+.modal .modal-dialog {
+  position: relative;
+  z-index: 1310;
+}

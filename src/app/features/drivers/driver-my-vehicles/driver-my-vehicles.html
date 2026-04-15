@@ -1,0 +1,66 @@
+<div class="driver-my-vehicles-container">
+  <!-- Template cells (must be in DOM at init so ViewChild refs are available for tableConfig) -->
+  <ng-template #equipmentTypeCell let-equipment>
+    <span class="badge badge-type" [ngClass]="{
+      'badge-truck': equipment.equipmentType === 'Truck',
+      'badge-trailer': equipment.equipmentType === 'Trailer',
+      'badge-reefer': equipment.equipmentType === 'Reefer'
+    }">
+      {{ equipment.equipmentType }}
+    </span>
+  </ng-template>
+
+  <ng-template #equipmentStatusCell let-equipment>
+    <span class="badge" [ngClass]="getStatusBadgeClass(equipment.status)">
+      {{ equipment.status === 'Active' ? 'Available' : equipment.status }}
+    </span>
+  </ng-template>
+
+  <ng-template #vehicleActionsCell let-equipment>
+    <div class="dropdown" (click)="$event.stopPropagation()">
+      <button type="button" class="tms-actions-btn" data-bs-toggle="dropdown" aria-expanded="false" title="Actions">
+        <i class="fas fa-ellipsis-h tms-actions-dots"></i>
+      </button>
+      <ul class="dropdown-menu dropdown-menu-end tms-actions-dropdown">
+        <li><a class="dropdown-item" [routerLink]="['/equipment', equipment.equipmentId]" [state]="{ equipmentReturnUrl: '/drivers/my-vehicles' }">View Details...</a></li>
+      </ul>
+    </div>
+  </ng-template>
+
+  <!-- Page Header -->
+  <div class="tms-dashboard-header mb-4">
+    <div class="tms-header-left">
+      <div class="tms-header-icon">
+        <i class="fa-solid fa-truck"></i>
+      </div>
+      <div>
+        <h1 class="tms-title">My Vehicles</h1>
+        <p class="tms-subtitle mb-0">Vehicles assigned to you</p>
+      </div>
+    </div>
+  </div>
+
+  @if (loadingProfile) {
+    <div class="text-center py-5">
+      <div class="spinner-border text-primary" role="status">
+        <span class="visually-hidden">Loading...</span>
+      </div>
+    </div>
+  } @else {
+    <!-- Card with shared table -->
+    <div class="load-list-card load-list-card-with-sticky">
+      <div class="load-list-card-header">
+        <h5><i class="fas fa-truck me-2"></i>My Vehicles</h5>
+      </div>
+      <div class="load-list-card-body p-0">
+        <app-data-table
+          [config]="tableConfig"
+          [dataSource]="dataSource"
+          [emptyMessage]="'No vehicles assigned to you.'"
+          [refreshTrigger]="tableRefreshTrigger"
+          (rowClick)="viewVehicleDetails($event)">
+        </app-data-table>
+      </div>
+    </div>
+  }
+</div>

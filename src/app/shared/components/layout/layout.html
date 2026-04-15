@@ -1,0 +1,14 @@
+<div class="layout-container">
+  <app-topbar></app-topbar>
+  <div class="layout-body">
+    <div class="sidebar-overlay" *ngIf="layoutService.sidebarOpen$ | async" (click)="layoutService.closeSidebar()" aria-hidden="true"></div>
+    <app-sidebar></app-sidebar>
+    <div class="main-content">
+      <router-outlet></router-outlet>
+    </div>
+  </div>
+  <footer class="app-footer">
+    <span class="app-footer__copyright">Developed by <a href="https://everlogiclabs.com/" target="_blank" rel="noopener noreferrer" class="app-footer__link">Everlogic Labs</a></span>
+    <span class="app-footer__version">v{{ appVersion }}</span>
+  </footer>
+</div>

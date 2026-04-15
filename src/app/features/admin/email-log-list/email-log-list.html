@@ -1,0 +1,126 @@
+<div class="email-log-list">
+  <div class="page-header">
+    <h1>Email Logs</h1>
+    <div class="filters">
+      <input 
+        type="text" 
+        [(ngModel)]="filterTo" 
+        placeholder="Filter by recipient email"
+        (keyup.enter)="applyFilters()"
+        class="filter-input">
+      <select [(ngModel)]="filterStatus" (change)="applyFilters()" class="filter-select">
+        <option value="">All Statuses</option>
+        <option value="Sent">Sent</option>
+        <option value="Failed">Failed</option>
+        <option value="Pending">Pending</option>
+      </select>
+      <button class="btn btn-primary" (click)="applyFilters()">Apply Filters</button>
+      <button class="btn btn-secondary" (click)="clearFilters()">Clear</button>
+    </div>
+  </div>
+
+  <div *ngIf="loading" class="loading">Loading email logs...</div>
+
+  <div *ngIf="!loading" class="email-logs">
+    <div *ngIf="emailLogs.length === 0" class="empty-state">
+      <p>No email logs found.</p>
+    </div>
+
+    <table *ngIf="emailLogs.length > 0" class="email-logs-table">
+      <thead>
+        <tr>
+          <th>Sent At</th>
+          <th>To</th>
+          <th>Subject</th>
+          <th>From</th>
+          <th>Status</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let log of emailLogs" [ngClass]="getStatusClass(log.status)">
+          <td>
+            <div class="time-display">
+              <div class="time-ago">{{ getTimeAgo(log.sentAt) }}</div>
+              <div class="time-full">{{ formatDateTime(log.sentAt) }}</div>
+            </div>
+          </td>
+          <td>{{ log.to }}</td>
+          <td class="subject-cell">{{ log.subject }}</td>
+          <td>
+            <div *ngIf="log.fromName || log.fromEmail">
+              <div *ngIf="log.fromName">{{ log.fromName }}</div>
+              <div class="email-address">{{ log.fromEmail }}</div>
+            </div>
+          </td>
+          <td>
+            <span class="status-badge" [ngClass]="getStatusClass(log.status)">
+              {{ log.status }}
+            </span>
+          </td>
+          <td>
+            <button class="btn btn-sm" (click)="viewDetails(log)">View Details</button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Details Modal -->
+  <div *ngIf="selectedLog" class="modal-overlay" (click)="closeDetails()">
+    <div class="modal-content" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h2>Email Details</h2>
+        <button class="close-btn" (click)="closeDetails()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="detail-row">
+          <label>Email Log ID:</label>
+          <span>{{ selectedLog.emailLogId }}</span>
+        </div>
+        <div class="detail-row">
+          <label>To:</label>
+          <span>{{ selectedLog.to }}</span>
+        </div>
+        <div class="detail-row" *ngIf="selectedLog.cc">
+          <label>CC:</label>
+          <span>{{ selectedLog.cc }}</span>
+        </div>
+        <div class="detail-row" *ngIf="selectedLog.bcc">
+          <label>BCC:</label>
+          <span>{{ selectedLog.bcc }}</span>
+        </div>
+        <div class="detail-row">
+          <label>From:</label>
+          <span>{{ selectedLog.fromName || 'N/A' }} &lt;{{ selectedLog.fromEmail || 'N/A' }}&gt;</span>
+        </div>
+        <div class="detail-row">
+          <label>Subject:</label>
+          <span>{{ selectedLog.subject }}</span>
+        </div>
+        <div class="detail-row">
+          <label>Status:</label>
+          <span class="status-badge" [ngClass]="getStatusClass(selectedLog.status)">
+            {{ selectedLog.status }}
+          </span>
+        </div>
+        <div class="detail-row" *ngIf="selectedLog.errorMessage">
+          <label>Error Message:</label>
+          <span class="error-message">{{ selectedLog.errorMessage }}</span>
+        </div>
+        <div class="detail-row">
+          <label>Sent At:</label>
+          <span>{{ formatDateTime(selectedLog.sentAt) }}</span>
+        </div>
+        <div class="detail-row">
+          <label>Created At:</label>
+          <span>{{ formatDateTime(selectedLog.createdAt) }}</span>
+        </div>
+        <div class="detail-row">
+          <label>Body:</label>
+          <div class="email-body" [innerHTML]="selectedLog.body"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

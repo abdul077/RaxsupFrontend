@@ -1,0 +1,120 @@
+<div class="driver-settlements-management-container">
+  <div class="page-header">
+    <div class="header-content">
+      <h1 class="page-title">Driver Settlements Management</h1>
+      <p class="page-subtitle">Manage all driver settlements</p>
+    </div>
+    <div class="header-actions">
+      <button class="btn btn-primary" (click)="exportSettlements()">
+        <i class="fas fa-download me-2"></i>Export
+      </button>
+    </div>
+  </div>
+
+  <div class="card mb-4">
+    <div class="card-header">
+      <h5 class="mb-0">Filters</h5>
+    </div>
+    <div class="card-body">
+      <div class="row g-3">
+        <div class="col-md-3">
+          <label class="form-label">Driver</label>
+          <select class="form-select" [(ngModel)]="driverFilter" (change)="applyFilters()">
+            <option [value]="null">All Drivers</option>
+            @for (driver of drivers; track driver.driverId) {
+              <option [value]="driver.driverId">{{ driver.fullName }}</option>
+            }
+          </select>
+        </div>
+        <div class="col-md-2">
+          <label class="form-label">Status</label>
+          <select class="form-select" [(ngModel)]="statusFilter" (change)="applyFilters()">
+            <option value="">All Statuses</option>
+            @for (status of statusOptions; track status) {
+              <option [value]="status">{{ status }}</option>
+            }
+          </select>
+        </div>
+        <div class="col-md-2">
+          <label class="form-label">Start Date</label>
+          <input type="date" class="form-control" [(ngModel)]="startDate" (change)="applyFilters()">
+        </div>
+        <div class="col-md-2">
+          <label class="form-label">End Date</label>
+          <input type="date" class="form-control" [(ngModel)]="endDate" (change)="applyFilters()">
+        </div>
+        <div class="col-md-2">
+          <label class="form-label">Search</label>
+          <input type="text" class="form-control" [(ngModel)]="searchTerm" placeholder="Search...">
+        </div>
+        <div class="col-md-1 d-flex align-items-end">
+          <button class="btn btn-outline-secondary w-100" (click)="clearFilters()">Clear</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  @if (loading) {
+    <div class="loading-container">
+      <div class="spinner-border text-primary" role="status"></div>
+    </div>
+  }
+
+  @if (!loading) {
+    <div class="card">
+      <div class="card-header">
+        <h5 class="mb-0">Settlements ({{ settlements.length }})</h5>
+      </div>
+      <div class="card-body">
+        <div class="table-responsive">
+          <table class="table table-hover">
+            <thead>
+              <tr>
+                <th>Settlement Number</th>
+                <th>Driver</th>
+                <th>Period</th>
+                <th>Total Earnings</th>
+                <th>Deductions</th>
+                <th>Net Pay</th>
+                <th>Status</th>
+                <th>Created</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (settlement of settlements; track settlement.settlementId) {
+                <tr>
+                  <td>{{ settlement.settlementNumber || 'N/A' }}</td>
+                  <td>
+                    <a href="javascript:void(0)" (click)="navigateToDriver(settlement.driverId)" class="text-primary">
+                      {{ settlement.driverName || 'Unknown' }}
+                    </a>
+                  </td>
+                  <td>{{ formatDate(settlement.periodStart) }} - {{ formatDate(settlement.periodEnd) }}</td>
+                  <td>{{ formatCurrency(settlement.totalEarnings) }}</td>
+                  <td>{{ formatCurrency(settlement.totalDeductions) }}</td>
+                  <td><strong>{{ formatCurrency(settlement.netPay) }}</strong></td>
+                  <td>
+                    <span [class]="getStatusBadgeClass(settlement.status)">{{ settlement.status }}</span>
+                  </td>
+                  <td>{{ formatDate(settlement.createdAt) }}</td>
+                  <td>
+                    <button class="btn btn-sm btn-outline-primary" (click)="navigateToSettlement(settlement.settlementId)">
+                      <i class="fas fa-eye"></i> View
+                    </button>
+                  </td>
+                </tr>
+              }
+              @if (settlements.length === 0) {
+                <tr>
+                  <td colspan="9" class="text-center text-muted py-4">No settlements found</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  }
+</div>
+

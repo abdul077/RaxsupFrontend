@@ -1,0 +1,806 @@
+<div class="container-fluid reports-container">
+  <!-- Header -->
+  <div class="reports-header mb-4">
+    <div class="header-content">
+      <div class="header-icon">
+        <i class="fas fa-chart-line"></i>
+      </div>
+      <div>
+        <h2 class="mb-1">Reports & Analytics</h2>
+        <p class="text-muted mb-0">Comprehensive insights into your trucking operations</p>
+      </div>
+    </div>
+    <div class="reports-actions">
+      <button class="btn btn-primary btn-export" (click)="exportReport()" [disabled]="reportLoading">
+        <i class="fas fa-download me-2"></i>Export Report
+      </button>
+    </div>
+  </div>
+
+  <!-- Report Type Tabs -->
+  <div class="report-tabs mb-4">
+    <ul class="nav nav-pills" role="tablist">
+      <li class="nav-item" role="presentation">
+        <button 
+          class="nav-link" 
+          [class.active]="selectedReportType === 'loads'"
+          (click)="selectedReportType = 'loads'; loadReport()">
+          <i class="fas fa-boxes me-2"></i>Load Reports
+        </button>
+      </li>
+      <li class="nav-item" role="presentation">
+        <button 
+          class="nav-link" 
+          [class.active]="selectedReportType === 'drivers'"
+          (click)="selectedReportType = 'drivers'; loadReport()">
+          <i class="fas fa-users me-2"></i>Driver Reports
+        </button>
+      </li>
+      <li class="nav-item" role="presentation">
+        <button 
+          class="nav-link" 
+          [class.active]="selectedReportType === 'financial'"
+          (click)="selectedReportType = 'financial'; loadReport()">
+          <i class="fas fa-dollar-sign me-2"></i>Financial Reports
+        </button>
+      </li>
+      <li class="nav-item" role="presentation">
+        <button 
+          class="nav-link" 
+          [class.active]="selectedReportType === 'compliance'"
+          (click)="selectedReportType = 'compliance'; loadReport()">
+          <i class="fas fa-shield-alt me-2"></i>Compliance Reports
+        </button>
+      </li>
+    </ul>
+  </div>
+
+  <!-- Filters Card -->
+  <div class="report-filters-card mb-4">
+    <div class="card">
+      <div class="card-header">
+        <h5 class="mb-0">
+          <i class="fas fa-filter me-2"></i>Report Filters
+        </h5>
+      </div>
+      <div class="card-body">
+        <div class="row g-3">
+          <!-- Date Range -->
+          <div class="col-md-3">
+            <label class="form-label">Start Date</label>
+            <input 
+              type="date" 
+              class="form-control" 
+              [(ngModel)]="startDate">
+          </div>
+          <div class="col-md-3">
+            <label class="form-label">End Date</label>
+            <input 
+              type="date" 
+              class="form-control" 
+              [(ngModel)]="endDate">
+          </div>
+          
+          <!-- Quick Date Presets -->
+          <div class="col-md-5">
+            <label class="form-label">Quick Select</label>
+            <div class="date-presets">
+              <button 
+                *ngFor="let preset of datePresets"
+                type="button" 
+                class="btn btn-preset"
+                (click)="applyDatePreset(preset.days)">
+                {{ preset.label }}
+              </button>
+            </div>
+          </div>
+
+          <!-- Additional Filters (for Load Reports) -->
+          <div *ngIf="selectedReportType === 'loads'" class="col-md-3">
+            <label class="form-label">Status</label>
+            <select 
+              class="form-select" 
+              [(ngModel)]="statusFilter">
+              <option value="">All Statuses</option>
+              <option *ngFor="let status of statusOptions" [value]="status">{{ getStatusDisplayLabel(status) }}</option>
+            </select>
+          </div>
+          <div *ngIf="selectedReportType === 'loads'" class="col-md-3">
+            <label class="form-label">Customer</label>
+            <select 
+              class="form-select" 
+              [(ngModel)]="customerFilter">
+              <option [value]="null">All Customers</option>
+              <option *ngFor="let customer of customers" [value]="customer.customerId">
+                {{ customer.name }}
+              </option>
+            </select>
+          </div>
+          
+          <!-- Additional Filters (for Financial Reports) -->
+          <div *ngIf="selectedReportType === 'financial'" class="col-md-3">
+            <label class="form-label">Customer</label>
+            <select 
+              class="form-select" 
+              [(ngModel)]="customerFilter">
+              <option [value]="null">All Customers</option>
+              <option *ngFor="let customer of customers" [value]="customer.customerId">
+                {{ customer.name }}
+              </option>
+            </select>
+          </div>
+          <div *ngIf="selectedReportType === 'financial'" class="col-md-3">
+            <label class="form-label">Driver</label>
+            <select 
+              class="form-select" 
+              [(ngModel)]="driverFilter">
+              <option [value]="null">All Drivers</option>
+              <option *ngFor="let driver of drivers" [value]="driver.driverId">
+                {{ driver.fullName }}
+              </option>
+            </select>
+          </div>
+          
+          <!-- Additional Filters (for Compliance Reports) -->
+          <div *ngIf="selectedReportType === 'compliance'" class="col-md-3">
+            <label class="form-label">Driver</label>
+            <select 
+              class="form-select" 
+              [(ngModel)]="driverFilter">
+              <option [value]="null">All Drivers</option>
+              <option *ngFor="let driver of drivers" [value]="driver.driverId">
+                {{ driver.fullName }}
+              </option>
+            </select>
+          </div>
+          
+          <!-- Apply and Clear Buttons -->
+          <div class="col-md-3 d-flex align-items-end gap-2">
+            <button class="btn btn-primary flex-fill" (click)="onApplyFilters()" title="Apply Filters">
+              <i class="fas fa-filter me-1"></i>Apply
+            </button>
+            <button class="btn btn-outline-secondary flex-fill" (click)="onClearFilters()" title="Clear Filters">
+              <i class="fas fa-times me-1"></i>Clear
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Loading State -->
+  <div *ngIf="reportLoading" class="loading-container">
+    <div class="loading-content">
+      <div class="spinner-border text-primary" role="status">
+        <span class="visually-hidden">Loading report...</span>
+      </div>
+      <p class="text-muted mt-3 mb-0">Generating report...</p>
+    </div>
+  </div>
+
+  <!-- Load Reports Content -->
+  <div *ngIf="!reportLoading && selectedReportType === 'loads' && loadReportData">
+    <!-- Summary Cards -->
+    <div class="row g-4 mb-4">
+      <div class="col-xl-3 col-md-6">
+        <div class="report-stat-card report-stat-primary">
+          <div class="stat-icon">
+            <i class="fas fa-boxes"></i>
+          </div>
+          <div class="stat-content">
+            <div class="stat-label">Total Loads</div>
+            <div class="stat-value">{{ loadReportData.totalLoads }}</div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="col-xl-3 col-md-6">
+        <div class="report-stat-card report-stat-success">
+          <div class="stat-icon">
+            <i class="fas fa-dollar-sign"></i>
+          </div>
+          <div class="stat-content">
+            <div class="stat-label">Total Revenue</div>
+            <div class="stat-value">{{ formatCurrency(loadReportData.totalRevenue) }}</div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="col-xl-3 col-md-6">
+        <div class="report-stat-card report-stat-info">
+          <div class="stat-icon">
+            <i class="fas fa-chart-line"></i>
+          </div>
+          <div class="stat-content">
+            <div class="stat-label">Average Rate</div>
+            <div class="stat-value">{{ formatCurrency(loadReportData.averageRate) }}</div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="col-xl-3 col-md-6">
+        <div class="report-stat-card report-stat-warning">
+          <div class="stat-icon">
+            <i class="fas fa-clock"></i>
+          </div>
+          <div class="stat-content">
+            <div class="stat-label">On-Time Delivery</div>
+            <div class="stat-value">{{ formatPercentage(loadReportData.onTimePercentage) }}</div>
+            <small class="stat-subtext">{{ loadReportData.onTimeDeliveries }} deliveries</small>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Status Breakdown -->
+    <div class="row g-4 mb-4">
+      <div class="col-xl-8">
+        <div class="card report-card">
+          <div class="card-header">
+            <h5 class="mb-0">
+              <i class="fas fa-chart-pie me-2"></i>Load Status Breakdown
+            </h5>
+          </div>
+          <div class="card-body">
+            <div class="status-breakdown-list">
+              <div 
+                *ngFor="let status of loadReportData.statusSummary" 
+                class="status-breakdown-item">
+                <div class="status-info">
+                  <div class="status-header">
+                    <span class="badge" [ngClass]="getStatusBadgeClass(status.status)">
+                      {{ status.status }}
+                    </span>
+                    <span class="status-count">{{ status.count }} loads</span>
+                  </div>
+                  <div class="progress status-progress">
+                    <div 
+                      class="progress-bar" 
+                      [ngClass]="getStatusBadgeClass(status.status)"
+                      [style.width.%]="getStatusPercentage(status.count)">
+                    </div>
+                  </div>
+                  <div class="status-footer">
+                    <span class="status-percentage">{{ getStatusPercentage(status.count) }}%</span>
+                    <span class="status-revenue">{{ formatCurrency(status.totalRevenue) }}</span>
+                  </div>
+                </div>
+              </div>
+              <div *ngIf="loadReportData.statusSummary.length === 0" class="text-center text-muted py-4">
+                No data available for the selected period
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-xl-4">
+        <div class="card report-card">
+          <div class="card-header">
+            <h5 class="mb-0">
+              <i class="fas fa-info-circle me-2"></i>Report Summary
+            </h5>
+          </div>
+          <div class="card-body">
+            <div class="summary-list">
+              <div class="summary-item">
+                <i class="fas fa-calendar-alt text-primary"></i>
+                <div class="summary-content">
+                  <strong>Date Range</strong>
+                  <small>{{ startDate }} to {{ endDate }}</small>
+                </div>
+              </div>
+              <div class="summary-item">
+                <i class="fas fa-filter text-info"></i>
+                <div class="summary-content">
+                  <strong>Filters Applied</strong>
+                  <small>
+                    {{ getStatusFilterText() }} | {{ getCustomerName() }}
+                  </small>
+                </div>
+              </div>
+              <div class="summary-item">
+                <i class="fas fa-boxes text-success"></i>
+                <div class="summary-content">
+                  <strong>Total Loads</strong>
+                  <small>{{ loadReportData.totalLoads }} loads processed</small>
+                </div>
+              </div>
+              <div class="summary-item">
+                <i class="fas fa-dollar-sign text-warning"></i>
+                <div class="summary-content">
+                  <strong>Total Revenue</strong>
+                  <small>{{ formatCurrency(loadReportData.totalRevenue) }}</small>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Driver Reports Content -->
+  <div *ngIf="!reportLoading && selectedReportType === 'drivers' && driverReportData">
+    <!-- Summary Cards -->
+    <div class="row g-4 mb-4">
+      <div class="col-xl-3 col-md-6">
+        <div class="report-stat-card report-stat-success">
+          <div class="stat-icon">
+            <i class="fas fa-user-check"></i>
+          </div>
+          <div class="stat-content">
+            <div class="stat-label">Active Drivers</div>
+            <div class="stat-value">{{ driverReportData.activeInactive.activeCount }}</div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="col-xl-3 col-md-6">
+        <div class="report-stat-card report-stat-warning">
+          <div class="stat-icon">
+            <i class="fas fa-user-times"></i>
+          </div>
+          <div class="stat-content">
+            <div class="stat-label">Inactive Drivers</div>
+            <div class="stat-value">{{ driverReportData.activeInactive.inactiveCount }}</div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="col-xl-3 col-md-6">
+        <div class="report-stat-card report-stat-primary">
+          <div class="stat-icon">
+            <i class="fas fa-truck"></i>
+          </div>
+          <div class="stat-content">
+            <div class="stat-label">On Trip</div>
+            <div class="stat-value">{{ driverReportData.activeInactive.onTripCount }}</div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="col-xl-3 col-md-6">
+        <div class="report-stat-card report-stat-info">
+          <div class="stat-icon">
+            <i class="fas fa-user-clock"></i>
+          </div>
+          <div class="stat-content">
+            <div class="stat-label">Available</div>
+            <div class="stat-value">{{ driverReportData.activeInactive.availableCount }}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Performance Metrics -->
+    <div class="row g-4 mb-4">
+      <div class="col-xl-6">
+        <div class="card report-card">
+          <div class="card-header">
+            <h5 class="mb-0">
+              <i class="fas fa-chart-line me-2"></i>Performance Overview
+            </h5>
+          </div>
+          <div class="card-body">
+            <div class="summary-list">
+              <div class="summary-item">
+                <i class="fas fa-users text-primary"></i>
+                <div class="summary-content">
+                  <strong>Total Drivers</strong>
+                  <small>{{ driverReportData.performance.totalDrivers }} drivers in system</small>
+                </div>
+              </div>
+              <div class="summary-item">
+                <i class="fas fa-clock text-success"></i>
+                <div class="summary-content">
+                  <strong>Average On-Time Rate</strong>
+                  <small>{{ formatPercentage(driverReportData.performance.averageOnTimeRate) }}</small>
+                </div>
+              </div>
+              <div class="summary-item">
+                <i class="fas fa-exclamation-triangle text-warning"></i>
+                <div class="summary-content">
+                  <strong>Drivers with Incidents</strong>
+                  <small>{{ driverReportData.performance.driversWithIncidents }} drivers</small>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-xl-6">
+        <div class="card report-card">
+          <div class="card-header">
+            <h5 class="mb-0">
+              <i class="fas fa-trophy me-2"></i>Top Performers
+            </h5>
+          </div>
+          <div class="card-body">
+            <div class="status-breakdown-list">
+              <div 
+                *ngFor="let performer of driverReportData.performance.topPerformers" 
+                class="status-breakdown-item">
+                <div class="status-info">
+                  <div class="status-header">
+                    <span class="badge bg-success">{{ performer.fullName }}</span>
+                    <span class="status-count">{{ formatPercentage(performer.onTimeRate) }}</span>
+                  </div>
+                  <div class="status-footer">
+                    <span class="status-percentage">{{ performer.totalDeliveries }} deliveries</span>
+                    <span class="status-revenue" *ngIf="performer.rating">Rating: {{ performer.rating }}/5</span>
+                  </div>
+                </div>
+              </div>
+              <div *ngIf="driverReportData.performance.topPerformers.length === 0" class="text-center text-muted py-4">
+                No performance data available
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Financial Reports Content -->
+  <div *ngIf="!reportLoading && selectedReportType === 'financial' && financialReportData">
+    <!-- Summary Cards -->
+    <div class="row g-4 mb-4">
+      <div class="col-xl-3 col-md-6">
+        <div class="report-stat-card report-stat-success">
+          <div class="stat-icon">
+            <i class="fas fa-dollar-sign"></i>
+          </div>
+          <div class="stat-content">
+            <div class="stat-label">Total Revenue</div>
+            <div class="stat-value">{{ formatCurrency(financialReportData.revenueReport.totalRevenue) }}</div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="col-xl-3 col-md-6">
+        <div class="report-stat-card report-stat-warning">
+          <div class="stat-icon">
+            <i class="fas fa-arrow-down"></i>
+          </div>
+          <div class="stat-content">
+            <div class="stat-label">Total Expenses</div>
+            <div class="stat-value">{{ formatCurrency(financialReportData.profitLoss.totalCosts + financialReportData.profitLoss.operatingExpenses) }}</div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="col-xl-3 col-md-6">
+        <div class="report-stat-card report-stat-primary">
+          <div class="stat-icon">
+            <i class="fas fa-chart-line"></i>
+          </div>
+          <div class="stat-content">
+            <div class="stat-label">Net Profit</div>
+            <div class="stat-value">{{ formatCurrency(financialReportData.profitLoss.netProfit) }}</div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="col-xl-3 col-md-6">
+        <div class="report-stat-card report-stat-info">
+          <div class="stat-icon">
+            <i class="fas fa-percentage"></i>
+          </div>
+          <div class="stat-content">
+            <div class="stat-label">Profit Margin</div>
+            <div class="stat-value">{{ formatPercentage(financialReportData.revenueReport.totalRevenue > 0 ? (financialReportData.profitLoss.netProfit / financialReportData.revenueReport.totalRevenue) * 100 : 0) }}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Revenue Breakdown -->
+    <div class="row g-4 mb-4">
+      <div class="col-xl-6">
+        <div class="card report-card">
+          <div class="card-header">
+            <h5 class="mb-0">
+              <i class="fas fa-users me-2"></i>Revenue by Driver
+            </h5>
+          </div>
+          <div class="card-body">
+            <div class="status-breakdown-list">
+              <div 
+                *ngFor="let driver of financialReportData.revenueReport.byDriver" 
+                class="status-breakdown-item">
+                <div class="status-info">
+                  <div class="status-header">
+                    <span class="badge bg-primary">{{ driver.driverName }}</span>
+                    <span class="status-count">{{ driver.loadCount }} loads</span>
+                  </div>
+                  <div class="status-footer">
+                    <span class="status-revenue">{{ formatCurrency(driver.totalRevenue) }}</span>
+                  </div>
+                </div>
+              </div>
+              <div *ngIf="financialReportData.revenueReport.byDriver.length === 0" class="text-center text-muted py-4">
+                No revenue data available
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-xl-6">
+        <div class="card report-card">
+          <div class="card-header">
+            <h5 class="mb-0">
+              <i class="fas fa-building me-2"></i>Revenue by Customer
+            </h5>
+          </div>
+          <div class="card-body">
+            <div class="status-breakdown-list">
+              <div 
+                *ngFor="let customer of financialReportData.revenueReport.byCustomer" 
+                class="status-breakdown-item">
+                <div class="status-info">
+                  <div class="status-header">
+                    <span class="badge bg-info">{{ customer.customerName }}</span>
+                    <span class="status-count">{{ customer.invoiceCount }} invoices</span>
+                  </div>
+                  <div class="status-footer">
+                    <span class="status-revenue">{{ formatCurrency(customer.totalRevenue) }}</span>
+                  </div>
+                </div>
+              </div>
+              <div *ngIf="financialReportData.revenueReport.byCustomer.length === 0" class="text-center text-muted py-4">
+                No revenue data available
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Aging Report -->
+    <div class="row g-4 mb-4" *ngIf="financialReportData.agingReport">
+      <div class="col-12">
+        <div class="card report-card">
+          <div class="card-header">
+            <h5 class="mb-0">
+              <i class="fas fa-clock me-2"></i>Aging Report
+            </h5>
+          </div>
+          <div class="card-body">
+            <div class="row mb-3">
+              <div class="col-md-2">
+                <strong>Current:</strong> {{ formatCurrency(financialReportData.agingReport.totalCurrent) }}
+              </div>
+              <div class="col-md-2">
+                <strong>1-30 Days:</strong> {{ formatCurrency(financialReportData.agingReport.total1To30Days) }}
+              </div>
+              <div class="col-md-2">
+                <strong>31-60 Days:</strong> {{ formatCurrency(financialReportData.agingReport.total31To60Days) }}
+              </div>
+              <div class="col-md-2">
+                <strong>61-90 Days:</strong> {{ formatCurrency(financialReportData.agingReport.total61To90Days) }}
+              </div>
+              <div class="col-md-2">
+                <strong>Over 90 Days:</strong> {{ formatCurrency(financialReportData.agingReport.totalOver90Days) }}
+              </div>
+              <div class="col-md-2">
+                <strong>Grand Total:</strong> {{ formatCurrency(financialReportData.agingReport.grandTotal) }}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Compliance Reports Content -->
+  <div *ngIf="!reportLoading && selectedReportType === 'compliance' && complianceReportData">
+    <!-- Summary Cards -->
+    <div class="row g-4 mb-4">
+      <div class="col-xl-3 col-md-6">
+        <div class="report-stat-card report-stat-primary">
+          <div class="stat-icon">
+            <i class="fas fa-users"></i>
+          </div>
+          <div class="stat-content">
+            <div class="stat-label">Total Drivers</div>
+            <div class="stat-value">{{ complianceReportData.summary.totalDrivers }}</div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="col-xl-3 col-md-6">
+        <div class="report-stat-card report-stat-success">
+          <div class="stat-icon">
+            <i class="fas fa-check-circle"></i>
+          </div>
+          <div class="stat-content">
+            <div class="stat-label">Compliant Drivers</div>
+            <div class="stat-value">{{ complianceReportData.summary.compliantDrivers }}</div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="col-xl-3 col-md-6">
+        <div class="report-stat-card report-stat-warning">
+          <div class="stat-icon">
+            <i class="fas fa-exclamation-triangle"></i>
+          </div>
+          <div class="stat-content">
+            <div class="stat-label">Non-Compliant</div>
+            <div class="stat-value">{{ complianceReportData.summary.nonCompliantDrivers }}</div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="col-xl-3 col-md-6">
+        <div class="report-stat-card report-stat-info">
+          <div class="stat-icon">
+            <i class="fas fa-clipboard-check"></i>
+          </div>
+          <div class="stat-content">
+            <div class="stat-label">Audit Score</div>
+            <div class="stat-value">{{ complianceReportData.auditReadiness.overallScore }}%</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Compliance Details -->
+    <div class="row g-4 mb-4">
+      <div class="col-xl-6">
+        <div class="card report-card">
+          <div class="card-header">
+            <h5 class="mb-0">
+              <i class="fas fa-info-circle me-2"></i>Compliance Summary
+            </h5>
+          </div>
+          <div class="card-body">
+            <div class="summary-list">
+              <div class="summary-item">
+                <i class="fas fa-id-card text-warning"></i>
+                <div class="summary-content">
+                  <strong>Expiring CDLs</strong>
+                  <small>{{ complianceReportData.summary.expiringCDLs }} licenses expiring soon</small>
+                </div>
+              </div>
+              <div class="summary-item">
+                <i class="fas fa-heartbeat text-danger"></i>
+                <div class="summary-content">
+                  <strong>Expiring Medical Cards</strong>
+                  <small>{{ complianceReportData.summary.expiringMedicalCards }} cards expiring soon</small>
+                </div>
+              </div>
+              <div class="summary-item">
+                <i class="fas fa-exclamation-circle text-warning"></i>
+                <div class="summary-content">
+                  <strong>Overdue Items</strong>
+                  <small>{{ complianceReportData.summary.overdueItems }} items require attention</small>
+                </div>
+              </div>
+              <div class="summary-item">
+                <i class="fas fa-clipboard-list text-info"></i>
+                <div class="summary-content">
+                  <strong>Total Inspections</strong>
+                  <small>{{ complianceReportData.summary.totalInspections }} inspections completed</small>
+                </div>
+              </div>
+              <div class="summary-item">
+                <i class="fas fa-check text-success"></i>
+                <div class="summary-content">
+                  <strong>Passed Inspections</strong>
+                  <small>{{ complianceReportData.summary.passedInspections }} passed ({{ formatPercentage(complianceReportData.summary.inspectionPassRate) }})</small>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-xl-6">
+        <div class="card report-card">
+          <div class="card-header">
+            <h5 class="mb-0">
+              <i class="fas fa-shield-alt me-2"></i>Audit Readiness
+            </h5>
+          </div>
+          <div class="card-body">
+            <div class="summary-list">
+              <div class="summary-item">
+                <i class="fas" [ngClass]="complianceReportData.auditReadiness.isReady ? 'fa-check-circle text-success' : 'fa-times-circle text-danger'"></i>
+                <div class="summary-content">
+                  <strong>Audit Status</strong>
+                  <small>{{ complianceReportData.auditReadiness.isReady ? 'Ready for Audit' : 'Not Ready for Audit' }}</small>
+                </div>
+              </div>
+              <div class="summary-item">
+                <i class="fas fa-exclamation-triangle text-warning"></i>
+                <div class="summary-content">
+                  <strong>Total Violations</strong>
+                  <small>{{ complianceReportData.auditReadiness.totalViolations }} violations recorded</small>
+                </div>
+              </div>
+              <div class="summary-item">
+                <i class="fas fa-file-alt text-info"></i>
+                <div class="summary-content">
+                  <strong>Open Incidents</strong>
+                  <small>{{ complianceReportData.auditReadiness.openIncidents }} incidents pending resolution</small>
+                </div>
+              </div>
+              <div class="summary-item" *ngIf="complianceReportData.auditReadiness.missingItems.length > 0">
+                <i class="fas fa-times text-danger"></i>
+                <div class="summary-content">
+                  <strong>Missing Items</strong>
+                  <small>{{ complianceReportData.auditReadiness.missingItems.length }} items missing</small>
+                </div>
+              </div>
+              <div class="summary-item" *ngIf="complianceReportData.auditReadiness.expiringItems.length > 0">
+                <i class="fas fa-clock text-warning"></i>
+                <div class="summary-content">
+                  <strong>Expiring Items</strong>
+                  <small>{{ complianceReportData.auditReadiness.expiringItems.length }} items expiring soon</small>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- No Data States -->
+  <div *ngIf="!reportLoading && selectedReportType === 'drivers' && !driverReportData" class="empty-state-container">
+    <div class="empty-state">
+      <div class="empty-state-icon">
+        <i class="fas fa-inbox"></i>
+      </div>
+      <h4>No Data Available</h4>
+      <p>No driver report data found.</p>
+      <button class="btn btn-outline-primary mt-3" (click)="onClearFilters()">
+        <i class="fas fa-redo me-2"></i>Clear Filters
+      </button>
+    </div>
+  </div>
+
+  <div *ngIf="!reportLoading && selectedReportType === 'financial' && !financialReportData" class="empty-state-container">
+    <div class="empty-state">
+      <div class="empty-state-icon">
+        <i class="fas fa-inbox"></i>
+      </div>
+      <h4>No Data Available</h4>
+      <p>No financial report data found for the selected filters and date range.</p>
+      <button class="btn btn-outline-primary mt-3" (click)="onClearFilters()">
+        <i class="fas fa-redo me-2"></i>Clear Filters
+      </button>
+    </div>
+  </div>
+
+  <div *ngIf="!reportLoading && selectedReportType === 'compliance' && !complianceReportData" class="empty-state-container">
+    <div class="empty-state">
+      <div class="empty-state-icon">
+        <i class="fas fa-inbox"></i>
+      </div>
+      <h4>No Data Available</h4>
+      <p>No compliance report data found for the selected filters and date range.</p>
+      <button class="btn btn-outline-primary mt-3" (click)="onClearFilters()">
+        <i class="fas fa-redo me-2"></i>Clear Filters
+      </button>
+    </div>
+  </div>
+
+  <!-- No Data State -->
+  <div *ngIf="!reportLoading && selectedReportType === 'loads' && !loadReportData" class="empty-state-container">
+    <div class="empty-state">
+      <div class="empty-state-icon">
+        <i class="fas fa-inbox"></i>
+      </div>
+      <h4>No Data Available</h4>
+      <p>No data found for the selected filters and date range.</p>
+      <button class="btn btn-outline-primary mt-3" (click)="onClearFilters()">
+        <i class="fas fa-redo me-2"></i>Clear Filters
+      </button>
+    </div>
+  </div>
+</div>

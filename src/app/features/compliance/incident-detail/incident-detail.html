@@ -1,0 +1,178 @@
+<div class="container-fluid">
+  <!-- Compliance Navigation Tabs -->
+  <ul class="nav nav-tabs mb-4" role="tablist">
+    <li class="nav-item" role="presentation">
+      <a class="nav-link" routerLink="/compliance/dashboard" routerLinkActive="active">
+        <i class="fas fa-chart-pie me-2"></i>Dashboard
+      </a>
+    </li>
+    <li class="nav-item" role="presentation">
+      <a class="nav-link active" routerLink="/compliance/incidents" routerLinkActive="active" [routerLinkActiveOptions]="{exact: false}">
+        <i class="fas fa-exclamation-triangle me-2"></i>Incidents
+      </a>
+    </li>
+  </ul>
+
+  @if (loading) {
+    <div class="text-center py-5">
+      <div class="spinner-border text-primary" role="status">
+        <span class="visually-hidden">Loading...</span>
+      </div>
+    </div>
+  }
+
+  @if (!loading && incident) {
+    <div class="d-flex justify-content-between align-items-center mb-4">
+      <div>
+        <h2>Incident {{ incident.incidentNumber }}</h2>
+        <p class="text-muted mb-0">{{ incident.incidentDate | date:'medium' }}</p>
+      </div>
+      <div>
+        <button class="btn btn-outline-secondary me-2" (click)="backToList()">
+          <i class="bi bi-arrow-left me-2"></i>Back to List
+        </button>
+        <button class="btn btn-warning me-2" (click)="openStatusUpdate()" title="Update Status">
+          <i class="bi bi-flag-fill me-2"></i>Update Status
+        </button>
+        <button class="btn btn-primary" (click)="editIncident()">
+          <i class="bi bi-pencil me-2"></i>Edit
+        </button>
+      </div>
+    </div>
+
+    <div class="row">
+      <!-- Basic Information -->
+      <div class="col-md-8">
+        <div class="card mb-4">
+          <div class="card-header">
+            <h5 class="mb-0">Incident Details</h5>
+          </div>
+          <div class="card-body">
+            <dl class="row">
+              <dt class="col-sm-3">Incident Number:</dt>
+              <dd class="col-sm-9">{{ incident.incidentNumber }}</dd>
+
+              <dt class="col-sm-3">Incident Date:</dt>
+              <dd class="col-sm-9">{{ incident.incidentDate | date:'MM/dd/yyyy' }}</dd>
+
+              <dt class="col-sm-3">Reported Date:</dt>
+              <dd class="col-sm-9">{{ incident.reportedDate ? (incident.reportedDate | date:'MM/dd/yyyy') : 'N/A' }}</dd>
+
+              <dt class="col-sm-3">Type:</dt>
+              <dd class="col-sm-9">{{ incident.incidentType }}</dd>
+
+              <dt class="col-sm-3">Severity:</dt>
+              <dd class="col-sm-9">
+                <span class="badge" [ngClass]="getSeverityClass(incident.severity)">
+                  {{ incident.severity }}
+                </span>
+              </dd>
+
+              <dt class="col-sm-3">Status:</dt>
+              <dd class="col-sm-9">
+                @if (incident.resolved) {
+                  <span class="badge bg-success">Resolved</span>
+                } @else {
+                  <span class="badge bg-warning">Open</span>
+                }
+              </dd>
+
+              <dt class="col-sm-3">Owner Operator:</dt>
+              <dd class="col-sm-9">{{ incident.driverName || 'N/A' }}</dd>
+
+              <dt class="col-sm-3">Load:</dt>
+              <dd class="col-sm-9">{{ incident.loadNumber || 'N/A' }}</dd>
+
+              <dt class="col-sm-3">Equipment:</dt>
+              <dd class="col-sm-9">{{ incident.equipmentType || 'N/A' }}</dd>
+
+              <dt class="col-sm-3">Description:</dt>
+              <dd class="col-sm-9">{{ incident.description }}</dd>
+
+              <dt class="col-sm-3">Location:</dt>
+              <dd class="col-sm-9">
+                @if (incident.location || incident.city || incident.state) {
+                  {{ getLocationString() }}
+                } @else {
+                  N/A
+                }
+              </dd>
+
+              @if (incident.weatherConditions) {
+                <dt class="col-sm-3">Weather:</dt>
+                <dd class="col-sm-9">{{ incident.weatherConditions }}</dd>
+              }
+
+              @if (incident.roadConditions) {
+                <dt class="col-sm-3">Road Conditions:</dt>
+                <dd class="col-sm-9">{{ incident.roadConditions }}</dd>
+              }
+
+              @if (incident.estimatedCost) {
+                <dt class="col-sm-3">Estimated Cost:</dt>
+                <dd class="col-sm-9">${{ incident.estimatedCost | number:'1.2-2' }}</dd>
+              }
+            </dl>
+          </div>
+        </div>
+      </div>
+
+      <!-- Reporting Information -->
+      <div class="col-md-4">
+        <div class="card mb-4">
+          <div class="card-header">
+            <h5 class="mb-0">Reporting</h5>
+          </div>
+          <div class="card-body">
+            <dl class="row">
+              <dt class="col-sm-6">DOT Reportable:</dt>
+              <dd class="col-sm-6">
+                @if (incident.isDOTReportable) {
+                  <span class="badge bg-danger">Yes</span>
+                } @else {
+                  <span class="badge bg-secondary">No</span>
+                }
+              </dd>
+
+              @if (incident.dotReportNumber) {
+                <dt class="col-sm-6">DOT Report #:</dt>
+                <dd class="col-sm-6">{{ incident.dotReportNumber }}</dd>
+              }
+
+              <dt class="col-sm-6">OSHA Reportable:</dt>
+              <dd class="col-sm-6">
+                @if (incident.isOSHAReportable) {
+                  <span class="badge bg-danger">Yes</span>
+                } @else {
+                  <span class="badge bg-secondary">No</span>
+                }
+              </dd>
+
+              @if (incident.oshaReportNumber) {
+                <dt class="col-sm-6">OSHA Report #:</dt>
+                <dd class="col-sm-6">{{ incident.oshaReportNumber }}</dd>
+              }
+
+              @if (incident.resolvedDate) {
+                <dt class="col-sm-6">Resolved Date:</dt>
+                <dd class="col-sm-6">{{ incident.resolvedDate | date:'MM/dd/yyyy' }}</dd>
+              }
+            </dl>
+          </div>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- Status Update Modal -->
+  <app-incident-status-update
+    [show]="showStatusModal"
+    [incidentId]="incident?.incidentId || null"
+    [currentResolved]="incident?.resolved || false"
+    [currentResolvedDate]="incident?.resolvedDate"
+    [incidentDate]="incident?.incidentDate || ''"
+    (close)="onStatusModalClose()"
+    (updated)="onStatusUpdated()">
+  </app-incident-status-update>
+</div>
+

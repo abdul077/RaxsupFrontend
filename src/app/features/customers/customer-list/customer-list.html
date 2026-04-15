@@ -1,0 +1,431 @@
+<div class="customer-list-container">
+  <!-- Page Header - dashboard style (same as loads) -->
+  <div class="tms-dashboard-header mb-4">
+    <div class="tms-header-left">
+      <div class="tms-header-icon">
+        <i class="fas fa-users"></i>
+      </div>
+      <div>
+        <h1 class="tms-title">Broker Management</h1>
+        <p class="tms-subtitle">Manage broker accounts and information</p>
+      </div>
+    </div>
+    <button class="btn-tms-primary" *ngIf="canEditCustomers" (click)="openCreateModal()">
+      <i class="fas fa-plus me-2"></i>Add New Broker
+    </button>
+  </div>
+
+  <!-- Broker actions cell template: same style as loads page (dropdown with three dots) -->
+  <ng-template #customerActionsCell let-customer>
+    <div class="dropdown" (click)="$event.stopPropagation()">
+      <button type="button" class="tms-actions-btn" data-bs-toggle="dropdown" aria-expanded="false" title="Actions">
+        <i class="fas fa-ellipsis-h tms-actions-dots"></i>
+      </button>
+      <ul class="dropdown-menu dropdown-menu-end tms-actions-dropdown">
+        <li>
+          <a class="dropdown-item" href="javascript:void(0)" (click)="toggleActive(customer)">
+            {{ customer.isActive ? 'Deactivate' : 'Activate' }} Broker
+          </a>
+        </li>
+        <li><hr class="dropdown-divider"></li>
+        <li>
+          <a class="dropdown-item" href="javascript:void(0)" (click)="openEditCustomer(customer)">Edit Broker...</a>
+        </li>
+        <li>
+          <a class="dropdown-item" [routerLink]="['/customers', customer.customerId]">View Details...</a>
+        </li>
+      </ul>
+    </div>
+  </ng-template>
+
+  <!-- Brokers Table -->
+  <div class="customer-list-card">
+    <div class="customer-list-card-header">
+      <h5 class="mb-0">
+        <i class="fas fa-users me-2"></i>
+        Brokers
+      </h5>
+    </div>
+    <div class="customer-list-card-body p-0">
+      <app-data-table
+        [config]="tableConfig"
+        [dataSource]="customerDataSource"
+        [refreshTrigger]="refreshTrigger"
+        [loading]="loading">
+      </app-data-table>
+    </div>
+  </div>
+
+  <!-- Create Broker Modal, styled like the Enhanced Edit Modal -->
+  <div 
+    *ngIf="showCreateModal" 
+    class="modal-overlay"
+    [ngStyle]="{ 'backdrop-filter': 'blur(6px)', 'background': 'rgba(26, 54, 93, 0.30)' }"
+    (click)="showCreateModal = false"
+  >
+    <div 
+      class="modal-content enhanced-modal" 
+      (click)="$event.stopPropagation()" 
+      style="background: #fff; color: #1a365d;"
+    >
+      <div class="modal-header d-flex justify-content-between align-items-center">
+        <h2 class="modal-title mb-0">
+          <i class="bi bi-plus-square"></i> Add New Broker
+        </h2>
+        <button 
+          class="btn-close" 
+          (click)="showCreateModal = false" 
+          aria-label="Close"
+          style="filter: invert(100%);"
+        ></button>
+      </div>
+      <div class="modal-body enhanced-modal-body">
+        <form #customerForm="ngForm" (ngSubmit)="createCustomer()" novalidate autocomplete="off">
+          <div class="form-row row">
+            <div class="form-group col-md-6 mb-3">
+              <label for="createName" class="form-label" style="color: #1a365d;">
+                <i class="bi bi-person-circle"></i> Broker Name <span class="text-danger">*</span>
+              </label>
+              <input 
+                id="createName"
+                type="text" 
+                class="form-control" 
+                [(ngModel)]="newCustomer.name" 
+                name="name" #name="ngModel" 
+                required minlength="1" pattern=".*\S+.*"
+                placeholder="e.g. Acme Corp"
+                style="border: 1.5px solid #1a365d; color: #1a365d;"
+              >
+              <div *ngIf="name.invalid && (name.dirty || name.touched)" class="invalid-feedback d-block small" style="color: #000;">
+                <div *ngIf="name.errors?.['required']">Broker name is required.</div>
+                <div *ngIf="name.errors?.['minlength']">Broker name cannot be empty.</div>
+                <div *ngIf="name.errors?.['pattern']">Broker name cannot be only whitespace.</div>
+              </div>
+            </div>
+            <div class="form-group col-md-6 mb-3">
+              <label for="createContactPerson" class="form-label" style="color: #1a365d;">
+                <i class="bi bi-person-lines-fill"></i> Contact Person <span class="text-danger">*</span>
+              </label>
+              <input 
+                id="createContactPerson"
+                type="text" 
+                class="form-control" 
+                [(ngModel)]="newCustomer.contactPerson" 
+                name="contactPerson" #contactPerson="ngModel" 
+                required minlength="1" pattern=".*\S+.*"
+                placeholder="e.g. John Doe"
+                style="border: 1.5px solid #1a365d; color: #1a365d;"
+              >
+              <div *ngIf="contactPerson.invalid && (contactPerson.dirty || contactPerson.touched)" class="invalid-feedback d-block small" style="color: #000;">
+                <div *ngIf="contactPerson.errors?.['required']">Contact person is required.</div>
+                <div *ngIf="contactPerson.errors?.['minlength']">Contact person cannot be empty.</div>
+                <div *ngIf="contactPerson.errors?.['pattern']">Contact person cannot be only whitespace.</div>
+              </div>
+            </div>
+          </div>
+          <div class="form-row row">
+            <div class="form-group col-md-6 mb-3">
+              <label for="createEmail" class="form-label" style="color: #1a365d;">
+                <i class="bi bi-envelope"></i> Email <span class="text-danger">*</span>
+              </label>
+              <input 
+                id="createEmail"
+                type="email" 
+                class="form-control" 
+                [(ngModel)]="newCustomer.email" 
+                name="email" #email="ngModel" 
+                required
+                placeholder="e.g. john@acme.com"
+                style="border: 1.5px solid #1a365d; color: #1a365d;"
+              >
+              <div *ngIf="email.invalid && (email.dirty || email.touched)" class="invalid-feedback d-block small" style="color: #000;">
+                <div *ngIf="email.errors?.['required']">Email is required.</div>
+                <div *ngIf="email.errors?.['email']">Please enter a valid email address.</div>
+              </div>
+            </div>
+            <div class="form-group col-md-6 mb-3">
+              <label for="createPhone" class="form-label" style="color: #1a365d;">
+                <i class="bi bi-telephone"></i> Phone <span class="text-danger">*</span>
+              </label>
+              <input 
+                id="createPhone"
+                type="tel" 
+                class="form-control" 
+                [(ngModel)]="newCustomer.phone" 
+                name="phone" #phone="ngModel" 
+                required minlength="1" pattern=".*\S+.*"
+                placeholder="e.g. (555) 123-4567"
+                style="border: 1.5px solid #1a365d; color: #1a365d;"
+              >
+              <div *ngIf="phone.invalid && (phone.dirty || phone.touched)" class="invalid-feedback d-block small" style="color: #000;">
+                <div *ngIf="phone.errors?.['required']">Phone number is required.</div>
+                <div *ngIf="phone.errors?.['minlength']">Phone number cannot be empty.</div>
+                <div *ngIf="phone.errors?.['pattern']">Phone number cannot be only whitespace.</div>
+              </div>
+            </div>
+          </div>
+          <div class="form-row row">
+            <div class="form-group col-md-6 mb-3">
+              <label for="createMcNumber" class="form-label" style="color: #1a365d;">
+                <i class="bi bi-hash"></i> MC Number
+              </label>
+              <input
+                id="createMcNumber"
+                type="text"
+                class="form-control"
+                [(ngModel)]="newCustomer.mcNumber"
+                name="mcNumber"
+                maxlength="50"
+                placeholder="e.g. MC-123456"
+                style="border: 1.5px solid #1a365d; color: #1a365d;"
+              />
+            </div>
+            <div class="form-group col-md-6 mb-3">
+              <label for="createDotNumber" class="form-label" style="color: #1a365d;">
+                <i class="bi bi-truck"></i> DOT Number
+              </label>
+              <input
+                id="createDotNumber"
+                type="text"
+                class="form-control"
+                [(ngModel)]="newCustomer.dotNumber"
+                name="dotNumber"
+                maxlength="50"
+                placeholder="e.g. 1234567"
+                style="border: 1.5px solid #1a365d; color: #1a365d;"
+              />
+            </div>
+          </div>
+          <div class="form-group mb-3">
+            <label for="createAddress" class="form-label" style="color: #1a365d;">
+              <i class="bi bi-geo-alt"></i> Address <span class="text-danger">*</span>
+            </label>
+            <textarea 
+              id="createAddress"
+              class="form-control" 
+              [(ngModel)]="newCustomer.address" 
+              name="address" #address="ngModel" 
+              rows="3" required minlength="1"
+              placeholder="Street, City, State, ZIP"
+              style="border: 1.5px solid #1a365d; color: #1a365d;"
+            ></textarea>
+            <div *ngIf="address.invalid && (address.dirty || address.touched)" class="invalid-feedback d-block small" style="color: #000;">
+              <div *ngIf="address.errors?.['required']">Address is required.</div>
+              <div *ngIf="address.errors?.['minlength']">Address cannot be empty.</div>
+            </div>
+          </div>
+          <div class="form-actions d-flex justify-content-end gap-2 mt-4">
+            <button 
+              type="button" 
+              class="btn btn-secondary" 
+              (click)="showCreateModal = false"
+              style="min-width: 110px;"
+              style="color: #fff; background: #1a365d; border: 1.5px solid #1a365d;"
+              onmouseover="this.style.background='#000';this.style.color='#fff';" 
+              onmouseout="this.style.background='#1a365d';this.style.color='#fff';"
+            >Cancel</button>
+            <button 
+              type="submit" 
+              class="btn btn-primary" 
+              [disabled]="customerForm.invalid"
+              style="min-width: 150px;"
+              style="background: #1a365d; color: #fff; border: 1.5px solid #1a365d;"
+              onmouseover="this.style.background='#000';this.style.color='#fff';" 
+              onmouseout="this.style.background='#1a365d';this.style.color='#fff';"
+            >Create Broker</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Improved Edit Broker Modal UI -->
+  <div 
+    *ngIf="showEditModal" 
+    class="modal-overlay"
+    [ngStyle]="{ 'backdrop-filter': 'blur(6px)', 'background': 'rgba(26, 54, 93, 0.30)' }"
+    (click)="closeEditModal()"
+  >
+    <!-- blue background with opacity -->
+    <div 
+      class="modal-content enhanced-modal" 
+      (click)="$event.stopPropagation()" 
+      style="background: #fff; color: #1a365d; "
+    >
+      <div 
+        class="modal-header d-flex justify-content-between align-items-center" 
+        
+      >
+        <h2 class="modal-title mb-0">
+          <i class="bi bi-pencil-square"></i> Edit Broker
+        </h2>
+        <button 
+          class="btn-close" 
+          (click)="closeEditModal()" 
+          aria-label="Close"
+          style="filter: invert(100%);"
+        ></button>
+      </div>
+      <div class="modal-body enhanced-modal-body" *ngIf="editCustomer">
+        <form #editCustomerForm="ngForm" (ngSubmit)="updateCustomer()" novalidate autocomplete="off">
+          <div class="form-row row">
+            <div class="form-group col-md-6 mb-3">
+              <label for="editName" class="form-label" style="color: #1a365d;">
+                <i class="bi bi-person-circle"></i> Broker Name <span class="text-danger">*</span>
+              </label>
+              <input 
+                id="editName" 
+                type="text" 
+                class="form-control" 
+                [(ngModel)]="editCustomer.name" 
+                name="editName" #editName="ngModel" 
+                required minlength="1" pattern=".*\S+.*" 
+                placeholder="e.g. Acme Corp"
+                style="border: 1.5px solid #1a365d; color: #1a365d;"
+              >
+              <div *ngIf="editName.invalid && (editName.dirty || editName.touched)" class="invalid-feedback d-block small" style="color: #000;">
+                <div *ngIf="editName.errors?.['required']">Broker name is required.</div>
+                <div *ngIf="editName.errors?.['minlength']">Broker name cannot be empty.</div>
+                <div *ngIf="editName.errors?.['pattern']">Broker name cannot be only whitespace.</div>
+              </div>
+            </div>
+            <div class="form-group col-md-6 mb-3">
+              <label for="editContactPerson" class="form-label" style="color: #1a365d;">
+                <i class="bi bi-person-lines-fill"></i> Contact Person <span class="text-danger">*</span>
+              </label>
+              <input 
+                id="editContactPerson" 
+                type="text" 
+                class="form-control" 
+                [(ngModel)]="editCustomer.contactPerson" 
+                name="editContactPerson" #editContactPerson="ngModel" 
+                required minlength="1" pattern=".*\S+.*" 
+                placeholder="e.g. Jane Doe"
+                style="border: 1.5px solid #1a365d; color: #1a365d;"
+              >
+              <div *ngIf="editContactPerson.invalid && (editContactPerson.dirty || editContactPerson.touched)" class="invalid-feedback d-block small" style="color: #000;">
+                <div *ngIf="editContactPerson.errors?.['required']">Contact person is required.</div>
+                <div *ngIf="editContactPerson.errors?.['minlength']">Contact person cannot be empty.</div>
+                <div *ngIf="editContactPerson.errors?.['pattern']">Contact person cannot be only whitespace.</div>
+              </div>
+            </div>
+          </div>
+          <div class="form-row row">
+            <div class="form-group col-md-6 mb-3">
+              <label for="editEmail" class="form-label" style="color: #1a365d;">
+                <i class="bi bi-envelope"></i> Email <span class="text-danger">*</span>
+              </label>
+              <input 
+                id="editEmail" 
+                type="email" 
+                class="form-control" 
+                [(ngModel)]="editCustomer.email" 
+                name="editEmail" #editEmail="ngModel" 
+                required 
+                placeholder="e.g. contact@acme.com"
+                style="border: 1.5px solid #1a365d; color: #1a365d;"
+              >
+              <div *ngIf="editEmail.invalid && (editEmail.dirty || editEmail.touched)" class="invalid-feedback d-block small" style="color: #000;">
+                <div *ngIf="editEmail.errors?.['required']">Email is required.</div>
+                <div *ngIf="editEmail.errors?.['email']">Please enter a valid email address.</div>
+              </div>
+            </div>
+            <div class="form-group col-md-6 mb-3">
+              <label for="editPhone" class="form-label" style="color: #1a365d;">
+                <i class="bi bi-telephone"></i> Phone <span class="text-danger">*</span>
+              </label>
+              <input 
+                id="editPhone" 
+                type="tel" 
+                class="form-control" 
+                [(ngModel)]="editCustomer.phone" 
+                name="editPhone" #editPhone="ngModel" 
+                required minlength="1" pattern=".*\S+.*" 
+                placeholder="e.g. (555) 222-3333"
+                style="border: 1.5px solid #1a365d; color: #1a365d;"
+              >
+              <div *ngIf="editPhone.invalid && (editPhone.dirty || editPhone.touched)" class="invalid-feedback d-block small" style="color: #000;">
+                <div *ngIf="editPhone.errors?.['required']">Phone number is required.</div>
+                <div *ngIf="editPhone.errors?.['minlength']">Phone number cannot be empty.</div>
+                <div *ngIf="editPhone.errors?.['pattern']">Phone number cannot be only whitespace.</div>
+              </div>
+            </div>
+          </div>
+          <div class="form-row row">
+            <div class="form-group col-md-6 mb-3">
+              <label for="editMcNumber" class="form-label" style="color: #1a365d;">
+                <i class="bi bi-hash"></i> MC Number
+              </label>
+              <input
+                id="editMcNumber"
+                type="text"
+                class="form-control"
+                [(ngModel)]="editCustomer.mcNumber"
+                name="editMcNumber"
+                maxlength="50"
+                placeholder="e.g. MC-123456"
+                style="border: 1.5px solid #1a365d; color: #1a365d;"
+              />
+            </div>
+            <div class="form-group col-md-6 mb-3">
+              <label for="editDotNumber" class="form-label" style="color: #1a365d;">
+                <i class="bi bi-truck"></i> DOT Number
+              </label>
+              <input
+                id="editDotNumber"
+                type="text"
+                class="form-control"
+                [(ngModel)]="editCustomer.dotNumber"
+                name="editDotNumber"
+                maxlength="50"
+                placeholder="e.g. 1234567"
+                style="border: 1.5px solid #1a365d; color: #1a365d;"
+              />
+            </div>
+          </div>
+          <div class="form-group mb-4">
+            <label for="editAddress" class="form-label" style="color: #1a365d;">
+              <i class="bi bi-geo-alt"></i> Address <span class="text-danger">*</span>
+            </label>
+            <textarea 
+              id="editAddress" 
+              [(ngModel)]="editCustomer.address" 
+              name="editAddress" #editAddress="ngModel" 
+              class="form-control" rows="7" 
+              required minlength="1" 
+              placeholder="e.g. 123 Main St, Springfield"
+              style="border: 1.5px solid #1a365d; color: #1a365d;"
+            ></textarea>
+            <div *ngIf="editAddress.invalid && (editAddress.dirty || editAddress.touched)" class="invalid-feedback d-block small" style="color: #000;">
+              <div *ngIf="editAddress.errors?.['required']">Address is required.</div>
+              <div *ngIf="editAddress.errors?.['minlength']">Address cannot be empty.</div>
+            </div>
+          </div>
+          <div class="form-actions d-flex justify-content-end gap-2 mt-3">
+            <button 
+              type="button" 
+              class="btn btn-outline-secondary" 
+              (click)="closeEditModal()" 
+              style="color: #fff; background: #1a365d; border: 1.5px solid #1a365d;"
+              onmouseover="this.style.background='#000';this.style.color='#fff';" 
+              onmouseout="this.style.background='#1a365d';this.style.color='#fff';"
+            >
+              <i class="bi bi-x-circle"></i> Cancel
+            </button>
+            <button 
+              type="submit" 
+              class="btn btn-success" 
+              [disabled]="editCustomerForm.invalid"
+              style="background: #1a365d; color: #fff; border: 1.5px solid #1a365d;"
+              onmouseover="this.style.background='#000';this.style.color='#fff';"
+              onmouseout="this.style.background='#1a365d';this.style.color='#fff';"
+            >
+              <i class="bi bi-check-circle"></i> Save Changes
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+</div>

@@ -1,0 +1,251 @@
+.email-log-list {
+  padding: 20px;
+
+  .page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+    gap: 15px;
+
+    h1 {
+      margin: 0;
+    }
+
+    .filters {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      flex-wrap: wrap;
+
+      .filter-input {
+        padding: 8px 12px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        min-width: 200px;
+      }
+
+      .filter-select {
+        padding: 8px 12px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+      }
+    }
+  }
+
+  .loading {
+    text-align: center;
+    padding: 40px;
+    color: #666;
+  }
+
+  .empty-state {
+    text-align: center;
+    padding: 40px;
+    color: #666;
+  }
+
+  .email-logs-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: white;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+
+    thead {
+      background: #f5f5f5;
+
+      th {
+        padding: 12px;
+        text-align: left;
+        font-weight: 600;
+        border-bottom: 2px solid #ddd;
+      }
+    }
+
+    tbody {
+      tr {
+        border-bottom: 1px solid #eee;
+        transition: background-color 0.2s;
+
+        &:hover {
+          background-color: #f9f9f9;
+        }
+
+        &.status-sent {
+          border-left: 3px solid #28a745;
+        }
+
+        &.status-failed {
+          border-left: 3px solid #dc3545;
+        }
+
+        &.status-pending {
+          border-left: 3px solid #ffc107;
+        }
+
+        td {
+          padding: 12px;
+          vertical-align: top;
+        }
+      }
+    }
+
+    .time-display {
+      .time-ago {
+        font-weight: 500;
+        color: #333;
+      }
+
+      .time-full {
+        font-size: 0.85em;
+        color: #666;
+        margin-top: 4px;
+      }
+    }
+
+    .subject-cell {
+      max-width: 300px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .email-address {
+      font-size: 0.9em;
+      color: #666;
+    }
+
+    .status-badge {
+      display: inline-block;
+      padding: 4px 12px;
+      border-radius: 12px;
+      font-size: 0.85em;
+      font-weight: 500;
+
+      &.status-sent {
+        background-color: #d4edda;
+        color: #155724;
+      }
+
+      &.status-failed {
+        background-color: #f8d7da;
+        color: #721c24;
+      }
+
+      &.status-pending {
+        background-color: #fff3cd;
+        color: #856404;
+      }
+    }
+
+    .btn {
+      padding: 6px 12px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 0.9em;
+      transition: background-color 0.2s;
+
+      &.btn-sm {
+        padding: 4px 8px;
+        font-size: 0.85em;
+      }
+
+      &:hover {
+        opacity: 0.9;
+      }
+    }
+  }
+
+  .modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    padding: 20px;
+  }
+
+  .modal-content {
+    background: white;
+    border-radius: 8px;
+    max-width: 800px;
+    width: 100%;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 20px;
+      border-bottom: 1px solid #eee;
+
+      h2 {
+        margin: 0;
+      }
+
+      .close-btn {
+        background: none;
+        border: none;
+        font-size: 24px;
+        cursor: pointer;
+        color: #666;
+        padding: 0;
+        width: 30px;
+        height: 30px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+
+        &:hover {
+          color: #000;
+        }
+      }
+    }
+
+    .modal-body {
+      padding: 20px;
+
+      .detail-row {
+        margin-bottom: 15px;
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+
+        label {
+          font-weight: 600;
+          color: #333;
+        }
+
+        span {
+          color: #666;
+        }
+
+        .error-message {
+          color: #dc3545;
+          background: #f8d7da;
+          padding: 8px;
+          border-radius: 4px;
+        }
+
+        .email-body {
+          max-height: 400px;
+          overflow-y: auto;
+          padding: 12px;
+          background: #f9f9f9;
+          border-radius: 4px;
+          border: 1px solid #ddd;
+          margin-top: 8px;
+        }
+      }
+    }
+  }
+}

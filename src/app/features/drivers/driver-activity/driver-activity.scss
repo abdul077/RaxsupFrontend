@@ -1,0 +1,39 @@
+.driver-activity-container {
+  padding: 20px;
+
+  .timeline {
+    position: relative;
+    padding-left: 30px;
+
+    .timeline-item {
+      position: relative;
+      padding-bottom: 20px;
+      border-left: 2px solid #dee2e6;
+
+      &:last-child {
+        border-left: none;
+      }
+
+      .timeline-marker {
+        position: absolute;
+        left: -15px;
+        width: 30px;
+        height: 30px;
+        background: #007bff;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+      }
+
+      .timeline-content {
+        margin-left: 40px;
+        padding: 10px;
+        background: #f8f9fa;
+        border-radius: 4px;
+      }
+    }
+  }
+}
+

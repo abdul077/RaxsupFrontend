@@ -1,0 +1,349 @@
+<div class="container-fluid">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+      <h4 class="mb-1">{{ isEditMode ? 'Edit Driver' : 'Add New Driver' }}</h4>
+      <p class="text-muted mb-0">{{ isEditMode ? 'Update driver information' : 'Create a new driver profile' }}</p>
+    </div>
+    <button class="btn btn-outline-secondary" (click)="cancel()">
+      <i class="fas fa-times me-2"></i>Cancel
+    </button>
+  </div>
+
+  @if (isEditMode && !loading) {
+    <div class="card mb-4 profile-completion-horizontal-card">
+      <div class="card-body profile-completion-horizontal-body">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+          <span class="profile-completion-title">Profile completion</span>
+          <span class="profile-completion-total">{{ profileCompletionPercent }}%</span>
+        </div>
+        <div class="profile-completion-horizontal-track">
+          <div class="profile-completion-horizontal-fill" role="progressbar"
+               [style.width.%]="profileCompletionPercent"
+               [attr.aria-valuenow]="profileCompletionPercent"
+               aria-valuemin="0" aria-valuemax="100"></div>
+        </div>
+      </div>
+    </div>
+  }
+
+  @if (loading) {
+    <div class="text-center py-5">
+      <div class="spinner-border text-primary" role="status">
+        <span class="visually-hidden">Loading...</span>
+      </div>
+    </div>
+  }
+
+  @if (!loading) {
+    <form (ngSubmit)="onSubmit()">
+    @if (showErrors && validationErrors.length > 0) {
+      <div class="alert alert-danger validation-alert mb-4">
+        <i class="fas fa-exclamation-triangle me-2"></i>
+        <strong>Please correct the following errors:</strong>
+        <ul class="mb-0 mt-2">
+          @for (error of validationErrors; track $index) {
+            <li>{{ error }}</li>
+          }
+        </ul>
+      </div>
+    }
+    <div class="row" [class.driver-edit-layout]="isEditMode">
+      @if (isEditMode) {
+        <div class="driver-edit-sidebar">
+          <div class="card profile-completion-vertical-card">
+            <div class="card-body profile-completion-vertical-body">
+              <h6 class="profile-completion-sidebar-title">By section</h6>
+              <div class="profile-completion-vertical">
+                @for (section of profileCompletionSections; track section.label) {
+                  <div class="profile-completion-section">
+                    <span class="profile-completion-section-label">{{ section.label }}</span>
+                    <div class="profile-completion-track" role="progressbar"
+                         [attr.aria-valuenow]="section.percent"
+                         aria-valuemin="0" aria-valuemax="100"
+                         [attr.aria-label]="section.label + ' ' + section.percent + '%'">
+                      <div class="profile-completion-fill" [style.height.%]="section.percent"></div>
+                    </div>
+                    <span class="profile-completion-section-pct">{{ section.percent }}%</span>
+                  </div>
+                }
+              </div>
+            </div>
+          </div>
+        </div>
+      }
+      <div class="driver-edit-main">
+    <div class="row">
+      <!-- Basic Information -->
+      <div class="col-12">
+        <div class="card mb-4">
+          <div class="card-header">
+            <h5 class="mb-0"><i class="fas fa-user me-2"></i>Basic Information</h5>
+          </div>
+          <div class="card-body">
+            <div class="row g-3">
+              <div class="col-md-6">
+                <label class="form-label">Full Name <span class="required">*</span></label>
+                <input type="text" class="form-control"
+                       [class.is-invalid]="showErrors && !formData.fullName?.trim()"
+                       [(ngModel)]="formData.fullName" name="fullName" required
+                       placeholder="Driver's full legal name">
+                <small class="form-hint">Driver's full legal name as it appears on license and documents</small>
+              </div>
+              <div class="col-md-3">
+                <label class="form-label">Type</label>
+                <select class="form-select" [(ngModel)]="formData.type" name="type"
+                        title="Driver employment type">
+                  @for (type of typeOptions; track type) {
+                    <option [value]="type">{{ type }}</option>
+                  }
+                </select>
+                <small class="form-hint">Employee or owner-operator</small>
+              </div>
+              <div class="col-md-3">
+                <label class="form-label">Status</label>
+                <select class="form-select" [(ngModel)]="formData.status" name="status"
+                        title="Current driver status">
+                  @for (status of statusOptions; track status) {
+                    <option [value]="status">{{ status }}</option>
+                  }
+                </select>
+                <small class="form-hint">Current availability or status</small>
+              </div>
+              @if (ownerOperators.length > 0) {
+                <div class="col-md-6">
+                  <label class="form-label">Owner-Operator</label>
+                  <select class="form-select" [(ngModel)]="formData.ownerOperatorId" name="ownerOperatorId"
+                          title="Link to owner-operator company">
+                    <option [value]="undefined">None</option>
+                    @for (oo of ownerOperators; track oo.ownerOperatorId) {
+                      <option [value]="oo.ownerOperatorId">
+                        {{ oo.companyName }}
+                      </option>
+                    }
+                  </select>
+                  <small class="form-hint">Link this driver to an owner-operator company if applicable</small>
+                </div>
+              }
+              @if (!isEditMode && availableReferrers.length > 0) {
+                <div class="col-md-6">
+                  <label class="form-label">Referred By (MLM)</label>
+                  <select class="form-select" [(ngModel)]="formData.referredBy" name="referredBy"
+                          title="Referring driver for MLM">
+                    <option [value]="undefined">None</option>
+                    @for (referrer of availableReferrers; track referrer.driverId) {
+                      <option [value]="referrer.driverId">
+                        {{ referrer.fullName }} {{ referrer.referralCount ? '(Refs: ' + referrer.referralCount + ')' : '' }}
+                      </option>
+                    }
+                  </select>
+                  <small class="form-hint">Select the driver who referred this person (for MLM commission tracking)</small>
+                </div>
+              }
+              <div class="col-md-3">
+                <label class="form-label">Hire Date</label>
+                <input type="date" class="form-control" [(ngModel)]="formData.hireDate" name="hireDate"
+                       title="Date driver was hired">
+                <small class="form-hint">First day of employment</small>
+              </div>
+              @if (isEditMode) {
+                <div class="col-md-3">
+                  <label class="form-label">Termination Date</label>
+                  <input type="date" class="form-control" [(ngModel)]="terminationDate" name="terminationDate"
+                         title="Last day of employment">
+                  <small class="form-hint">Leave blank if driver is still active</small>
+                </div>
+              }
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Contact Information -->
+      <div class="col-12">
+        <div class="card mb-4">
+          <div class="card-header">
+            <h5 class="mb-0"><i class="fas fa-phone me-2"></i>Contact Information</h5>
+          </div>
+          <div class="card-body">
+            <div class="row g-3">
+              <div class="col-md-6">
+                <label class="form-label">Mobile Phone</label>
+                <input type="tel" class="form-control"
+                       [(ngModel)]="formData.mobilePhone"
+                       name="mobilePhone"
+                       placeholder="e.g. (555) 123-4567"
+                       title="Primary contact number"
+                       maxlength="14"
+                       pattern="^\(?\d{3}\)?[-\s.]?\d{3}[-\s.]?\d{4}$"
+                       inputmode="tel"
+                       oninput="this.value=this.value.replace(/[^0-9\(\)\-\s\.]/g,'').slice(0,12)">
+                <small class="form-hint">Primary phone number for dispatch and contact (US 10-digit number)</small>
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">Email</label>
+                <input type="email" class="form-control"
+                       [class.is-invalid]="showErrors && isEmailInvalid"
+                       [(ngModel)]="formData.email" name="email"
+                       placeholder="driver@example.com" title="Email address">
+                <small class="form-hint">Valid email for documents and notifications</small>
+              </div>
+              <div class="col-12">
+                <label class="form-label">Address</label>
+                <input type="text" class="form-control" [(ngModel)]="formData.address" name="address"
+                       placeholder="Street address" title="Street address">
+                <small class="form-hint">Street address line</small>
+              </div>
+              <div class="col-md-4">
+                <label class="form-label">City</label>
+                <input type="text" class="form-control" [(ngModel)]="formData.city" name="city"
+                       placeholder="City" title="City">
+                <small class="form-hint">City of residence</small>
+              </div>
+              <div class="col-md-4">
+                <label class="form-label">State</label>
+                <input type="text" class="form-control" [(ngModel)]="formData.state" name="state"
+                       placeholder="State" title="State or province">
+                <small class="form-hint">State or province code</small>
+              </div>
+              <div class="col-md-4">
+                <label class="form-label">Zip Code</label>
+                <input type="text" class="form-control" [(ngModel)]="formData.zipCode" name="zipCode"
+                       placeholder="ZIP or postal code" title="ZIP or postal code">
+                <small class="form-hint">ZIP or postal code</small>
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">Emergency Contact Name</label>
+                <input type="text" class="form-control" [(ngModel)]="formData.emergencyContactName" name="emergencyContactName"
+                       placeholder="Contact name" title="Emergency contact">
+                <small class="form-hint">Name of person to contact in case of emergency</small>
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">Emergency Contact Phone</label>
+                <input type="tel" class="form-control" [(ngModel)]="formData.emergencyContactPhone" name="emergencyContactPhone"
+                       placeholder="Phone number" title="Emergency contact phone">
+                <small class="form-hint">Phone number for emergency contact</small>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- License & Compliance -->
+      <div class="col-12">
+        <div class="card mb-4">
+          <div class="card-header">
+            <h5 class="mb-0"><i class="fas fa-id-card me-2"></i>License & Compliance</h5>
+          </div>
+          <div class="card-body">
+            <div class="row g-3">
+              <div class="col-md-4">
+                <label class="form-label">License Number</label>
+                <input type="text" class="form-control" [(ngModel)]="formData.licenseNumber" name="licenseNumber"
+                       placeholder="License number" title="CDL or license number">
+                <small class="form-hint">CDL or commercial license number</small>
+              </div>
+              <div class="col-md-4">
+                <label class="form-label">License State</label>
+                <input type="text" class="form-control" [(ngModel)]="formData.licenseState" name="licenseState"
+                       placeholder="e.g. CA" title="State of issuance">
+                <small class="form-hint">State that issued the license</small>
+              </div>
+              <div class="col-md-4">
+                <label class="form-label">License Expiry</label>
+                <input type="date" class="form-control" [(ngModel)]="formData.licenseExpiry" name="licenseExpiry"
+                       title="License expiration date">
+                <small class="form-hint">Expiration date of the license</small>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Insurance -->
+      <div class="col-12">
+        <div class="card mb-4">
+          <div class="card-header">
+            <h5 class="mb-0"><i class="fas fa-shield-alt me-2"></i>Insurance</h5>
+          </div>
+          <div class="card-body">
+            <div class="row g-3">
+              <div class="col-md-6">
+                <label class="form-label">Insurance Company</label>
+                <input type="text" class="form-control" [(ngModel)]="formData.insuranceCompany" name="insuranceCompany"
+                       placeholder="Insurance provider" title="Insurance company name">
+                <small class="form-hint">Name of the insurance provider</small>
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">Policy Number</label>
+                <input type="text" class="form-control" [(ngModel)]="formData.insurancePolicyNumber" name="insurancePolicyNumber"
+                       placeholder="Policy number" title="Insurance policy number">
+                <small class="form-hint">Policy or certificate number</small>
+              </div>
+              <div class="col-md-12">
+                <label class="form-label">Insurance Expiry</label>
+                <input type="date" class="form-control" [(ngModel)]="formData.insuranceExpiry" name="insuranceExpiry"
+                       title="Insurance expiration date">
+                <small class="form-hint">Date when insurance coverage expires</small>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Pay Structure -->
+      <div class="col-12">
+        <div class="card mb-4">
+          <div class="card-header">
+            <h5 class="mb-0"><i class="fas fa-dollar-sign me-2"></i>Pay Structure</h5>
+          </div>
+          <div class="card-body">
+            <div class="row g-3">
+              <div class="col-md-6">
+                <label class="form-label">Pay Structure</label>
+                <select class="form-select" [(ngModel)]="formData.payStructure" name="payStructure"
+                        title="How the driver is paid">
+                  <option value="">Select Pay Structure</option>
+                  @for (ps of payStructureOptions; track ps) {
+                    <option [value]="ps">{{ ps }}</option>
+                  }
+                </select>
+                <small class="form-hint">Percentage, per mile, hourly, or salary</small>
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">Pay Rate</label>
+                <input type="number" step="0.01" class="form-control"
+                       [class.is-invalid]="showErrors && isPayRateInvalid"
+                       [(ngModel)]="formData.payRate" name="payRate"
+                       placeholder="0.00" title="Pay rate amount"
+                       min="0">
+                <small class="form-hint">Rate in the selected unit (e.g. % or $/mile). Must be 0 or greater.</small>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Actions -->
+      <div class="col-12">
+        <div class="d-flex justify-content-end gap-2">
+          <button type="button" class="btn btn-outline-secondary" (click)="cancel()" [disabled]="submitting">
+            Cancel
+          </button>
+          <button type="submit" class="btn btn-primary" [disabled]="submitting">
+            @if (submitting) {
+              <span class="spinner-border spinner-border-sm me-2"></span>
+            }
+            @if (!submitting) {
+              <i class="fas fa-save me-2"></i>
+            }
+            {{ isEditMode ? 'Update Driver' : 'Create Driver' }}
+          </button>
+        </div>
+      </div>
+    </div>
+      </div>
+    </div>
+    </form>
+  }
+</div>
+

@@ -1,0 +1,443 @@
+<div class="equipment-list">
+  <div class="page-header">
+    <h1>Equipment Management</h1>
+    <button class="btn btn-primary" (click)="openCreateModal()">
+      <i class="fas fa-plus"></i> Add Equipment
+    </button>
+  </div>
+
+  <div class="filters">
+    <div class="form-group">
+      <label>Equipment Type</label>
+      <select [(ngModel)]="filterType" (change)="applyFilters()">
+        <option [ngValue]="undefined">All Types</option>
+        <option *ngFor="let type of equipmentTypes" [value]="type">{{ type }}</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label>Status</label>
+      <select [(ngModel)]="filterStatus" (change)="applyFilters()">
+        <option [ngValue]="undefined">All Statuses</option>
+        <option *ngFor="let status of statusOptions" [value]="status">{{ status }}</option>
+      </select>
+    </div>
+    <div class="form-group clear-filters-group">
+      <button type="button" class="btn btn-secondary" (click)="clearFilters()" [disabled]="!filterType && !filterStatus">
+        <i class="fas fa-times"></i> Clear Filters
+      </button>
+    </div>
+  </div>
+
+  <!-- Template cells to preserve existing equipment UI -->
+  <ng-template #equipmentTypeCell let-equipment>
+    <span class="badge badge-type" [ngClass]="{
+      'badge-truck': equipment.equipmentType === 'Truck',
+      'badge-trailer': equipment.equipmentType === 'Trailer',
+      'badge-reefer': equipment.equipmentType === 'Reefer'
+    }">
+      {{ equipment.equipmentType }}
+    </span>
+  </ng-template>
+
+  <ng-template #equipmentStatusCell let-equipment>
+    <div style="display: flex; align-items: center; gap: 0.5rem;" (click)="$event.stopPropagation()">
+      <span class="badge" [ngClass]="getStatusBadgeClass(equipment.status)">
+        <i class="fas" [ngClass]="getStatusIcon(equipment.status)"></i>
+        {{ equipment.status === 'Active' ? 'Available' : equipment.status }}
+      </span>
+      <button *ngIf="equipment.status !== 'Active'"
+              class="btn btn-sm btn-success"
+              (click)="setToActive(equipment); $event.stopPropagation()"
+              title="Set to Available"
+              style="padding: 0.25rem 0.5rem;">
+        <i class="fas fa-check"></i>
+      </button>
+    </div>
+  </ng-template>
+
+  <!-- Actions: dropdown, text-only options (same style as load-list) -->
+  <ng-template #equipmentActionsCell let-equipment>
+    <div class="dropdown" (click)="$event.stopPropagation()">
+      <button type="button" class="tms-actions-btn" data-bs-toggle="dropdown" aria-expanded="false" title="Actions">
+        <i class="fas fa-ellipsis-h tms-actions-dots"></i>
+      </button>
+      <ul class="dropdown-menu dropdown-menu-end tms-actions-dropdown">
+        <li><a class="dropdown-item" [routerLink]="['/equipment', equipment.equipmentId]">View Details...</a></li>
+        <li><hr class="dropdown-divider"></li>
+        <li><a class="dropdown-item" href="javascript:void(0)" (click)="openEditModal(equipment)">Edit Equipment...</a></li>
+        <li><a class="dropdown-item" href="javascript:void(0)" (click)="openMaintenanceModal(equipment)">Add Maintenance...</a></li>
+        <li><a class="dropdown-item" href="javascript:void(0)" (click)="openLogsModal(equipment)">View Maintenance Logs...</a></li>
+        <li><hr class="dropdown-divider"></li>
+        <li><a class="dropdown-item" href="javascript:void(0)" (click)="deleteEquipment(equipment)">Delete Equipment...</a></li>
+      </ul>
+    </div>
+  </ng-template>
+
+  <!-- Shared table (same component as /admin/users) -->
+  <app-data-table
+    [config]="tableConfig"
+    [dataSource]="dataSource"
+    [emptyMessage]="'No equipment found'"
+    [refreshTrigger]="tableRefreshTrigger">
+  </app-data-table>
+
+  <!-- Create Equipment Modal -->
+  <div *ngIf="showCreateModal" class="modal-overlay" (click)="showCreateModal = false; errorMessage = ''">
+    <div class="modal-content" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h2>Add Equipment</h2>
+        <button class="btn-close" (click)="showCreateModal = false; errorMessage = ''">&times;</button>
+      </div>
+      <div class="modal-body">
+        <form (ngSubmit)="createEquipment()">
+          <div class="alert alert-info mb-3" role="status">
+            <i class="fas fa-info-circle"></i> When Motive is configured, this equipment is also created in Motive (as a vehicle for Trucks, or as an asset for Trailers/Reefers). Leave the Motive ID field blank to create a new one.
+          </div>
+          <div *ngIf="errorMessage" class="alert alert-danger" role="alert">
+            <i class="fas fa-exclamation-circle"></i> {{ errorMessage }}
+          </div>
+          <div class="form-group">
+            <label>Equipment Type *</label>
+            <select [(ngModel)]="newEquipment.equipmentType" name="equipmentType" required>
+              <option *ngFor="let type of equipmentTypes" [value]="type">{{ type }}</option>
+            </select>
+            <small class="form-text text-muted">Select the type of equipment (Truck, Trailer, or Reefer)</small>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Plate Number</label>
+              <input type="text" [(ngModel)]="newEquipment.plateNumber" name="plateNumber" placeholder="e.g., ABC-1234">
+              <small class="form-text text-muted">Vehicle license plate number (must be unique)</small>
+            </div>
+            <div class="form-group">
+              <label>VIN</label>
+              <input type="text" [(ngModel)]="newEquipment.vin" name="vin" placeholder="17-character Vehicle Identification Number">
+              <small class="form-text text-muted">Unique vehicle identification number (17 characters)</small>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Make</label>
+              <input type="text" [(ngModel)]="newEquipment.make" name="make" placeholder="e.g., Freightliner, Volvo, Peterbilt"
+                     [required]="newEquipment.equipmentType === 'Trailer' || newEquipment.equipmentType === 'Reefer'">
+              <small class="form-text text-muted">
+                Vehicle manufacturer/brand name (required for Trailer/Reefer)
+              </small>
+            </div>
+            <div class="form-group">
+              <label>Model</label>
+              <input type="text" [(ngModel)]="newEquipment.model" name="model" placeholder="e.g., Cascadia, VNL, 579"
+                     [required]="newEquipment.equipmentType === 'Trailer' || newEquipment.equipmentType === 'Reefer'">
+              <small class="form-text text-muted">
+                Specific vehicle model (required for Trailer/Reefer)
+              </small>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Year Manufactured</label>
+              <input type="number" [(ngModel)]="newEquipment.yearManufactured" name="yearManufactured" min="1900" [max]="getCurrentYear() + 1" placeholder="e.g., 2020"
+                     [required]="newEquipment.equipmentType === 'Trailer' || newEquipment.equipmentType === 'Reefer'">
+              <small class="form-text text-muted">Year the vehicle was manufactured (required for Trailer/Reefer)</small>
+            </div>
+            <div class="form-group">
+              <label>Current Odometer</label>
+              <input type="number" [(ngModel)]="newEquipment.currentOdometer" name="currentOdometer" min="0" placeholder="e.g., 150000">
+              <small class="form-text text-muted">Current mileage reading in miles</small>
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Assign Driver (Optional)</label>
+            <select [(ngModel)]="newEquipment.assignedToDriverId" name="assignedToDriverId">
+              <option [ngValue]="undefined">-- Select Driver --</option>
+              <option *ngFor="let driver of drivers" [ngValue]="driver.driverId">{{ driver.fullName }}</option>
+            </select>
+            <small class="form-text text-muted">Optionally assign this equipment to a driver</small>
+          </div>
+          <div class="form-group">
+            <label>Status</label>
+            <select [(ngModel)]="newEquipment.status" name="status">
+              <option *ngFor="let status of statusOptions" [value]="status">{{ status }}</option>
+            </select>
+            <small class="form-text text-muted">Current operational status of the equipment</small>
+          </div>
+          <div class="form-group">
+            <label>Motive Vehicle/Asset ID (optional)</label>
+            <input type="text" [(ngModel)]="newEquipment.motiveId" name="motiveId" placeholder="e.g., 12345">
+            <small class="form-text text-muted">If the vehicle already exists in Motive, enter its Motive ID to link without creating a new one.</small>
+          </div>
+          <div class="form-actions">
+            <button type="button" class="btn btn-secondary" (click)="showCreateModal = false">Cancel</button>
+            <button type="submit" class="btn btn-primary">Create</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Edit Equipment Modal -->
+  <div *ngIf="showEditModal" class="modal-overlay" (click)="showEditModal = false; editErrorMessage = ''">
+    <div class="modal-content" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h2>Edit Equipment</h2>
+        <button class="btn-close" (click)="showEditModal = false; editErrorMessage = ''">&times;</button>
+      </div>
+      <div class="modal-body">
+        <form (ngSubmit)="updateEquipment()">
+          <div *ngIf="editErrorMessage" class="alert alert-danger" role="alert">
+            <i class="fas fa-exclamation-circle"></i> {{ editErrorMessage }}
+          </div>
+          <div class="form-group">
+            <label>Equipment Type</label>
+            <select [(ngModel)]="editEquipment.equipmentType" name="editEquipmentType" disabled>
+              <option *ngFor="let type of equipmentTypes" [value]="type">{{ type }}</option>
+            </select>
+            <small class="form-text text-muted">Equipment type cannot be changed after creation.</small>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Plate Number</label>
+              <input type="text" [(ngModel)]="editEquipment.plateNumber" name="editPlateNumber" placeholder="e.g., ABC-1234">
+            </div>
+            <div class="form-group">
+              <label>VIN</label>
+              <input type="text" [(ngModel)]="editEquipment.vin" name="editVin" placeholder="17-character Vehicle Identification Number">
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Make</label>
+              <input type="text" [(ngModel)]="editEquipment.make" name="editMake"
+                     [required]="editEquipment.equipmentType === 'Trailer' || editEquipment.equipmentType === 'Reefer'">
+              <small class="form-text text-muted">Required for Trailer/Reefer</small>
+            </div>
+            <div class="form-group">
+              <label>Model</label>
+              <input type="text" [(ngModel)]="editEquipment.model" name="editModel"
+                     [required]="editEquipment.equipmentType === 'Trailer' || editEquipment.equipmentType === 'Reefer'">
+              <small class="form-text text-muted">Required for Trailer/Reefer</small>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Year Manufactured</label>
+              <input type="number" [(ngModel)]="editEquipment.yearManufactured" name="editYearManufactured" min="1900" [max]="getCurrentYear() + 1"
+                     [required]="editEquipment.equipmentType === 'Trailer' || editEquipment.equipmentType === 'Reefer'">
+              <small class="form-text text-muted">Required for Trailer/Reefer</small>
+            </div>
+            <div class="form-group">
+              <label>Current Odometer</label>
+              <input type="number" [(ngModel)]="editEquipment.currentOdometer" name="editCurrentOdometer" min="0">
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Assign Driver (Optional)</label>
+            <select [(ngModel)]="editEquipment.assignedToDriverId" name="editAssignedToDriverId">
+              <option [ngValue]="undefined">-- Select Driver --</option>
+              <option *ngFor="let driver of drivers" [ngValue]="driver.driverId">{{ driver.fullName }}</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Status</label>
+            <select [(ngModel)]="editEquipment.status" name="editStatus" required>
+              <option *ngFor="let status of statusOptions" [value]="status">{{ status }}</option>
+            </select>
+          </div>
+          <div class="form-actions">
+            <button type="button" class="btn btn-secondary" (click)="showEditModal = false; editErrorMessage = ''">Cancel</button>
+            <button type="submit" class="btn btn-primary">Save</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Maintenance Log Modal -->
+  <div *ngIf="showMaintenanceModal && selectedEquipment" class="modal-overlay" (click)="showMaintenanceModal = false; maintenanceErrorMessage = ''">
+    <div class="modal-content" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h2>Add Maintenance Log</h2>
+        <button class="btn-close" (click)="showMaintenanceModal = false; maintenanceErrorMessage = ''">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="equipment-info">
+          <strong>{{ selectedEquipment.equipmentType }}</strong>
+          <span *ngIf="selectedEquipment.plateNumber"> - {{ selectedEquipment.plateNumber }}</span>
+        </div>
+        <form #maintenanceForm="ngForm" (ngSubmit)="addMaintenanceLog(maintenanceForm)">
+          <div *ngIf="maintenanceErrorMessage" class="alert alert-danger" role="alert">
+            <i class="fas fa-exclamation-circle"></i> {{ maintenanceErrorMessage }}
+          </div>
+          <div class="form-group">
+            <label>Service Type *</label>
+            <input type="text" 
+                   [(ngModel)]="maintenanceLog.serviceType" 
+                   name="serviceType" 
+                   #serviceTypeInput="ngModel"
+                   required 
+                   maxlength="200"
+                   [class.is-invalid]="serviceTypeInput.invalid && (serviceTypeInput.dirty || serviceTypeInput.touched)"
+                   [class.is-valid]="serviceTypeInput.valid && serviceTypeInput.dirty"
+                   placeholder="e.g., Oil Change, Tire Replacement">
+            <div *ngIf="serviceTypeInput.invalid && (serviceTypeInput.dirty || serviceTypeInput.touched)" class="invalid-feedback">
+              <div *ngIf="serviceTypeInput.errors?.['required']">Service type is required.</div>
+              <div *ngIf="serviceTypeInput.errors?.['maxlength']">Service type cannot exceed 200 characters.</div>
+            </div>
+            <small class="form-text text-muted">Type of service performed (required, max 200 characters)</small>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Service Date *</label>
+              <input type="date" 
+                     [(ngModel)]="maintenanceLog.serviceDate" 
+                     name="serviceDate" 
+                     #serviceDateInput="ngModel"
+                     required
+                     [max]="getCurrentDate()"
+                     [class.is-invalid]="serviceDateInput.invalid && (serviceDateInput.dirty || serviceDateInput.touched) || isServiceDateInvalid()"
+                     [class.is-valid]="serviceDateInput.valid && serviceDateInput.dirty && !isServiceDateInvalid()">
+              <div *ngIf="(serviceDateInput.invalid && (serviceDateInput.dirty || serviceDateInput.touched)) || isServiceDateInvalid()" class="invalid-feedback">
+                <div *ngIf="serviceDateInput.errors?.['required']">Service date is required.</div>
+                <div *ngIf="isServiceDateInvalid()">Service date cannot be in the future.</div>
+              </div>
+              <small class="form-text text-muted">Date when service was performed (cannot be in the future)</small>
+            </div>
+            <div class="form-group">
+              <label>Odometer at Service *</label>
+              <input type="number" 
+                     [(ngModel)]="maintenanceLog.odometerAtService" 
+                     name="odometerAtService" 
+                     #odometerInput="ngModel"
+                     required
+                     min="0" 
+                     max="9999999"
+                     [class.is-invalid]="odometerInput.invalid && (odometerInput.dirty || odometerInput.touched)"
+                     [class.is-valid]="odometerInput.valid && odometerInput.dirty"
+                     placeholder="e.g., 150000">
+              <div *ngIf="odometerInput.invalid && (odometerInput.dirty || odometerInput.touched)" class="invalid-feedback">
+                <div *ngIf="odometerInput.errors?.['required']">Odometer at service is required.</div>
+                <div *ngIf="odometerInput.errors?.['min']">Odometer reading cannot be negative.</div>
+                <div *ngIf="odometerInput.errors?.['max']">Odometer reading cannot exceed 9,999,999 miles.</div>
+              </div>
+              <small class="form-text text-muted">Vehicle odometer reading at time of service (required)</small>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Vendor *</label>
+              <input type="text" 
+                     [(ngModel)]="maintenanceLog.vendor" 
+                     name="vendor"
+                     #vendorInput="ngModel"
+                     required
+                     maxlength="250"
+                     [class.is-invalid]="vendorInput.invalid && (vendorInput.dirty || vendorInput.touched)"
+                     [class.is-valid]="vendorInput.valid && vendorInput.dirty"
+                     placeholder="e.g., ABC Auto Repair">
+              <div *ngIf="vendorInput.invalid && (vendorInput.dirty || vendorInput.touched)" class="invalid-feedback">
+                <div *ngIf="vendorInput.errors?.['required']">Vendor is required.</div>
+                <div *ngIf="vendorInput.errors?.['maxlength']">Vendor name cannot exceed 250 characters.</div>
+              </div>
+              <small class="form-text text-muted">Name of the service vendor (required, max 250 characters)</small>
+            </div>
+            <div class="form-group">
+              <label>Cost *</label>
+              <input type="number" 
+                     [(ngModel)]="maintenanceLog.cost" 
+                     name="cost" 
+                     #costInput="ngModel"
+                     required 
+                     min="0" 
+                     max="1000000"
+                     step="0.01"
+                     [class.is-invalid]="costInput.invalid && (costInput.dirty || costInput.touched)"
+                     [class.is-valid]="costInput.valid && costInput.dirty"
+                     placeholder="0.00">
+              <div *ngIf="costInput.invalid && (costInput.dirty || costInput.touched)" class="invalid-feedback">
+                <div *ngIf="costInput.errors?.['required']">Cost is required.</div>
+                <div *ngIf="costInput.errors?.['min']">Cost cannot be negative.</div>
+                <div *ngIf="costInput.errors?.['max']">Cost cannot exceed $1,000,000.</div>
+              </div>
+              <small class="form-text text-muted">Service cost in dollars (required, cannot be negative)</small>
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Remarks *</label>
+            <textarea [(ngModel)]="maintenanceLog.remarks" 
+                      name="remarks" 
+                      #remarksInput="ngModel"
+                      required
+                      rows="3"
+                      maxlength="5000"
+                      [class.is-invalid]="remarksInput.invalid && (remarksInput.dirty || remarksInput.touched)"
+                      [class.is-valid]="remarksInput.valid && remarksInput.dirty"
+                      placeholder="Additional notes about the service..."></textarea>
+            <div *ngIf="remarksInput.invalid && (remarksInput.dirty || remarksInput.touched)" class="invalid-feedback">
+              <div *ngIf="remarksInput.errors?.['required']">Remarks are required.</div>
+              <div *ngIf="remarksInput.errors?.['maxlength']">Remarks cannot exceed 5000 characters.</div>
+            </div>
+            <small class="form-text text-muted">Additional notes or remarks (required, max 5000 characters)</small>
+          </div>
+          <div class="form-actions">
+            <button type="button" class="btn btn-secondary" (click)="showMaintenanceModal = false; maintenanceErrorMessage = ''">Cancel</button>
+            <button type="submit" class="btn btn-primary" [disabled]="maintenanceForm.invalid">Add Log</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Maintenance Logs Modal -->
+  <div *ngIf="showLogsModal && selectedEquipment" class="modal-overlay" (click)="showLogsModal = false">
+    <div class="modal-content modal-content-wide" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h2>Maintenance Logs</h2>
+        <button class="btn-close" (click)="showLogsModal = false">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="equipment-info">
+          <strong>{{ selectedEquipment.equipmentType }}</strong>
+          <span *ngIf="selectedEquipment.plateNumber"> - {{ selectedEquipment.plateNumber }}</span>
+        </div>
+        
+        <div *ngIf="loadingLogs" class="loading">Loading logs...</div>
+        
+        <div *ngIf="!loadingLogs">
+          <div *ngIf="maintenanceLogs.length === 0" class="empty-state">
+            No maintenance logs found for this equipment.
+          </div>
+          
+          <div *ngIf="maintenanceLogs.length > 0" class="logs-table">
+            <table>
+              <thead>
+                <tr>
+                  <th>Service Date</th>
+                  <th>Service Type</th>
+                  <th>Vendor</th>
+                  <th>Odometer</th>
+                  <th>Cost</th>
+                  <th>Remarks</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let log of maintenanceLogs">
+                  <td>{{ formatDate(log.serviceDate) }}</td>
+                  <td><strong>{{ log.serviceType }}</strong></td>
+                  <td>{{ log.vendor || '-' }}</td>
+                  <td>{{ log.odometerAtService ? (log.odometerAtService | number) + ' mi' : '-' }}</td>
+                  <td>{{ formatCurrency(log.cost) }}</td>
+                  <td>{{ log.remarks || '-' }}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        
+        <div class="form-actions">
+          <button type="button" class="btn btn-secondary" (click)="showLogsModal = false">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>

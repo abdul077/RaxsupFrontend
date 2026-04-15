@@ -1,0 +1,112 @@
+<div class="driver-analytics-container">
+  <div class="page-header">
+    <div class="header-content">
+      <button class="btn btn-back" (click)="navigateBack()">
+        <i class="fas fa-arrow-left me-2"></i>Back
+      </button>
+      <div>
+        <h1 class="page-title">Driver Performance Analytics</h1>
+        <p class="page-subtitle">Advanced analytics and performance metrics</p>
+      </div>
+    </div>
+    <div class="header-actions">
+      <div class="d-flex gap-2">
+        <input type="date" class="form-control" [(ngModel)]="startDate" (change)="applyDateFilter()" placeholder="Start Date">
+        <input type="date" class="form-control" [(ngModel)]="endDate" (change)="applyDateFilter()" placeholder="End Date">
+      </div>
+    </div>
+  </div>
+
+  @if (loading) {
+    <div class="loading-container">
+      <div class="spinner-border text-primary" role="status"></div>
+    </div>
+  }
+
+  @if (!loading && analytics) {
+    <div class="row g-4 mb-4">
+      <div class="col-md-3">
+        <div class="card stat-card">
+          <div class="card-body text-center">
+            <i class="fas fa-boxes fa-2x text-primary mb-2"></i>
+            <h4>{{ analytics.performance?.totalLoads || 0 }}</h4>
+            <small class="text-muted">Total Loads</small>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="card stat-card">
+          <div class="card-body text-center">
+            <i class="fas fa-check-circle fa-2x text-success mb-2"></i>
+            <h4>{{ analytics.performance?.onTimeRate?.toFixed(1) || 0 }}%</h4>
+            <small class="text-muted">On-Time Rate</small>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="card stat-card">
+          <div class="card-body text-center">
+            <i class="fas fa-dollar-sign fa-2x text-warning mb-2"></i>
+            <h4>{{ formatCurrency(analytics.revenue?.totalRevenue) }}</h4>
+            <small class="text-muted">Total Revenue</small>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="card stat-card">
+          <div class="card-body text-center">
+            <i class="fas fa-star fa-2x text-info mb-2"></i>
+            <h4>{{ analytics.performance?.rating?.toFixed(1) || 0 }}/5.0</h4>
+            <small class="text-muted">Rating</small>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="row g-4">
+      <div class="col-md-6">
+        <div class="card">
+          <div class="card-header">
+            <h5 class="mb-0">Performance Metrics</h5>
+          </div>
+          <div class="card-body">
+            <table class="table table-borderless">
+              <tr>
+                <td>Completed Loads:</td>
+                <td><strong>{{ analytics.performance?.completedLoads || 0 }}</strong></td>
+              </tr>
+              <tr>
+                <td>On-Time Deliveries:</td>
+                <td><strong>{{ analytics.performance?.onTimeDeliveries || 0 }}</strong></td>
+              </tr>
+              <tr>
+                <td>Average Delivery Time:</td>
+                <td><strong>{{ analytics.performance?.averageDeliveryTime?.toFixed(1) || 0 }} days</strong></td>
+              </tr>
+            </table>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-6">
+        <div class="card">
+          <div class="card-header">
+            <h5 class="mb-0">Revenue Metrics</h5>
+          </div>
+          <div class="card-body">
+            <table class="table table-borderless">
+              <tr>
+                <td>Average Revenue per Load:</td>
+                <td><strong>{{ formatCurrency(analytics.revenue?.averageRevenuePerLoad) }}</strong></td>
+              </tr>
+              <tr>
+                <td>Monthly Revenue:</td>
+                <td><strong>{{ formatCurrency(analytics.revenue?.monthlyRevenue) }}</strong></td>
+              </tr>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  }
+</div>
+

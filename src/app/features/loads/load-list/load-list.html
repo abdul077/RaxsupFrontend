@@ -1,0 +1,638 @@
+<div class="load-list-container">
+  <!-- Page Header - dashboard style -->
+  <div class="tms-dashboard-header mb-4">
+    <div class="tms-header-left">
+      <div class="tms-header-icon">
+        <i class="fas fa-truck-moving"></i>
+      </div>
+      <div>
+        <h1 class="tms-title">Dispatch</h1>
+        <p class="tms-subtitle mb-0">Manage and track all loads</p>
+      </div>
+    </div>
+    <div class="tms-header-actions">
+      <button *ngIf="canCreateLoad()" class="btn btn-tms-primary" (click)="navigateToCreate()">
+        <i class="fas fa-plus me-2"></i>Create New Load
+      </button>
+    </div>
+  </div>
+
+  <!-- Today KPIs: cards from table data (non-Driver only, no separate API) -->
+  <div *ngIf="!authService.hasRole('Driver') && todayKpis" class="load-list-kpi-row mb-4">
+    <ng-container *ngIf="todayKpis">
+      <div class="load-list-kpi-card load-list-kpi-blue">
+        <i class="fas fa-th-list load-list-kpi-icon"></i>
+        <div class="load-list-kpi-content">
+          <span class="load-list-kpi-value">{{ todayKpis.totalLoads }}</span>
+          <span class="load-list-kpi-label">Total Loads</span>
+        </div>
+      </div>
+      <div class="load-list-kpi-card load-list-kpi-blue">
+        <i class="fas fa-truck load-list-kpi-icon"></i>
+        <div class="load-list-kpi-content">
+          <span class="load-list-kpi-value">{{ todayKpis.inTransit }}</span>
+          <span class="load-list-kpi-label">En route</span>
+        </div>
+      </div>
+      <div class="load-list-kpi-card load-list-kpi-red">
+        <i class="fas fa-exclamation-circle load-list-kpi-icon"></i>
+        <div class="load-list-kpi-content">
+          <span class="load-list-kpi-value">{{ todayKpis.late }}</span>
+          <span class="load-list-kpi-label">Late</span>
+        </div>
+      </div>
+      <div class="load-list-kpi-card load-list-kpi-green">
+        <i class="fas fa-check-circle load-list-kpi-icon"></i>
+        <div class="load-list-kpi-content">
+          <span class="load-list-kpi-value">{{ todayKpis.delivered }}</span>
+          <span class="load-list-kpi-label">Delivered</span>
+        </div>
+      </div>
+      <div class="load-list-kpi-card load-list-kpi-gold">
+        <i class="fas fa-dollar-sign load-list-kpi-icon"></i>
+        <div class="load-list-kpi-content">
+          <span class="load-list-kpi-value" [title]="formatCurrency(todayKpis.revenueToday)">{{ formatCurrencyCompact(todayKpis.revenueToday) }}</span>
+          <span class="load-list-kpi-label">Revenue</span>
+        </div>
+      </div>
+    </ng-container>
+  </div>
+
+  <!-- Status Filter Tabs -->
+  <div class="status-tabs-container mb-4">
+    <div class="status-tabs">
+      <button 
+        class="status-tab" 
+        [class.active]="!statusFilter"
+        (click)="selectStatusTab('')">
+        <i class="fas fa-th-list me-1"></i>All
+      </button>
+      <button 
+        *ngFor="let status of statusOptions" 
+        class="status-tab" 
+        [class.active]="statusFilter === status"
+        (click)="selectStatusTab(status)">
+        <i [class]="'fas ' + getStatusIcon(status) + ' me-1'"></i>{{ getStatusDisplayLabel(status) }}
+      </button>
+    </div>
+  </div>
+
+  <!-- Smart Route cell: Origin → Destination, stops -->
+  <ng-template #smartRouteCell let-load>
+    <div class="smart-route-cell">
+      <div class="smart-route-main">{{ load.origin || '-' }} → {{ load.destination || '-' }}</div>
+      <div class="smart-route-meta">
+        <span>{{ (load.stopsCount ?? 0) > 0 ? (load.stopsCount + ' stops') : 'Direct' }}</span>
+      </div>
+      <div *ngIf="load.deliveryDateTime" class="smart-route-eta">ETA {{ formatDateRelative(load.deliveryDateTime) }}</div>
+    </div>
+  </ng-template>
+
+  <!-- Pickup / Delivery cell: label, then date + address for each -->
+  <ng-template #pickupDeliveryCell let-load>
+    <div class="pickup-delivery-cell">
+      <div class="pickup-delivery-row pickup-row">
+        <i class="fas fa-arrow-up fa-sm pickup-delivery-icon"></i>
+        <div class="pickup-delivery-detail">
+          <span class="pickup-delivery-label">Pickup</span>
+          <span class="pickup-delivery-line">
+            <span class="pickup-delivery-datetime">{{ formatPickupDeliveryDateTime(load.pickupDateTime) }}</span>
+            <span class="pickup-delivery-sep">·</span>
+            <span class="pickup-delivery-location" [title]="load.origin">{{ load.origin || '—' }}</span>
+          </span>
+        </div>
+      </div>
+      <div class="pickup-delivery-row delivery-row">
+        <i class="fas fa-arrow-down fa-sm pickup-delivery-icon"></i>
+        <div class="pickup-delivery-detail">
+          <span class="pickup-delivery-label">Delivery</span>
+          <span class="pickup-delivery-line">
+            <span class="pickup-delivery-datetime">{{ formatPickupDeliveryDateTime(load.deliveryDateTime) }}</span>
+            <span class="pickup-delivery-sep">·</span>
+            <span class="pickup-delivery-location" [title]="load.destination">{{ load.destination || '—' }}</span>
+          </span>
+        </div>
+      </div>
+    </div>
+  </ng-template>
+
+  <!-- Route & Pickup/Delivery merged cell -->
+  <ng-template #routePickupDeliveryCell let-load>
+    <div class="route-pickup-delivery-merged">
+      
+      <div class="pickup-delivery-cell">
+        <div class="pickup-delivery-row pickup-row">
+          <i class="fas fa-arrow-up fa-sm pickup-delivery-icon"></i>
+          <div class="pickup-delivery-detail">
+            <span class="pickup-delivery-label">Pickup</span>
+            <span class="pickup-delivery-line">
+              <span class="pickup-delivery-datetime">{{ formatPickupDeliveryDateTime(load.pickupDateTime) }}</span>
+              <span class="pickup-delivery-sep">·</span>
+              <span class="pickup-delivery-location" [title]="load.origin">{{ load.origin || '—' }}</span>
+            </span>
+          </div>
+        </div>
+        <div class="pickup-delivery-row delivery-row">
+          <i class="fas fa-arrow-down fa-sm pickup-delivery-icon"></i>
+          <div class="pickup-delivery-detail">
+            <span class="pickup-delivery-label">Delivery</span>
+            <span class="pickup-delivery-line">
+              <span class="pickup-delivery-datetime">{{ formatPickupDeliveryDateTime(load.deliveryDateTime) }}</span>
+              <span class="pickup-delivery-sep">·</span>
+              <span class="pickup-delivery-location" [title]="load.destination">{{ load.destination || '—' }}</span>
+            </span>
+          </div>
+        </div>
+        <div class="smart-route-cell">
+          <!-- <div class="smart-route-main">{{ load.origin || '-' }} → {{ load.destination || '-' }}</div> -->
+          <div class="smart-route-meta">
+            <span>{{ (load.stopsCount ?? 0) > 0 ? (load.stopsCount + ' stops') : 'Direct' }}</span>
+            <span *ngIf="load.deliveryDateTime" class="smart-route-sep">•</span>
+            <span *ngIf="load.deliveryDateTime" class="smart-route-eta">ETA {{ formatDateRelative(load.deliveryDateTime) }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </ng-template>
+
+  <!-- Driver & Equipment cell: avatar, name, status, equipment link (row click opens sidebar; link navigates) -->
+  <ng-template #driverEquipmentCell let-load>
+    <div class="driver-equipment-cell">
+      <div class="driver-row">
+        <span class="driver-avatar">{{ getInitial(load.ownerOperatorName || load.driverName) }}</span>
+        <div class="driver-info">
+          <span class="driver-name">{{ load.ownerOperatorName || load.driverName || '-' }}</span>
+          <span class="driver-status" *ngIf="load.ownerOperatorName || load.driverName">{{ getDriverStatusDisplay(load) }}</span>
+        </div>
+      </div>
+      <div class="equipment-row">
+        <ng-container *ngIf="load.equipmentPlateNumber || load.equipmentType">
+          <a *ngIf="load.equipmentPlateNumber && load.equipmentId" [routerLink]="['/equipment', load.equipmentId]" class="equipment-link" (click)="$event.stopPropagation()">{{ load.equipmentPlateNumber }}</a>
+          <span *ngIf="load.equipmentPlateNumber && !load.equipmentId" class="equipment-plain">{{ load.equipmentPlateNumber }}</span>
+          <span *ngIf="load.equipmentPlateNumber && load.equipmentType" class="equipment-type-sep"> · </span>
+          <span *ngIf="load.equipmentType" class="equipment-type">{{ load.equipmentType }}</span>
+        </ng-container>
+        <span *ngIf="!load.equipmentPlateNumber && !load.equipmentType">—</span>
+      </div>
+    </div>
+  </ng-template>
+
+  <!-- Load actions cell: same style as dashboard Current Trips (dropdown, text only, no icons) -->
+  <ng-template #loadActionsCell let-load>
+    <div class="dropdown" (click)="$event.stopPropagation()">
+      <button type="button" class="tms-actions-btn" data-bs-toggle="dropdown" aria-expanded="false" title="Actions" (click)="scrollActionsIntoView($event)">
+        <i class="fas fa-ellipsis-h tms-actions-dots"></i>
+      </button>
+      <ul class="dropdown-menu dropdown-menu-end tms-actions-dropdown">
+        <li><a class="dropdown-item" [routerLink]="['/loads', load.loadId]">View Trip Summary...</a></li>
+        <li><a class="dropdown-item" [routerLink]="['/loads', load.loadId]" [queryParams]="{tab: 'route'}">Track Location...</a></li>
+        <li *ngIf="canEditLoad()"><hr class="dropdown-divider"></li>
+        <li *ngIf="canEditLoad()"><a class="dropdown-item" [routerLink]="['/loads', load.loadId]" [queryParams]="{tab: 'assignments', action: 'assign'}">Assign Driver & Equipment...</a></li>
+        <li *ngIf="canEditLoad()"><a class="dropdown-item" [routerLink]="['/loads', load.loadId]" [queryParams]="{tab: 'stops', action: 'add'}">Add Stops...</a></li>
+        <li *ngIf="canEditLoad()"><hr class="dropdown-divider"></li>
+        <li *ngIf="canEditLoad()"><a class="dropdown-item" [routerLink]="['/loads', load.loadId]">Edit Trip...</a></li>
+        <li *ngIf="canEditLoad()"><a class="dropdown-item" href="javascript:void(0)" (click)="openStatusModal(load)">Change Status...</a></li>
+      </ul>
+    </div>
+  </ng-template>
+
+  <!-- Loads card - Current Trips style: white card, rounded corners, minimal borders -->
+  <div class="load-list-card load-list-card-with-sticky">
+    <div class="load-list-card-header">
+      <h5><i class="fas fa-list me-2"></i>Loads</h5>
+      <div class="load-list-card-actions">
+        <button type="button" class="btn btn-sm btn-tms-outline" (click)="exportCsv()" title="Export CSV">
+          <i class="fas fa-file-csv me-1"></i>CSV
+        </button>
+        <button type="button" class="btn btn-sm btn-tms-outline" (click)="exportPdf()" title="Export PDF / Print">
+          <i class="fas fa-file-pdf me-1"></i>PDF
+        </button>
+      </div>
+    </div>
+    <div class="load-list-card-body p-0">
+      <app-data-table
+        [config]="tableConfig"
+        [dataSource]="dataSource"
+        [emptyMessage]="'No loads found. Try adjusting your filters or create a new load.'"
+        [refreshTrigger]="tableRefreshTrigger"
+        (rowClick)="viewLoadDetails($event)"
+        (dataLoaded)="onTableDataLoaded($event)">
+      </app-data-table>
+    </div>
+  </div>
+</div>
+
+<!-- Load Details Drawer (right-side) -->
+<aside class="load-drawer" [class.open]="drawerOpen">
+  <div class="load-drawer-backdrop" (click)="closeDrawer()"></div>
+  <div class="load-drawer-panel">
+    <div class="load-drawer-header">
+      <h5 class="load-drawer-title">
+        <span *ngIf="drawerLoad">Load #{{ drawerLoad.loadNumber }}</span>
+        <span *ngIf="!drawerLoad && drawerLoading">Loading...</span>
+      </h5>
+      <div class="load-drawer-actions">
+        <button type="button" class="btn btn-sm btn-tms-outline" (click)="openLoadFullPage(drawerLoad!)" *ngIf="drawerLoad" title="Open full page">
+          <i class="fas fa-external-link-alt"></i>
+        </button>
+        <button type="button" class="btn btn-sm btn-tms-outline" (click)="closeDrawer()" title="Close (Esc)">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+    </div>
+    <div *ngIf="drawerLoading" class="load-drawer-body text-center py-5">
+      <div class="spinner-border text-primary"></div>
+    </div>
+    <ng-container *ngIf="!drawerLoading && drawerLoad">
+      <ul class="load-drawer-tabs">
+        <li><a [class.active]="drawerTab === 'overview'" (click)="setDrawerTab('overview')">Overview</a></li>
+        <li><a [class.active]="drawerTab === 'stops'" (click)="setDrawerTab('stops')">Stops</a></li>
+        <li><a [class.active]="drawerTab === 'driver'" (click)="setDrawerTab('driver')">Driver & Equipment</a></li>
+        <li><a [class.active]="drawerTab === 'documents'" (click)="setDrawerTab('documents')">Documents</a></li>
+        <li><a [class.active]="drawerTab === 'timeline'" (click)="setDrawerTab('timeline')">Timeline</a></li>
+        <li><a [class.active]="drawerTab === 'notes'" (click)="setDrawerTab('notes')">Notes</a></li>
+      </ul>
+      <div class="load-drawer-body">
+        <div *ngIf="drawerTab === 'overview'" class="load-drawer-tab-content overview-panel">
+          <!-- Status & Rate highlight -->
+          <div class="overview-hero">
+            <span class="badge overview-status-badge" [ngClass]="getStatusBadgeClass(drawerLoad.status)">{{ drawerLoad.status }}</span>
+            <div class="overview-rate">{{ formatCurrency(drawerLoad.totalRate, drawerLoad.currency) }}</div>
+            <span *ngIf="drawerLoad.loadType" class="overview-load-type">{{ drawerLoad.loadType }}</span>
+          </div>
+          <!-- Route: Origin → Destination -->
+          <div class="overview-route-card">
+            <div class="overview-route-leg pickup">
+              <i class="fas fa-arrow-circle-up overview-route-icon"></i>
+              <div class="overview-route-content">
+                <span class="overview-route-label">Pickup</span>
+                <span class="overview-route-place">{{ drawerLoad.origin || '—' }}</span>
+                <span class="overview-route-datetime" *ngIf="drawerLoad.pickupDateTime">{{ formatDate(drawerLoad.pickupDateTime) }}</span>
+              </div>
+            </div>
+            <div class="overview-route-connector">
+              <i class="fas fa-arrow-down"></i>
+            </div>
+            <div class="overview-route-leg delivery">
+              <i class="fas fa-arrow-circle-down overview-route-icon"></i>
+              <div class="overview-route-content">
+                <span class="overview-route-label">Delivery</span>
+                <span class="overview-route-place">{{ drawerLoad.destination || '—' }}</span>
+                <span class="overview-route-datetime" *ngIf="drawerLoad.deliveryDateTime">{{ formatDate(drawerLoad.deliveryDateTime) }}</span>
+              </div>
+            </div>
+          </div>
+          <!-- Details list -->
+          <div class="overview-details">
+            <div class="overview-detail-row">
+              <i class="fas fa-user overview-detail-icon"></i>
+              <div class="overview-detail-content">
+                <span class="overview-detail-label">Broker</span>
+                <span class="overview-detail-value">{{ drawerLoad.customerName || '—' }}</span>
+              </div>
+            </div>
+            <div class="overview-detail-row">
+              <i class="fas fa-truck overview-detail-icon"></i>
+              <div class="overview-detail-content">
+                <span class="overview-detail-label">Load type</span>
+                <span class="overview-detail-value">{{ drawerLoad.loadType || '—' }}</span>
+              </div>
+            </div>
+            <div class="overview-detail-row" *ngIf="drawerLoad.distanceKm != null">
+              <i class="fas fa-road overview-detail-icon"></i>
+              <div class="overview-detail-content">
+                <span class="overview-detail-label">Distance</span>
+                <span class="overview-detail-value">{{ formatDistanceKm(drawerLoad.distanceKm) }}</span>
+              </div>
+            </div>
+            <div class="overview-detail-row" *ngIf="(drawerLoad.stops?.length ?? 0) > 0">
+              <i class="fas fa-map-marker-alt overview-detail-icon"></i>
+              <div class="overview-detail-content">
+                <span class="overview-detail-label">Stops</span>
+                <span class="overview-detail-value">{{ drawerLoad.stops!.length }} stop(s)</span>
+              </div>
+            </div>
+            <div class="overview-detail-row" *ngIf="drawerLoad.deadheadOrigin || drawerLoad.deadheadDestination || drawerLoad.deadheadAmount != null">
+              <i class="fas fa-truck-loading overview-detail-icon"></i>
+              <div class="overview-detail-content">
+                <span class="overview-detail-label">Deadhead</span>
+                <span class="overview-detail-value">
+                  <span *ngIf="drawerLoad.deadheadOrigin">{{ drawerLoad.deadheadOrigin }}</span>
+                  <span *ngIf="drawerLoad.deadheadOrigin && drawerLoad.deadheadDestination"> → </span>
+                  <span *ngIf="drawerLoad.deadheadDestination">{{ drawerLoad.deadheadDestination }}</span>
+                  <span *ngIf="!drawerLoad.deadheadOrigin && !drawerLoad.deadheadDestination">—</span>
+                  <span *ngIf="drawerLoad.deadheadAmount != null" class="ms-1">({{ formatCurrency(drawerLoad.deadheadAmount, drawerLoad.currency) }})</span>
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div *ngIf="drawerTab === 'stops'" class="load-drawer-tab-content stops-panel">
+          <p *ngIf="drawerStopsIsDerived" class="stops-derived-note">
+            <i class="fas fa-info-circle me-1"></i>Showing pickup and delivery from load route.
+          </p>
+          <div class="stops-list">
+            <div *ngFor="let stop of getDrawerStops(); trackBy: stopSequenceTrackBy" class="stops-list-item" [class.origin]="stop.stopType === 'Origin' || stop.stopType === 'Pickup'" [class.destination]="stop.stopType === 'Destination' || stop.stopType === 'Delivery'">
+              <span class="stops-list-num">#{{ stop.sequenceNo }}</span>
+              <div class="stops-list-body">
+                <span class="stops-list-type">{{ stop.stopType }}</span>
+                <span class="stops-list-location">{{ stop.location }}</span>
+                <span class="stops-list-datetime" *ngIf="stop.plannedDateTime">{{ formatDate(stop.plannedDateTime) }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div *ngIf="drawerTab === 'driver'" class="load-drawer-tab-content driver-panel">
+          <ng-container *ngIf="drawerDriverName !== '—' || drawerEquipmentPlate !== '—' || drawerFirstAssignment">
+            <!-- Driver / Owner-Operator -->
+            <div class="driver-panel-card">
+              <div class="driver-panel-avatar">{{ getInitial(drawerDriverName) }}</div>
+              <div class="driver-panel-info">
+                <span class="driver-panel-label">Driver / Owner-Operator</span>
+                <span class="driver-panel-value">{{ drawerDriverName }}</span>
+                <span class="driver-panel-status" *ngIf="drawerLoad">{{ getDriverStatusDisplay(drawerLoad) }}</span>
+              </div>
+            </div>
+            <!-- Equipment -->
+            <div class="driver-panel-card">
+              <i class="fas fa-truck driver-panel-icon"></i>
+              <div class="driver-panel-info">
+                <span class="driver-panel-label">Equipment</span>
+                <a *ngIf="drawerEquipmentId" [routerLink]="['/equipment', drawerEquipmentId]" class="driver-panel-value driver-panel-link" (click)="$event.stopPropagation()">{{ drawerEquipmentPlate }}</a>
+                <span *ngIf="!drawerEquipmentId" class="driver-panel-value">{{ drawerEquipmentPlate }}</span>
+              </div>
+            </div>
+            <!-- Assignment details (when available) -->
+            <div *ngIf="drawerFirstAssignment" class="driver-panel-details">
+              <div class="driver-panel-detail-row" *ngIf="drawerFirstAssignment.assignedAt">
+                <i class="fas fa-calendar-check driver-panel-detail-icon"></i>
+                <div class="driver-panel-detail-content">
+                  <span class="driver-panel-detail-label">Assigned at</span>
+                  <span class="driver-panel-detail-value">{{ formatDate(drawerFirstAssignment.assignedAt) }}</span>
+                </div>
+              </div>
+              <div class="driver-panel-detail-row" *ngIf="drawerFirstAssignment.etd">
+                <i class="fas fa-arrow-right-from-bracket driver-panel-detail-icon"></i>
+                <div class="driver-panel-detail-content">
+                  <span class="driver-panel-detail-label">ETD</span>
+                  <span class="driver-panel-detail-value">{{ formatDate(drawerFirstAssignment.etd) }}</span>
+                </div>
+              </div>
+              <div class="driver-panel-detail-row" *ngIf="drawerFirstAssignment.eta">
+                <i class="fas fa-flag-checkered driver-panel-detail-icon"></i>
+                <div class="driver-panel-detail-content">
+                  <span class="driver-panel-detail-label">ETA</span>
+                  <span class="driver-panel-detail-value">{{ formatDate(drawerFirstAssignment.eta) }}</span>
+                </div>
+              </div>
+              <div class="driver-panel-detail-row" *ngIf="drawerFirstAssignment.status">
+                <i class="fas fa-info-circle driver-panel-detail-icon"></i>
+                <div class="driver-panel-detail-content">
+                  <span class="driver-panel-detail-label">Assignment status</span>
+                  <span class="driver-panel-detail-value">{{ drawerFirstAssignment.status }}</span>
+                </div>
+              </div>
+            </div>
+          </ng-container>
+          <!-- Empty state when no driver/equipment/assignment -->
+          <div *ngIf="drawerDriverName === '—' && drawerEquipmentPlate === '—' && !drawerFirstAssignment" class="driver-panel-empty">
+            <i class="fas fa-user-clock driver-panel-empty-icon"></i>
+            <p class="driver-panel-empty-text">No driver or equipment assigned yet.</p>
+          </div>
+        </div>
+        <div *ngIf="drawerTab === 'documents'" class="load-drawer-tab-content">
+          <div *ngIf="drawerLoad.documents?.length; else noDocs">
+            <div *ngFor="let doc of drawerLoad.documents" class="drawer-doc-item">
+              {{ doc.documentType }} — <a [href]="getDocumentViewUrl(drawerLoad!.loadId, doc.loadDocumentId)" target="_blank" rel="noopener">View</a>
+            </div>
+          </div>
+          <ng-template #noDocs><p class="text-muted">No documents.</p></ng-template>
+        </div>
+        <div *ngIf="drawerTab === 'timeline'" class="load-drawer-tab-content timeline-panel">
+          <div class="timeline-list">
+            <div class="timeline-item">
+              <span class="timeline-dot timeline-dot-created"></span>
+              <div class="timeline-content">
+                <span class="timeline-label">Created</span>
+                <span class="timeline-value">{{ formatDate(drawerLoad.createdAt) }}</span>
+              </div>
+            </div>
+            <div class="timeline-item" *ngIf="drawerLoad.updatedAt">
+              <span class="timeline-dot timeline-dot-updated"></span>
+              <div class="timeline-content">
+                <span class="timeline-label">Last updated</span>
+                <span class="timeline-value">{{ formatDate(drawerLoad.updatedAt) }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div *ngIf="drawerTab === 'notes'" class="load-drawer-tab-content notes-panel">
+          <div *ngIf="drawerLoad.notes?.trim()" class="notes-card">
+            <i class="fas fa-sticky-note notes-card-icon"></i>
+            <div class="notes-card-body">
+              <span class="notes-card-label">Notes</span>
+              <p class="notes-card-text">{{ drawerLoad.notes }}</p>
+            </div>
+          </div>
+          <div *ngIf="!drawerLoad.notes?.trim()" class="notes-empty">
+            <i class="fas fa-comment-dots notes-empty-icon"></i>
+            <p class="notes-empty-text">No notes added yet.</p>
+          </div>
+        </div>
+      </div>
+    </ng-container>
+  </div>
+</aside>
+
+<!-- Create Modal -->
+<div class="modal load-list-modal" [class.show]="showCreateModal" *ngIf="showCreateModal">
+  <div class="modal-backdrop" (click)="closeModals()"></div>
+  <div class="modal-dialog modal-lg" (click)="$event.stopPropagation()">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Create New Load</h5>
+        <button type="button" class="btn-close" (click)="closeModals()"></button>
+      </div>
+      <div class="modal-body">
+        <form>
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label class="form-label">Load Number *</label>
+              <input type="text" class="form-control" [(ngModel)]="formData.loadNumber" name="loadNumber" required>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Broker</label>
+              <select class="form-select" [(ngModel)]="formData.customerId" name="customerId">
+                <option [value]="null">Select Broker</option>
+                <option *ngFor="let customer of customers" [value]="customer.customerId">
+                  RE{{ customer.customerId }} - {{ customer.name }}
+                </option>
+              </select>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Origin *</label>
+              <input type="text" class="form-control" [(ngModel)]="formData.origin" name="origin" required>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Destination *</label>
+              <input type="text" class="form-control" [(ngModel)]="formData.destination" name="destination" required>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Deadhead origin</label>
+              <input type="text" class="form-control" [(ngModel)]="formData.deadheadOrigin" name="deadheadOriginCreate" placeholder="Optional">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Deadhead destination</label>
+              <input type="text" class="form-control" [(ngModel)]="formData.deadheadDestination" name="deadheadDestinationCreate" placeholder="Optional">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Pickup Date/Time</label>
+              <input type="datetime-local" class="form-control" [(ngModel)]="formData.pickupDateTime" name="pickupDateTime">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Delivery Date/Time</label>
+              <input type="datetime-local" class="form-control" [(ngModel)]="formData.deliveryDateTime" name="deliveryDateTime">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Deadhead amount</label>
+              <input type="number" step="0.01" min="0" class="form-control" [(ngModel)]="formData.deadheadAmount" name="deadheadAmountCreate" placeholder="Optional">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Total Rate</label>
+              <input type="number" step="0.01" class="form-control" [(ngModel)]="formData.totalRate" name="totalRate">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Currency</label>
+              <select class="form-select" [(ngModel)]="formData.currency" name="currency">
+                <option value="USD">USD</option>
+                <option value="CAD">CAD</option>
+                <option value="EUR">EUR</option>
+              </select>
+            </div>
+            <div class="col-12">
+              <label class="form-label">Notes</label>
+              <textarea class="form-control" rows="3" [(ngModel)]="formData.notes" name="notes"></textarea>
+            </div>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" (click)="closeModals()">Cancel</button>
+        <button type="button" class="btn btn-primary" (click)="createLoad()">Create Load</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Edit Modal -->
+<div class="modal load-list-modal" [class.show]="showEditModal" *ngIf="showEditModal">
+  <div class="modal-backdrop" (click)="closeModals()"></div>
+  <div class="modal-dialog modal-lg" (click)="$event.stopPropagation()">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Edit Load</h5>
+        <button type="button" class="btn-close" (click)="closeModals()"></button>
+      </div>
+      <div class="modal-body">
+        <form>
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label class="form-label">Load Number *</label>
+              <input type="text" class="form-control" [(ngModel)]="formData.loadNumber" name="loadNumber" required>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Broker</label>
+              <select class="form-select" [(ngModel)]="formData.customerId" name="customerId">
+                <option [value]="null">Select Broker</option>
+                <option *ngFor="let customer of customers" [value]="customer.customerId">
+                  RE{{ customer.customerId }} - {{ customer.name }}
+                </option>
+              </select>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Origin *</label>
+              <input type="text" class="form-control" [(ngModel)]="formData.origin" name="origin" required>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Destination *</label>
+              <input type="text" class="form-control" [(ngModel)]="formData.destination" name="destination" required>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Deadhead origin</label>
+              <input type="text" class="form-control" [(ngModel)]="formData.deadheadOrigin" name="deadheadOriginEdit" placeholder="Optional">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Deadhead destination</label>
+              <input type="text" class="form-control" [(ngModel)]="formData.deadheadDestination" name="deadheadDestinationEdit" placeholder="Optional">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Pickup Date/Time</label>
+              <input type="datetime-local" class="form-control" [(ngModel)]="formData.pickupDateTime" name="pickupDateTime">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Delivery Date/Time</label>
+              <input type="datetime-local" class="form-control" [(ngModel)]="formData.deliveryDateTime" name="deliveryDateTime">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Deadhead amount</label>
+              <input type="number" step="0.01" min="0" class="form-control" [(ngModel)]="formData.deadheadAmount" name="deadheadAmountEdit" placeholder="Optional">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Total Rate</label>
+              <input type="number" step="0.01" class="form-control" [(ngModel)]="formData.totalRate" name="totalRate">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Currency</label>
+              <select class="form-select" [(ngModel)]="formData.currency" name="currency">
+                <option value="USD">USD</option>
+                <option value="CAD">CAD</option>
+                <option value="EUR">EUR</option>
+              </select>
+            </div>
+            <div class="col-12">
+              <label class="form-label">Notes</label>
+              <textarea class="form-control" rows="3" [(ngModel)]="formData.notes" name="notes"></textarea>
+            </div>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" (click)="closeModals()">Cancel</button>
+        <button type="button" class="btn btn-primary" (click)="updateLoad()">Update Load</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Status Update Modal -->
+<div class="modal load-list-modal" [class.show]="showStatusModal" *ngIf="showStatusModal">
+  <div class="modal-backdrop" (click)="closeModals()"></div>
+  <div class="modal-dialog" (click)="$event.stopPropagation()">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Update Load Status</h5>
+        <button type="button" class="btn-close" (click)="closeModals()"></button>
+      </div>
+      <div class="modal-body">
+        <div class="mb-3">
+          <label class="form-label">Load Number</label>
+          <input type="text" class="form-control" [value]="selectedLoad?.loadNumber" disabled>
+        </div>
+        <div class="mb-3">
+          <label class="form-label">Current Status</label>
+          <input type="text" class="form-control" [value]="selectedLoad?.status" disabled>
+        </div>
+        <div class="mb-3">
+          <label class="form-label">New Status *</label>
+          <select class="form-select" [(ngModel)]="newStatus">
+            <option *ngFor="let status of statusOptionsForUpdate" [value]="status">{{ getStatusDisplayLabel(status) }}</option>
+          </select>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" (click)="closeModals()">Cancel</button>
+        <button type="button" class="btn btn-warning" (click)="updateStatus()">Update Status</button>
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,180 @@
+<div class="user-detail" *ngIf="user">
+  <!-- Loading State -->
+  <div *ngIf="loading" class="loading-container">
+    <div class="spinner"></div>
+    <p>Loading user details...</p>
+  </div>
+
+  <!-- Content -->
+  <div *ngIf="!loading" class="detail-content">
+    <!-- Header Section -->
+    <div class="detail-header">
+      <div class="header-top">
+        <button class="btn-back" (click)="goBack()">
+          <i class="fas fa-arrow-left"></i>
+          <span>Back to Users</span>
+        </button>
+      </div>
+      <div class="header-content">
+        <h1>{{ user.fullName || user.username }}</h1>
+        <div class="header-meta">
+          <div class="meta-section">
+            <span class="meta-label">Role</span>
+            <span class="priority-badge" *ngIf="user.roleName">
+              {{ getDisplayRoleName(user.roleName) }}
+            </span>
+            <span class="priority-badge priority-none" *ngIf="!user.roleName">N/A</span>
+          </div>
+          <div class="meta-section">
+            <span class="meta-label">Status</span>
+            <span class="status-badge" [class.active]="user.isActive">
+              <span class="status-dot"></span>
+              {{ user.isActive ? 'Active' : 'Inactive' }}
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Key Attributes Section -->
+    <div class="key-attributes">
+      <div class="attribute-item">
+        <div class="attribute-icon">
+          <i class="fas fa-id-card"></i>
+        </div>
+        <div class="attribute-content">
+          <div class="attribute-label">User ID</div>
+          <div class="attribute-value">{{ getIdPrefix(user.roleName) }}{{ user.userId }}</div>
+        </div>
+      </div>
+      <div class="attribute-item">
+        <div class="attribute-icon">
+          <i class="fas fa-user"></i>
+        </div>
+        <div class="attribute-content">
+          <div class="attribute-label">Username</div>
+          <div class="attribute-value">{{ user.username }}</div>
+        </div>
+      </div>
+      <div class="attribute-item">
+        <div class="attribute-icon">
+          <i class="fas fa-calendar-alt"></i>
+        </div>
+        <div class="attribute-content">
+          <div class="attribute-label">Created At</div>
+          <div class="attribute-value">{{ formatDate(user.createdAt) }}</div>
+        </div>
+      </div>
+      <div class="attribute-item">
+        <div class="attribute-icon">
+          <i class="fas fa-sign-in-alt"></i>
+        </div>
+        <div class="attribute-content">
+          <div class="attribute-label">Last Login</div>
+          <div class="attribute-value">{{ formatDate(user.lastLoginAt) }}</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tabbed Content -->
+    <div class="tabbed-content">
+      <div class="tabs-header">
+        <button class="tab-btn" [class.active]="activeTab === 'details'" (click)="setActiveTab('details')">
+          Details
+        </button>
+        <button class="tab-btn" [class.active]="activeTab === 'contact'" (click)="setActiveTab('contact')">
+          Contact
+        </button>
+        <button class="tab-btn" [class.active]="activeTab === 'notifications'" (click)="setActiveTab('notifications')">
+          Notifications
+        </button>
+      </div>
+
+      <!-- Details Tab Content -->
+      <div class="tab-content" [class.active]="activeTab === 'details'">
+        <div class="content-section">
+          <div class="info-row">
+            <div class="info-label">
+              <i class="fas fa-user-tag"></i>
+              Full Name
+            </div>
+            <div class="info-value">{{ user.fullName || 'N/A' }}</div>
+          </div>
+          <div class="info-row">
+            <div class="info-label">
+              <i class="fas fa-envelope"></i>
+              Email
+            </div>
+            <div class="info-value">{{ user.email || 'N/A' }}</div>
+          </div>
+          <div class="info-row">
+            <div class="info-label">
+              <i class="fas fa-phone"></i>
+              Mobile Number
+            </div>
+            <div class="info-value">{{ user.phoneNumber || 'N/A' }}</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Contact Tab Content -->
+      <div class="tab-content" [class.active]="activeTab === 'contact'">
+        <div class="content-section">
+          <div class="info-row">
+            <div class="info-label">
+              <i class="fas fa-envelope"></i>
+              Email Address
+            </div>
+            <div class="info-value">{{ user.email || 'N/A' }}</div>
+          </div>
+          <div class="info-row">
+            <div class="info-label">
+              <i class="fas fa-phone"></i>
+              Phone Number
+            </div>
+            <div class="info-value">{{ user.phoneNumber || 'N/A' }}</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Notifications Tab Content -->
+      <div class="tab-content" [class.active]="activeTab === 'notifications'">
+        <div class="content-section">
+          <div class="info-row">
+            <div class="info-label">
+              <i class="fas fa-envelope-open-text"></i>
+              Email Notifications
+            </div>
+            <div class="info-value">
+              <span [class]="user.emailNotificationsEnabled ? 'badge badge-green' : 'badge badge-gray'">
+                {{ user.emailNotificationsEnabled ? 'Enabled' : 'Disabled' }}
+              </span>
+            </div>
+          </div>
+          <div class="info-row">
+            <div class="info-label">
+              <i class="fas fa-sms"></i>
+              SMS Notifications
+            </div>
+            <div class="info-value">
+              <span [class]="user.smsNotificationsEnabled ? 'badge badge-green' : 'badge badge-gray'">
+                {{ user.smsNotificationsEnabled ? 'Enabled' : 'Disabled' }}
+              </span>
+            </div>
+          </div>
+          <div class="info-row">
+            <div class="info-label">
+              <i class="fas fa-bell"></i>
+              In-App Notifications
+            </div>
+            <div class="info-value">
+              <span [class]="user.inAppNotificationsEnabled ? 'badge badge-green' : 'badge badge-gray'">
+                {{ user.inAppNotificationsEnabled ? 'Enabled' : 'Disabled' }}
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

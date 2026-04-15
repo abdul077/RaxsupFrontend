@@ -1,0 +1,91 @@
+<div class="container-fluid">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>Create Payroll</h2>
+    <button class="btn btn-secondary" (click)="router.navigate(['/payroll/list'])">
+      <i class="fas fa-arrow-left me-2"></i>Back to List
+    </button>
+  </div>
+
+  <div class="row">
+    <div class="col-md-8">
+      <div class="card">
+        <div class="card-body">
+          <form (ngSubmit)="onSubmit()">
+            <div class="row mb-3">
+              <div class="col-md-6">
+                <label class="form-label">Driver</label>
+                <select class="form-select" [(ngModel)]="request.driverId" name="driverId" [disabled]="!!settlementId">
+                  <option [value]="undefined">Select Driver</option>
+                  <option *ngFor="let driver of drivers" [value]="driver.driverId">
+                    {{ driver.fullName }}
+                  </option>
+                </select>
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">Owner Operator (if applicable)</label>
+                <input type="number" class="form-control" [(ngModel)]="request.ownerOperatorId" name="ownerOperatorId" 
+                       placeholder="Owner Operator ID" [disabled]="!!settlementId">
+              </div>
+            </div>
+
+            <div class="row mb-3">
+              <div class="col-md-6">
+                <label class="form-label">Pay Period Start</label>
+                <input type="date" class="form-control" [(ngModel)]="request.payPeriodStart" name="payPeriodStart" required>
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">Pay Period End</label>
+                <input type="date" class="form-control" [(ngModel)]="request.payPeriodEnd" name="payPeriodEnd" required>
+              </div>
+            </div>
+
+            <div class="row mb-3">
+              <div class="col-md-6">
+                <label class="form-label">Gross Pay</label>
+                <input type="number" class="form-control" [(ngModel)]="request.grossPay" name="grossPay" 
+                       step="0.01" min="0" required>
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">Total Deductions</label>
+                <input type="number" class="form-control" [(ngModel)]="request.totalDeductions" name="totalDeductions" 
+                       step="0.01" min="0" required>
+              </div>
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label">Net Pay</label>
+              <div class="form-control-plaintext h4 text-primary">
+                ${{ calculateNetPay() | number:'1.2-2' }}
+              </div>
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label">Notes</label>
+              <textarea class="form-control" [(ngModel)]="request.notes" name="notes" rows="3"></textarea>
+            </div>
+
+            <div class="mb-3">
+              <div class="form-check">
+                <input class="form-check-input" type="checkbox" [(ngModel)]="request.syncToEveree" name="syncToEveree" id="syncToEveree">
+                <label class="form-check-label" for="syncToEveree">
+                  Sync to Everee immediately after creation
+                </label>
+              </div>
+            </div>
+
+            <div class="d-flex justify-content-end">
+              <button type="button" class="btn btn-secondary me-2" (click)="router.navigate(['/payroll/list'])">
+                Cancel
+              </button>
+              <button type="submit" class="btn btn-primary" [disabled]="loading">
+                <span *ngIf="loading" class="spinner-border spinner-border-sm me-2"></span>
+                Create Payroll
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+

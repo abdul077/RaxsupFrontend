@@ -1,0 +1,151 @@
+<div class="chat-list-container">
+  <div class="chat-list-header">
+    <h2>Messages</h2>
+    <button class="btn btn-primary btn-sm" (click)="createNewChat()">
+      <i class="fas fa-plus"></i> New Chat
+    </button>
+  </div>
+
+  <!-- Create Chat Modal -->
+  <div *ngIf="showCreateModal" class="modal-overlay" (click)="showCreateModal = false">
+    <div class="modal-content" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h2>Start New Chat</h2>
+        <button class="btn-close" (click)="showCreateModal = false">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="chat-type-selector">
+          <button 
+            class="btn" 
+            [class.btn-primary]="chatType === 'direct'"
+            [class.btn-outline-primary]="chatType !== 'direct'"
+            (click)="chatType = 'direct'">
+            <i class="fas fa-user"></i> Direct Chat
+          </button>
+          <button 
+            class="btn" 
+            [class.btn-primary]="chatType === 'group'"
+            [class.btn-outline-primary]="chatType !== 'group'"
+            (click)="chatType = 'group'">
+            <i class="fas fa-users"></i> Group Chat
+          </button>
+        </div>
+
+        <!-- Direct Chat Form -->
+        <div *ngIf="chatType === 'direct'" class="chat-form">
+          <div class="form-group">
+            <label>Select User *</label>
+            <input 
+              type="text" 
+              class="form-control" 
+              placeholder="Search users..."
+              [(ngModel)]="searchTerm">
+            <div class="user-list">
+              <div 
+                *ngFor="let user of getFilteredUsers()"
+                class="user-item"
+                (click)="selectedUserId = user.userId"
+                [class.selected]="selectedUserId === user.userId">
+                <div class="user-avatar-small">
+                  {{ (user.fullName || user.username || 'U').charAt(0).toUpperCase() }}
+                </div>
+                <div class="user-info">
+                  <div class="user-name">{{ user.fullName || user.username }}</div>
+                  <div class="user-email">{{ user.email }}</div>
+                </div>
+                <i class="fas fa-check" *ngIf="selectedUserId === user.userId"></i>
+              </div>
+              <div *ngIf="getFilteredUsers().length === 0" class="no-users">
+                No users found
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Group Chat Form -->
+        <div *ngIf="chatType === 'group'" class="chat-form">
+          <div class="form-group">
+            <label>Group Name *</label>
+            <input 
+              type="text" 
+              class="form-control" 
+              placeholder="Enter group name"
+              [(ngModel)]="groupName"
+              required>
+          </div>
+          <div class="form-group">
+            <label>Select Members *</label>
+            <input 
+              type="text" 
+              class="form-control" 
+              placeholder="Search users..."
+              [(ngModel)]="searchTerm">
+            <div class="user-list">
+              <div 
+                *ngFor="let user of getFilteredUsers()"
+                class="user-item"
+                (click)="toggleUserSelection(user.userId)"
+                [class.selected]="isUserSelected(user.userId)">
+                <div class="user-avatar-small">
+                  {{ (user.fullName || user.username || 'U').charAt(0).toUpperCase() }}
+                </div>
+                <div class="user-info">
+                  <div class="user-name">{{ user.fullName || user.username }}</div>
+                  <div class="user-email">{{ user.email }}</div>
+                </div>
+                <i class="fas fa-check" *ngIf="isUserSelected(user.userId)"></i>
+              </div>
+              <div *ngIf="getFilteredUsers().length === 0" class="no-users">
+                No users found
+              </div>
+            </div>
+            <small class="text-muted" *ngIf="selectedUserIds.length > 0">
+              {{ selectedUserIds.length }} member(s) selected
+            </small>
+          </div>
+        </div>
+
+        <div class="form-actions">
+          <button class="btn btn-secondary" (click)="showCreateModal = false">Cancel</button>
+          <button 
+            class="btn btn-primary" 
+            (click)="onCreateChat()"
+            [disabled]="(chatType === 'direct' && !selectedUserId) || (chatType === 'group' && (!groupName.trim() || selectedUserIds.length === 0))">
+            Create Chat
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="chat-list">
+    <div
+      class="chat-item"
+      *ngFor="let chat of chats"
+      (click)="openChat(chat.chatId)"
+      [class.active]="false">
+      <div class="chat-avatar">
+        {{ getChatAvatar(chat) }}
+      </div>
+      <div class="chat-info">
+        <div class="chat-header">
+          <span class="chat-name">{{ getChatDisplayName(chat) }}</span>
+          <span class="chat-time" *ngIf="chat.lastMessageAt">
+            {{ formatTime(chat.lastMessageAt) }}
+          </span>
+        </div>
+        <div class="chat-preview">
+          <span class="chat-message">{{ chat.lastMessagePreview || 'No messages yet' }}</span>
+          <span class="unread-badge" *ngIf="chat.unreadCount > 0">
+            {{ chat.unreadCount }}
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <div class="no-chats" *ngIf="chats.length === 0">
+      <p>No chats yet. Start a new conversation!</p>
+    </div>
+  </div>
+</div>
+

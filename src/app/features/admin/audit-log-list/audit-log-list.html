@@ -1,0 +1,152 @@
+<div class="audit-log-list">
+  <div class="page-header">
+    <div class="header-content">
+      <h1>Audit Logs</h1>
+      <p class="subtitle">Track and monitor all system activities and changes</p>
+    </div>
+  </div>
+
+  <div class="filters-card">
+    <div class="filters-header">
+      <h3><i class="fas fa-filter me-2"></i>Filters</h3>
+    </div>
+    <div class="filters-body">
+      <div class="filters-grid">
+        <div class="form-group">
+          <label class="form-label">
+            <i class="fas fa-user me-1"></i>User ID
+          </label>
+          <div class="input-group">
+            <span class="input-group-text"><i class="fas fa-hashtag"></i></span>
+            <input
+              type="number"
+              class="form-control"
+              [(ngModel)]="filterUserId"
+              placeholder="Enter User ID">
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">
+            <i class="fas fa-calendar-alt me-1"></i>From Date
+          </label>
+          <div class="input-group">
+            <span class="input-group-text"><i class="fas fa-calendar"></i></span>
+            <input
+              type="date"
+              class="form-control"
+              [(ngModel)]="filterFromDate">
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">
+            <i class="fas fa-calendar-alt me-1"></i>To Date
+          </label>
+          <div class="input-group">
+            <span class="input-group-text"><i class="fas fa-calendar"></i></span>
+            <input
+              type="date"
+              class="form-control"
+              [(ngModel)]="filterToDate">
+          </div>
+        </div>
+        <div class="form-group filter-actions">
+          <label class="form-label d-block">&nbsp;</label>
+          <div class="filter-buttons">
+            <button class="btn btn-primary" (click)="applyFilters()" title="Apply Filters">
+              <i class="fas fa-filter me-1"></i>Apply
+            </button>
+            <button class="btn btn-outline-secondary" (click)="clearFilters()" title="Clear Filters">
+              <i class="fas fa-times me-1"></i>Clear
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="audit-logs-container">
+    <div class="load-list-card load-list-card-with-sticky">
+      <div class="load-list-card-header">
+        <h5><i class="fas fa-list me-2"></i>Audit Logs</h5>
+      </div>
+      <div class="load-list-card-body p-0">
+        <ng-template #auditLogActionsCell let-log>
+          <button
+            *ngIf="log.details"
+            type="button"
+            class="btn btn-sm btn-outline-primary"
+            (click)="openDetailsModal(log); $event.stopPropagation()"
+            title="View full details">
+            <i class="fas fa-expand-alt me-1"></i>View
+          </button>
+        </ng-template>
+        <app-data-table
+          [config]="tableConfig"
+          [dataSource]="dataSource"
+          [emptyMessage]="'No audit logs found. Try adjusting your filters.'"
+          [refreshTrigger]="tableRefreshTrigger">
+        </app-data-table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Details modal -->
+@if (selectedLog) {
+  <div class="modal-overlay" (click)="closeDetailsModal()">
+    <div class="modal-dialog modal-lg" (click)="$event.stopPropagation()">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title"><i class="fas fa-info-circle me-2"></i>Audit Log Details</h5>
+          <button type="button" class="btn-close" (click)="closeDetailsModal()" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <div class="expanded-section mb-4">
+            <h4 class="details-modal-heading">Details <small class="tz-label">(times in ET)</small></h4>
+            @if (hasReadableDetails(selectedLog.details)) {
+              <div class="details-formatted">
+                @for (item of getFormattedDetails(selectedLog.details); track item.key) {
+                  <div class="detail-item">
+                    <span class="detail-key">{{ item.key }}:</span>
+                    <span class="detail-value" [class.change-value]="item.isChange">
+                      @if (item.isChange) {
+                        <span class="change-display">
+                          <span class="change-old">{{ item.oldValue }}</span>
+                          <span class="change-arrow">→</span>
+                          <span class="change-new">{{ item.newValue }}</span>
+                        </span>
+                      } @else {
+                        {{ item.value }}
+                      }
+                    </span>
+                  </div>
+                }
+              </div>
+            } @else {
+              <pre class="details-full">{{ selectedLog.details || 'No additional details available' }}</pre>
+            }
+          </div>
+          @if (selectedLog.entityId || selectedLog.userId) {
+            <div class="expanded-section">
+              <h4 class="details-modal-heading">Identifiers</h4>
+              <div class="identifiers">
+                @if (selectedLog.logId) {
+                  <span><strong>Log ID:</strong> {{ selectedLog.logId }}</span>
+                }
+                @if (selectedLog.userId) {
+                  <span><strong>User ID:</strong> {{ selectedLog.userId }}</span>
+                }
+                @if (selectedLog.entityId) {
+                  <span><strong>Entity ID:</strong> {{ selectedLog.entityId }}</span>
+                }
+              </div>
+            </div>
+          }
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" (click)="closeDetailsModal()">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
+}

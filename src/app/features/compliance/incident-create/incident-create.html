@@ -1,0 +1,356 @@
+<div class="container-fluid">
+  <!-- Compliance Navigation Tabs -->
+  <ul class="nav nav-tabs mb-4" role="tablist">
+    <li class="nav-item" role="presentation">
+      <a class="nav-link" routerLink="/compliance/dashboard" routerLinkActive="active">
+        <i class="fas fa-chart-pie me-2"></i>Dashboard
+      </a>
+    </li>
+    <li class="nav-item" role="presentation">
+      <a class="nav-link active" routerLink="/compliance/incidents" routerLinkActive="active" [routerLinkActiveOptions]="{exact: false}">
+        <i class="fas fa-exclamation-triangle me-2"></i>Incidents
+      </a>
+    </li>
+  </ul>
+
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+      <h4 class="mb-1">{{ isEditMode ? 'Edit Incident' : 'Create Incident' }}</h4>
+      <p class="text-muted mb-0">{{ isEditMode ? 'Update incident details' : 'Report a new incident' }}</p>
+    </div>
+    <button class="btn btn-outline-secondary" (click)="cancel()">
+      <i class="bi bi-x-circle me-2"></i>Cancel
+    </button>
+  </div>
+
+  @if (loading) {
+    <div class="text-center py-5">
+      <div class="spinner-border text-primary" role="status">
+        <span class="visually-hidden">Loading...</span>
+      </div>
+    </div>
+  }
+
+  @if (!loading) {
+    @if (showErrors && validationErrors.length > 0) {
+      <div class="alert alert-danger" role="alert">
+        <h5 class="alert-heading">Please fix the following errors:</h5>
+        <ul class="mb-0">
+          @for (error of validationErrors; track error) {
+            <li>{{ error }}</li>
+          }
+        </ul>
+      </div>
+    }
+    <div class="alert alert-info" role="alert">
+      <div class="d-flex">
+        <i class="fas fa-info-circle me-3 mt-1"></i>
+        <div>
+          <div><strong>Before saving, please verify:</strong></div>
+          <ul class="mb-0 ps-3">
+            <li>Incident Date is today or earlier (required).</li>
+            <li>Incident Type and Severity are selected (required).</li>
+            <li>Description is at least 10 characters (required).</li>
+            <li>Reported Date (if set) is not before Incident Date.</li>
+            <li>Location, City, State, Weather, Road text within limits.</li>
+            <li>Estimated Cost is zero or a positive number.</li>
+            <li>Equipment and Load lists only show items assigned to the selected Owner Operator’s assigned vehicle.</li>
+            <li>Incident number is auto-generated after save.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    <form (ngSubmit)="save()">
+      <div class="row">
+        <!-- Basic Information -->
+        <div class="col-12">
+          <div class="card mb-4">
+            <div class="card-header">
+              <h5 class="mb-0">Incident Information</h5>
+            </div>
+            <div class="card-body">
+              <div class="row g-3">
+                <div class="col-md-3">
+                  <label class="form-label">Incident Date <span class="text-danger">*</span></label>
+                  <input 
+                    type="date" 
+                    class="form-control" 
+                    [class.is-invalid]="hasError('incidentDate')"
+                    [class.is-valid]="isValid('incidentDate')"
+                    [(ngModel)]="formData.incidentDate" 
+                    name="incidentDate" 
+                    [max]="getMaxDate()"
+                    required
+                    (blur)="validateForm()">
+                  @if (hasError('incidentDate')) {
+                    <div class="invalid-feedback">{{ getFieldError('incidentDate') }}</div>
+                  }
+                  <small class="form-text text-muted">Must be today or earlier.</small>
+                </div>
+                <div class="col-md-3">
+                  <label class="form-label">Reported Date</label>
+                  <input 
+                    type="datetime-local" 
+                    class="form-control" 
+                    [class.is-invalid]="hasError('reportedDate')"
+                    [class.is-valid]="isValid('reportedDate') && formData.reportedDate"
+                    [(ngModel)]="formData.reportedDate" 
+                    name="reportedDate"
+                    [max]="getMaxDateTime()"
+                    (blur)="validateForm()">
+                  @if (hasError('reportedDate')) {
+                    <div class="invalid-feedback">{{ getFieldError('reportedDate') }}</div>
+                  }
+                  <small class="form-text text-muted">If set, cannot be before Incident Date.</small>
+                </div>
+                <div class="col-md-3">
+                  <label class="form-label">Incident Type <span class="text-danger">*</span></label>
+                  <select 
+                    class="form-select" 
+                    [class.is-invalid]="hasError('incidentType')"
+                    [class.is-valid]="isValid('incidentType')"
+                    [(ngModel)]="formData.incidentType" 
+                    name="incidentType" 
+                    required
+                    (change)="validateForm()">
+                    <option value="">Select Type</option>
+                    @for (type of incidentTypeOptions; track type) {
+                      <option [value]="type">{{ type }}</option>
+                    }
+                  </select>
+                  @if (hasError('incidentType')) {
+                    <div class="invalid-feedback">{{ getFieldError('incidentType') }}</div>
+                  }
+                  <small class="form-text text-muted">Choose the classification of the incident.</small>
+                </div>
+                <div class="col-md-3">
+                  <label class="form-label">Severity <span class="text-danger">*</span></label>
+                  <select 
+                    class="form-select" 
+                    [class.is-invalid]="hasError('severity')"
+                    [class.is-valid]="isValid('severity')"
+                    [(ngModel)]="formData.severity" 
+                    name="severity" 
+                    required
+                    (change)="validateForm()">
+                    @for (severity of severityOptions; track severity) {
+                      <option [value]="severity">{{ severity }}</option>
+                    }
+                  </select>
+                  @if (hasError('severity')) {
+                    <div class="invalid-feedback">{{ getFieldError('severity') }}</div>
+                  }
+                  <small class="form-text text-muted">Select the impact level.</small>
+                </div>
+                <div class="col-md-4">
+                  <label class="form-label">Owner Operator</label>
+                  <select class="form-select" [ngModel]="formData.driverId" (ngModelChange)="onDriverChange($event)" name="driverId">
+                    <option [ngValue]="undefined">Select Owner Operator</option>
+                    @for (driver of drivers; track driver.driverId) {
+                      <option [ngValue]="driver.driverId">RO{{ driver.driverId }} • {{ driver.fullName }}</option>
+                    }
+                  </select>
+                  <small class="form-text text-muted">Filters equipment to this owner operator’s vehicle.</small>
+                </div>
+                <div class="col-md-4">
+                  <label class="form-label">Load</label>
+                  <select class="form-select" [(ngModel)]="formData.loadId" name="loadId" [disabled]="!formData.driverId">
+                    <option [value]="undefined">{{ formData.driverId ? 'Select Load' : 'Select Owner Operator first' }}</option>
+                    @for (load of loads; track load.loadId) {
+                      <option [value]="load.loadId">{{ load.loadNumber }}</option>
+                    }
+                  </select>
+                  <small class="form-text text-muted">Shows only loads assigned to the selected owner operator.</small>
+                </div>
+                <div class="col-md-4">
+                  <label class="form-label">Equipment</label>
+                  <select class="form-select" [(ngModel)]="formData.equipmentId" name="equipmentId">
+                    <option [ngValue]="undefined">Select Equipment</option>
+                    @for (equipment of filteredEquipments; track equipment.equipmentId) {
+                      <option [ngValue]="equipment.equipmentId">
+                        {{ equipment.equipmentType }} • {{ equipment.plateNumber || equipment.vin || ('#' + equipment.equipmentId) }}
+                      </option>
+                    }
+                  </select>
+                  <small class="form-text text-muted">Shows only equipment assigned to the selected owner operator.</small>
+                </div>
+                <div class="col-md-12">
+                  <label class="form-label">Description <span class="text-danger">*</span></label>
+                  <textarea 
+                    class="form-control" 
+                    [class.is-invalid]="hasError('description')"
+                    [class.is-valid]="isValid('description')"
+                    [(ngModel)]="formData.description" 
+                    name="description" 
+                    rows="4" 
+                    required
+                    (blur)="validateForm()"
+                    maxlength="10000"></textarea>
+                  @if (hasError('description')) {
+                    <div class="invalid-feedback">{{ getFieldError('description') }}</div>
+                  }
+                  <small class="form-text text-muted">Minimum 10 characters describing what happened.</small>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Location Information -->
+        <div class="col-12">
+          <div class="card mb-4">
+            <div class="card-header">
+              <h5 class="mb-0">Location Information</h5>
+            </div>
+            <div class="card-body">
+              <div class="row g-3">
+                <div class="col-md-6">
+                  <label class="form-label">Location</label>
+                  <input 
+                    type="text" 
+                    class="form-control" 
+                    [class.is-invalid]="hasError('location')"
+                    [class.is-valid]="isValid('location') && formData.location"
+                    [(ngModel)]="formData.location" 
+                    name="location"
+                    maxlength="200"
+                    (blur)="validateForm()">
+                  @if (hasError('location')) {
+                    <div class="invalid-feedback">{{ getFieldError('location') }}</div>
+                  }
+                  <small class="form-text text-muted">Up to 200 chars. Enter the exact site of the incident.</small>
+                </div>
+                <div class="col-md-3">
+                  <label class="form-label">City</label>
+                  <input 
+                    type="text" 
+                    class="form-control" 
+                    [class.is-invalid]="hasError('city')"
+                    [class.is-valid]="isValid('city') && formData.city"
+                    [(ngModel)]="formData.city" 
+                    name="city"
+                    maxlength="100"
+                    (blur)="validateForm()">
+                  @if (hasError('city')) {
+                    <div class="invalid-feedback">{{ getFieldError('city') }}</div>
+                  }
+                  <small class="form-text text-muted">Up to 100 chars. City where the incident occurred.</small>
+                </div>
+                <div class="col-md-3">
+                  <label class="form-label">State</label>
+                  <input 
+                    type="text" 
+                    class="form-control" 
+                    [class.is-invalid]="hasError('state')"
+                    [class.is-valid]="isValid('state') && formData.state"
+                    [(ngModel)]="formData.state" 
+                    name="state"
+                    maxlength="50"
+                    (blur)="validateForm()">
+                  @if (hasError('state')) {
+                    <div class="invalid-feedback">{{ getFieldError('state') }}</div>
+                  }
+                  <small class="form-text text-muted">Up to 50 chars. Use 2-letter code if available.</small>
+                </div>
+                <div class="col-md-6">
+                  <label class="form-label">Weather Conditions</label>
+                  <input 
+                    type="text" 
+                    class="form-control" 
+                    [class.is-invalid]="hasError('weatherConditions')"
+                    [class.is-valid]="isValid('weatherConditions') && formData.weatherConditions"
+                    [(ngModel)]="formData.weatherConditions" 
+                    name="weatherConditions"
+                    maxlength="200"
+                    (blur)="validateForm()">
+                  @if (hasError('weatherConditions')) {
+                    <div class="invalid-feedback">{{ getFieldError('weatherConditions') }}</div>
+                  }
+                  <small class="form-text text-muted">Up to 200 chars. Example: “Clear, 70°F, light wind”.</small>
+                </div>
+                <div class="col-md-6">
+                  <label class="form-label">Road Conditions</label>
+                  <input 
+                    type="text" 
+                    class="form-control" 
+                    [class.is-invalid]="hasError('roadConditions')"
+                    [class.is-valid]="isValid('roadConditions') && formData.roadConditions"
+                    [(ngModel)]="formData.roadConditions" 
+                    name="roadConditions"
+                    maxlength="200"
+                    (blur)="validateForm()">
+                  @if (hasError('roadConditions')) {
+                    <div class="invalid-feedback">{{ getFieldError('roadConditions') }}</div>
+                  }
+                  <small class="form-text text-muted">Up to 200 chars. Example: “Dry asphalt” or “Icy shoulder”.</small>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Reporting Information -->
+        <div class="col-12">
+          <div class="card mb-4">
+            <div class="card-header">
+              <h5 class="mb-0">Reporting Information</h5>
+            </div>
+            <div class="card-body">
+              <div class="row g-3">
+                <div class="col-md-6">
+                  <div class="form-check">
+                    <input class="form-check-input" type="checkbox" [(ngModel)]="formData.isDOTReportable" name="isDOTReportable" id="dotReportable">
+                    <label class="form-check-label" for="dotReportable">
+                      DOT Reportable
+                    </label>
+                  </div>
+                  <small class="form-text text-muted">Check if the incident meets FMCSA/DOT reporting criteria (e.g., tow-away, injury requiring treatment away from scene, fatality, or hazmat release).</small>
+                </div>
+                <div class="col-md-6">
+                  <div class="form-check">
+                    <input class="form-check-input" type="checkbox" [(ngModel)]="formData.isOSHAReportable" name="isOSHAReportable" id="oshaReportable">
+                    <label class="form-check-label" for="oshaReportable">
+                      OSHA Reportable
+                    </label>
+                  </div>
+                  <small class="form-text text-muted">Check if OSHA-reportable (e.g., fatality, inpatient hospitalization, amputation, or loss of an eye).</small>
+                </div>
+                <div class="col-md-6">
+                  <label class="form-label">Estimated Cost</label>
+                  <input 
+                    type="number" 
+                    class="form-control" 
+                    [class.is-invalid]="hasError('estimatedCost')"
+                    [class.is-valid]="isValid('estimatedCost') && formData.estimatedCost !== undefined && formData.estimatedCost !== null"
+                    [(ngModel)]="formData.estimatedCost" 
+                    name="estimatedCost" 
+                    step="0.01"
+                    min="0"
+                    (blur)="validateForm()">
+                  @if (hasError('estimatedCost')) {
+                    <div class="invalid-feedback">{{ getFieldError('estimatedCost') }}</div>
+                  }
+                  <small class="form-text text-muted">Enter zero if unknown; must not be negative.</small>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Submit Buttons -->
+        <div class="col-12">
+          <div class="d-flex justify-content-end gap-2">
+            <button type="button" class="btn btn-outline-secondary" (click)="cancel()">Cancel</button>
+            <button type="submit" class="btn btn-primary" [disabled]="saving || (submitted && !isFormValid())">
+              @if (saving) {
+                <span class="spinner-border spinner-border-sm me-2"></span>
+              }
+              {{ isEditMode ? 'Update' : 'Create' }} Incident
+            </button>
+          </div>
+        </div>
+      </div>
+    </form>
+  }
+</div>
+
