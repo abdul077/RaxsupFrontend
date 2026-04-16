@@ -191,7 +191,7 @@
         <li *ngIf="canEditLoad()"><a class="dropdown-item" [routerLink]="['/loads', load.loadId]" [queryParams]="{tab: 'stops', action: 'add'}">Add Stops...</a></li>
         <li *ngIf="canEditLoad()"><hr class="dropdown-divider"></li>
         <li *ngIf="canEditLoad()"><a class="dropdown-item" [routerLink]="['/loads', load.loadId]">Edit Trip...</a></li>
-        <li *ngIf="canEditLoad()"><a class="dropdown-item" href="javascript:void(0)" (click)="openStatusModal(load)">Change Status...</a></li>
+        <li *ngIf="canUpdateLoadStatus()"><a class="dropdown-item" href="javascript:void(0)" (click)="openStatusModal(load)">Update Status...</a></li>
       </ul>
     </div>
   </ng-template>
@@ -631,7 +631,7 @@
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-secondary" (click)="closeModals()">Cancel</button>
-        <button type="button" class="btn btn-warning" (click)="updateStatus()">Update Status</button>
+        <button type="button" class="btn btn-warning" (click)="updateStatus()" [disabled]="!newStatus">Update Status</button>
       </div>
     </div>
   </div>

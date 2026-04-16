@@ -17,7 +17,7 @@
       </div>
       <div class="header-right">
         <div class="status-area" *ngIf="canEditLoadStatus()">
-          <select class="status-dropdown" [ngClass]="'status-' + load.status.toLowerCase()" [(ngModel)]="load.status" (change)="updateStatus(load.status)">
+          <select class="status-dropdown" [ngClass]="'status-' + load.status.toLowerCase()" [ngModel]="load.status" (ngModelChange)="updateStatus($event)">
             <option [value]="load.status">{{ getStatusDisplayName(load.status) }}</option>
             <option *ngFor="let status of getAvailableStatusTransitions()" [value]="status">{{ getStatusDisplayName(status) }}</option>
           </select>
@@ -1441,6 +1441,15 @@
     </div>
   </div>
 </div>
+
+<app-confirmation-modal
+  [show]="showStatusConfirmModal"
+  [data]="statusConfirmationData"
+  [loading]="statusUpdateLoading"
+  (confirm)="onStatusConfirmAccept()"
+  (cancel)="onStatusConfirmCancel()"
+  (close)="onStatusConfirmClose()">
+</app-confirmation-modal>
 
 <!-- Load overview note (visibility) -->
 <div class="modal fade" [class.show]="showNoteModal" [style.display]="showNoteModal ? 'block' : 'none'" style="background: rgba(0,0,0,0.6);" *ngIf="showNoteModal">

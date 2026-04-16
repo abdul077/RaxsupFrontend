@@ -83,7 +83,11 @@ export class LoadListComponent implements OnInit, OnDestroy {
   ];
   /** Status options for manual update; excludes Assigned (set automatically when driver is assigned). */
   get statusOptionsForUpdate(): string[] {
-    return this.statusOptions.filter(s => s !== 'Assigned');
+    if (!this.selectedLoad) {
+      return [];
+    }
+
+    return this.getAvailableStatusTransitions(this.selectedLoad);
   }
   newStatus: string = '';
 
@@ -323,8 +327,18 @@ export class LoadListComponent implements OnInit, OnDestroy {
   }
 
   openStatusModal(load: Load): void {
+    if (!this.canUpdateLoadStatus()) {
+      return;
+    }
+
     this.selectedLoad = load;
-    this.newStatus = load.status;
+    const availableTransitions = this.getAvailableStatusTransitions(load);
+    if (!availableTransitions.length) {
+      alert('No valid status updates are available for this load.');
+      return;
+    }
+
+    this.newStatus = availableTransitions[0] ?? '';
     this.showStatusModal = true;
   }
 
@@ -392,6 +406,17 @@ export class LoadListComponent implements OnInit, OnDestroy {
 
   updateStatus(): void {
     if (!this.selectedLoad) return;
+    if (!this.canUpdateLoadStatus()) return;
+    if (!this.newStatus) {
+      alert('Please select a valid status.');
+      return;
+    }
+
+    const allowedTransitions = this.getAvailableStatusTransitions(this.selectedLoad);
+    if (!allowedTransitions.includes(this.newStatus)) {
+      alert('This status update is not allowed for your role or the load state.');
+      return;
+    }
 
     // Assigned is set automatically when a driver is assigned; do not allow manual update
     if (this.newStatus === 'Assigned') {
@@ -867,5 +892,57 @@ export class LoadListComponent implements OnInit, OnDestroy {
 
   canEditLoad(): boolean {
     return this.authService.hasAnyRole(['Admin', 'Dispatcher']);
+  }
+
+  canUpdateLoadStatus(): boolean {
+    return this.authService.hasRole('Admin');
+  }
+
+  private getAvailableStatusTransitions(load: Load): string[] {
+    const currentStatus = load.status;
+    const isDispatcher = this.authService.hasAnyRole(['Dispatcher']);
+
+    // Dispatchers can only mark a delivered load as completed.
+    if (isDispatcher) {
+      return currentStatus === 'Delivered' ? ['Completed'] : [];
+    }
+
+    const statusFlow: Record<string, string[]> = {
+      'Created': [],
+      'Assigned': ['PickedUp', 'InTransit'],
+      'Dispatched': ['PickedUp', 'InTransit'],
+      'PickedUp': ['InTransit'],
+      'InTransit': ['Delivered'],
+      'Delivered': ['Completed', 'Settled'],
+      'Completed': ['Settled'],
+      'Settled': [],
+      'Cancelled': []
+    };
+
+    let allowedTransitions = [...(statusFlow[currentStatus] || [])];
+
+    if (allowedTransitions.includes('Delivered')) {
+      if (!this.canMarkAsDelivered(load) || !this.isLoadAssignedToDriver(load)) {
+        allowedTransitions = allowedTransitions.filter((status) => status !== 'Delivered');
+      }
+    }
+
+    if (currentStatus !== 'Cancelled' && currentStatus !== 'Settled') {
+      allowedTransitions.push('Cancelled');
+    }
+
+    return allowedTransitions;
+  }
+
+  private canMarkAsDelivered(load: Load): boolean {
+    if (!load.deliveryDateTime) {
+      return true;
+    }
+
+    return new Date() >= new Date(load.deliveryDateTime);
+  }
+
+  private isLoadAssignedToDriver(load: Load): boolean {
+    return !!(load.driverName || load.ownerOperatorName);
   }
 }

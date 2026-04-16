@@ -12,13 +12,14 @@ import { Driver } from '../../../core/models/driver.model';
 import { Customer } from '../../../core/models/customer.model';
 import { Equipment } from '../../../core/models/equipment.model';
 import { environment } from '../../../../environments/environment';
+import { ConfirmationModalComponent, ConfirmationModalData } from '../../../shared/components/confirmation-modal/confirmation-modal';
 
 // Google Maps type declarations
 declare var google: any;
 
 @Component({
   selector: 'app-load-detail',
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, ConfirmationModalComponent],
   providers: [DatePipe],
   templateUrl: './load-detail.html',
   styleUrl: './load-detail.scss',
@@ -43,6 +44,10 @@ export class LoadDetailComponent implements OnInit, AfterViewInit, OnDestroy {
   showRouteModal = false;
   assignmentValidationError: string = '';
   assignmentFieldErrors: { [key: string]: string } = {};
+  showStatusConfirmModal = false;
+  statusUpdateLoading = false;
+  statusConfirmationData: ConfirmationModalData | null = null;
+  pendingStatusUpdate: { previousStatus: string; nextStatus: string } | null = null;
 
   // Form data
   stopForm: CreateLoadStopRequest = {
@@ -1707,22 +1712,69 @@ export class LoadDetailComponent implements OnInit, AfterViewInit, OnDestroy {
       return;
     }
 
-    // Every status update requires explicit confirmation.
-    const confirmMessage = `Confirm status update from "${this.getStatusDisplayName(currentStatus)}" to "${this.getStatusDisplayName(status)}"?`;
-    if (!confirm(confirmMessage)) {
-      this.load.status = currentStatus;
+    this.openStatusConfirmation(currentStatus, status);
+  }
+
+  private openStatusConfirmation(currentStatus: string, nextStatus: string): void {
+    this.pendingStatusUpdate = { previousStatus: currentStatus, nextStatus };
+    this.statusConfirmationData = {
+      title: 'Confirm Status Update',
+      message: `Are you sure you want to update this load from <strong>${this.getStatusDisplayName(currentStatus)}</strong> to <strong>${this.getStatusDisplayName(nextStatus)}</strong>?`,
+      confirmText: 'Update Status',
+      cancelText: 'Keep Current Status',
+      confirmButtonClass: 'btn-success',
+      icon: 'fas fa-route',
+      iconColor: '#2563eb',
+      showDetails: true,
+      details: [
+        { label: 'Load', value: this.load?.loadNumber || '-', icon: 'fas fa-hashtag' },
+        { label: 'Current Status', value: this.getStatusDisplayName(currentStatus), icon: 'fas fa-circle' },
+        { label: 'New Status', value: this.getStatusDisplayName(nextStatus), icon: 'fas fa-arrow-right' }
+      ],
+      notice: 'This change will update the load timeline and notify related workflows.'
+    };
+    this.showStatusConfirmModal = true;
+  }
+
+  onStatusConfirmCancel(): void {
+    if (!this.load || !this.pendingStatusUpdate) {
+      this.closeStatusConfirmModal();
       return;
     }
 
-    this.loadService.updateLoadStatus(this.load.loadId, status).subscribe({
+    this.load.status = this.pendingStatusUpdate.previousStatus;
+    this.closeStatusConfirmModal();
+  }
+
+  onStatusConfirmClose(): void {
+    this.onStatusConfirmCancel();
+  }
+
+  onStatusConfirmAccept(): void {
+    if (!this.load || !this.pendingStatusUpdate) return;
+
+    const { previousStatus, nextStatus } = this.pendingStatusUpdate;
+    this.statusUpdateLoading = true;
+
+    this.loadService.updateLoadStatus(this.load.loadId, nextStatus).subscribe({
       next: () => {
+        this.statusUpdateLoading = false;
+        this.closeStatusConfirmModal();
         this.loadLoadDetail(this.load!.loadId);
       },
       error: (err) => {
-        this.load!.status = currentStatus;
+        this.statusUpdateLoading = false;
+        this.load!.status = previousStatus;
         alert(err?.error?.message || err?.message || 'Failed to update status');
       }
     });
+  }
+
+  private closeStatusConfirmModal(): void {
+    this.showStatusConfirmModal = false;
+    this.statusConfirmationData = null;
+    this.pendingStatusUpdate = null;
+    this.statusUpdateLoading = false;
   }
 
   // Get available status transitions for current load status
@@ -1730,7 +1782,7 @@ export class LoadDetailComponent implements OnInit, AfterViewInit, OnDestroy {
     if (!this.load) return [];
 
     const currentStatus = this.load.status;
-    const isDriver = this.authService.hasAnyRole(['Driver']);
+    const isDriver = this.isDriverLikeRole();
     const isDispatcher = this.authService.hasAnyRole(['Dispatcher']);
 
     // Drivers can only progress a load one step at a time:
@@ -1938,7 +1990,11 @@ export class LoadDetailComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   canEditLoadStatus(): boolean {
-    return this.authService.hasAnyRole(['Admin', 'Dispatcher', 'Driver']);
+    return this.authService.hasAnyRole(['Admin', 'Dispatcher']) || this.isDriverLikeRole();
+  }
+
+  private isDriverLikeRole(): boolean {
+    return this.authService.hasAnyRole(['Driver', 'OwnerOperator', 'Owner Operator']);
   }
 
   getAssignedDriver(): string | null {
