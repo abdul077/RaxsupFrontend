@@ -530,6 +530,33 @@ export class LoadListComponent implements OnInit, OnDestroy {
     }
   }
 
+  /**
+   * Bootstrap dropdowns won't auto-close if we stop event propagation to prevent row-click.
+   * Explicitly hide the dropdown after a menu item is selected.
+   */
+  closeActionsDropdown(event: Event): void {
+    event.stopPropagation();
+    const target = event.target as HTMLElement | null;
+    const dropdownRoot = target?.closest?.('.dropdown') as HTMLElement | null;
+    const toggle = dropdownRoot?.querySelector?.('[data-bs-toggle="dropdown"]') as HTMLElement | null;
+
+    const w = window as any;
+    const Dropdown = w?.bootstrap?.Dropdown;
+    if (Dropdown && toggle) {
+      try {
+        Dropdown.getOrCreateInstance(toggle).hide();
+        return;
+      } catch {
+        // fall through to class-based hide
+      }
+    }
+
+    // Fallback (no bootstrap instance): remove show classes.
+    dropdownRoot?.classList?.remove('show');
+    const menu = dropdownRoot?.querySelector?.('.dropdown-menu') as HTMLElement | null;
+    menu?.classList?.remove('show');
+  }
+
   /** Driver/O-O name for drawer: from load or first assignment. */
   get drawerDriverName(): string {
     if (!this.drawerLoad) return '';
@@ -583,7 +610,7 @@ export class LoadListComponent implements OnInit, OnDestroy {
 
   /** Initial for avatar */
   getInitial(name: string | undefined): string {
-    if (!name || !name.trim()) return '?';
+    if (!name || !name.trim()) return '—';
     const parts = name.trim().split(/\s+/);
     if (parts.length >= 2) return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
     return name[0].toUpperCase();

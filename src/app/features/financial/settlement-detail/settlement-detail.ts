@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { CommonModule, Location } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, ActivatedRoute, RouterModule } from '@angular/router';
 import { FinancialService } from '../../../core/services/financial.service';
@@ -21,14 +21,17 @@ export class SettlementDetailComponent implements OnInit {
   cancelReason = '';
   paymentMethod = 'ACH';
   paymentReference = '';
+  returnUrl: string | null = null;
 
   constructor(
     private financialService: FinancialService,
     private router: Router,
-    private route: ActivatedRoute
+    private route: ActivatedRoute,
+    private location: Location
   ) {}
 
   ngOnInit(): void {
+    this.returnUrl = this.route.snapshot.queryParamMap.get('returnUrl');
     this.route.params.subscribe(params => {
       const id = +params['id'];
       this.loadSettlement(id);
@@ -50,6 +53,18 @@ export class SettlementDetailComponent implements OnInit {
   }
 
   navigateBack(): void {
+    if (this.returnUrl) {
+      this.router.navigateByUrl(this.returnUrl);
+      return;
+    }
+
+    // If the user landed here via normal in-app navigation, prefer browser history.
+    // If there is no meaningful history (e.g. opened in a new tab), fall back to list.
+    if (window.history.length > 1) {
+      this.location.back();
+      return;
+    }
+
     this.router.navigate(['/financial/settlements']);
   }
 

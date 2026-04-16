@@ -530,7 +530,9 @@ export class UserListComponent implements OnInit {
   }
 
   openViewModal(user: UserDetail): void {
-    this.router.navigate(['/admin/users', user.userId]);
+    this.router.navigate(['/admin/users', user.userId], {
+      queryParams: { from: this.inactiveOnlyPage ? 'inactive' : 'active' }
+    });
   }
 
   openEditModal(user: UserDetail): void {

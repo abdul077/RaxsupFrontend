@@ -233,10 +233,23 @@ export class DataTableComponent<T = any> implements OnInit, OnChanges, OnDestroy
     this.loadData();
   }
 
-  onRowClick(row: T): void {
-    if (this.config?.rowClickable !== false) {
-      this.rowClick.emit(row);
+  onRowClick(row: T, event?: MouseEvent): void {
+    if (this.config?.rowClickable === false) {
+      return;
     }
+
+    const target = event?.target as HTMLElement | null;
+    if (target) {
+      // If user clicked an interactive control inside the row, don't treat it as a row click.
+      // This avoids swallowing clicks on dropdowns, links, and buttons.
+      const interactiveSelector =
+        'a,button,input,select,textarea,label,[role="button"],.dropdown,.dropdown-menu,.dropdown-item';
+      if (target.closest(interactiveSelector)) {
+        return;
+      }
+    }
+
+    this.rowClick.emit(row);
   }
 
   onActionClick(action: any, row: T): void {

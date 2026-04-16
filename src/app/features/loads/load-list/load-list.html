@@ -159,9 +159,9 @@
   <ng-template #driverEquipmentCell let-load>
     <div class="driver-equipment-cell">
       <div class="driver-row">
-        <span class="driver-avatar">{{ getInitial(load.ownerOperatorName || load.driverName) }}</span>
+        <span class="driver-avatar">{{ (load.ownerOperatorName || load.driverName) ? getInitial(load.ownerOperatorName || load.driverName) : '—' }}</span>
         <div class="driver-info">
-          <span class="driver-name">{{ load.ownerOperatorName || load.driverName || '-' }}</span>
+          <span class="driver-name">{{ load.ownerOperatorName || load.driverName || 'Unassigned' }}</span>
           <span class="driver-status" *ngIf="load.ownerOperatorName || load.driverName">{{ getDriverStatusDisplay(load) }}</span>
         </div>
       </div>
@@ -184,14 +184,16 @@
         <i class="fas fa-ellipsis-h tms-actions-dots"></i>
       </button>
       <ul class="dropdown-menu dropdown-menu-end tms-actions-dropdown">
-        <li><a class="dropdown-item" [routerLink]="['/loads', load.loadId]">View Trip Summary...</a></li>
-        <li><a class="dropdown-item" [routerLink]="['/loads', load.loadId]" [queryParams]="{tab: 'route'}">Track Location...</a></li>
+        <li><a class="dropdown-item" [routerLink]="['/loads', load.loadId]" (click)="closeActionsDropdown($event)">View Trip Summary...</a></li>
+        <li><a class="dropdown-item" [routerLink]="['/loads', load.loadId]" [queryParams]="{tab: 'route'}" (click)="closeActionsDropdown($event)">Track Location...</a></li>
         <li *ngIf="canEditLoad()"><hr class="dropdown-divider"></li>
-        <li *ngIf="canEditLoad()"><a class="dropdown-item" [routerLink]="['/loads', load.loadId]" [queryParams]="{tab: 'assignments', action: 'assign'}">Assign Driver & Equipment...</a></li>
-        <li *ngIf="canEditLoad()"><a class="dropdown-item" [routerLink]="['/loads', load.loadId]" [queryParams]="{tab: 'stops', action: 'add'}">Add Stops...</a></li>
+        <li *ngIf="canEditLoad()"><a class="dropdown-item" [routerLink]="['/loads', load.loadId]" [queryParams]="{tab: 'assignments', action: 'assign'}" (click)="closeActionsDropdown($event)">Assign Driver & Equipment...</a></li>
+        <li *ngIf="canEditLoad()"><a class="dropdown-item" [routerLink]="['/loads', load.loadId]" [queryParams]="{tab: 'stops', action: 'add'}" (click)="closeActionsDropdown($event)">Add Stops...</a></li>
         <li *ngIf="canEditLoad()"><hr class="dropdown-divider"></li>
-        <li *ngIf="canEditLoad()"><a class="dropdown-item" [routerLink]="['/loads', load.loadId]">Edit Trip...</a></li>
-        <li *ngIf="canUpdateLoadStatus()"><a class="dropdown-item" href="javascript:void(0)" (click)="openStatusModal(load)">Update Status...</a></li>
+        <li *ngIf="canEditLoad()">
+          <button type="button" class="dropdown-item" (click)="closeActionsDropdown($event); openEditModal(load)">Edit Trip...</button>
+        </li>
+        <li *ngIf="canUpdateLoadStatus()"><a class="dropdown-item" href="javascript:void(0)" (click)="closeActionsDropdown($event); openStatusModal(load)">Update Status...</a></li>
       </ul>
     </div>
   </ng-template>

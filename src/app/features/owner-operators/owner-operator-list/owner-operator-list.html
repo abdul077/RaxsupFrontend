@@ -21,6 +21,7 @@
             class="form-control" 
             placeholder="Search by company name, contact, email, or phone..."
             [(ngModel)]="searchTerm"
+            (ngModelChange)="onSearchTermChange($event)"
             (keyup.enter)="applyFilters()">
         </div>
         <div class="col-md-3">

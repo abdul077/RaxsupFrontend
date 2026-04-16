@@ -421,12 +421,12 @@
             <div class="tms-hos-row">
               <span>Driving Hours:</span>
               <span>{{ stats.drivingHoursToday ?? 0 }} hrs</span>
-              <a routerLink="/compliance" class="btn btn-sm btn-success">View</a>
+              <a routerLink="/compliance/dashboard" class="btn btn-sm btn-success">View</a>
             </div>
             <div class="tms-hos-row">
               <span>HOS Remaining:</span>
               <span>{{ stats.hosRemaining ?? 11 }} hrs</span>
-              <a routerLink="/compliance" class="btn btn-sm btn-danger">View</a>
+              <a routerLink="/compliance/dashboard" class="btn btn-sm btn-danger">View</a>
             </div>
             <div class="tms-hos-row tms-hos-violations" *ngIf="(stats.violationsCount ?? 0) > 0">
               <span>Violations:</span>
