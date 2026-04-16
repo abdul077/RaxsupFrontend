@@ -46,6 +46,42 @@
         Brokers
       </h5>
     </div>
+    <div class="customer-filter-bar">
+      <div class="customer-filter-item">
+        <label for="statusFilter" class="form-label mb-1">Status</label>
+        <select
+          id="statusFilter"
+          class="form-select"
+          [(ngModel)]="selectedStatusFilter"
+          (ngModelChange)="onFiltersChanged()">
+          <option value="all">All</option>
+          <option value="active">Active</option>
+          <option value="inactive">Inactive</option>
+        </select>
+      </div>
+      <div class="customer-filter-item">
+        <label for="mcDotFilter" class="form-label mb-1">MC/DOT Availability</label>
+        <select
+          id="mcDotFilter"
+          class="form-select"
+          [(ngModel)]="selectedMcDotFilter"
+          (ngModelChange)="onFiltersChanged()">
+          <option value="all">All</option>
+          <option value="hasMc">Has MC</option>
+          <option value="hasDot">Has DOT</option>
+          <option value="missingBoth">Missing Both</option>
+        </select>
+      </div>
+      <div class="customer-filter-actions">
+        <button
+          type="button"
+          class="btn btn-outline-secondary btn-sm"
+          (click)="clearFilters()"
+          [disabled]="!hasActiveCategoryFilters()">
+          Clear Filters
+        </button>
+      </div>
+    </div>
     <div class="customer-list-card-body p-0">
       <app-data-table
         [config]="tableConfig"

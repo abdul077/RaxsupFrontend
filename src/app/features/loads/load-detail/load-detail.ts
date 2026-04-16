@@ -2017,16 +2017,12 @@ export class LoadDetailComponent implements OnInit, AfterViewInit, OnDestroy {
     }
   }
 
-  getMargin(): number {
-    if (!this.load) return 0;
-    
-    const totalRate = this.load.totalRate || 0;
-    const totalAccessorials = this.getTotalAccessorials();
-    const totalRevenue = totalRate + this.getDeadheadRevenue() + totalAccessorials;
-    
-    // This would need actual cost data to calculate real margin
-    // For now, return a placeholder
-    return totalRevenue * 0.2; // Assuming 20% margin
+  getRaxsupCommission(): number {
+    return this.calculateTotalWithAccessorials() * 0.15;
+  }
+
+  getDriverCalculatedAmount(): number {
+    return this.calculateTotalWithAccessorials() - this.getRaxsupCommission();
   }
 
   activeNoteTab: 'internal' | 'driver' | 'customer' | 'public' = 'internal';

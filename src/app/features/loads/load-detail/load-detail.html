@@ -439,15 +439,35 @@
               <span class="financial-label">Total Revenue</span>
               <span class="financial-value total-amount">{{ formatCurrency(calculateTotalWithAccessorials(), load.currency) }}</span>
             </div>
-            <div class="financial-row margin-row">
+            <div class="financial-row commission-row">
               <span class="financial-label">
-                <i class="fas fa-arrow-trend-up margin-icon"></i>
-                Margin
+                <i class="fas fa-percentage commission-icon"></i>
+                Raxsup Commission 15%
               </span>
-              <span class="financial-value margin-amount">
-                {{ formatCurrency(getMargin(), load.currency) }}
-                <span class="margin-per-stop">/Stop</span>
+              <span class="financial-value commission-amount">
+                -{{ formatCurrency(getRaxsupCommission(), load.currency) }}
               </span>
+            </div>
+            <div class="financial-row driver-amount-row">
+              <span class="financial-label">
+                <i class="fas fa-user-check driver-amount-icon"></i>
+                Driver Calculated Amount
+              </span>
+              <span
+                class="financial-value driver-amount-value"
+                title="Calculated as Total Revenue minus Raxsup Commission. Deductions/advances are not included.">
+                {{ formatCurrency(getDriverCalculatedAmount(), load.currency) }}
+              </span>
+            </div>
+            <div class="financial-helper-text">
+              Commission is calculated from Total Revenue (Base + Deadhead + Accessorials).
+            </div>
+            <div class="financial-formula">
+              {{ formatCurrency(calculateTotalWithAccessorials(), load.currency) }}
+              -
+              {{ formatCurrency(getRaxsupCommission(), load.currency) }}
+              =
+              {{ formatCurrency(getDriverCalculatedAmount(), load.currency) }}
             </div>
           </div>
         </div>
@@ -1011,6 +1031,20 @@
         <div class="col-md-6">
           <label class="form-label text-muted">Total Amount</label>
           <p class="mb-0"><strong>{{ formatCurrency(calculateTotalWithAccessorials(), load.currency) }}</strong></p>
+        </div>
+        <div class="col-md-6">
+          <label class="form-label text-muted">Raxsup Commission 15%</label>
+          <p class="mb-0"><strong class="text-primary">-{{ formatCurrency(getRaxsupCommission(), load.currency) }}</strong></p>
+        </div>
+        <div class="col-md-6">
+          <label class="form-label text-muted">Driver Calculated Amount</label>
+          <p class="mb-0">
+            <strong
+              class="text-success"
+              title="Calculated as Total Revenue minus Raxsup Commission. Deductions/advances are not included.">
+              {{ formatCurrency(getDriverCalculatedAmount(), load.currency) }}
+            </strong>
+          </p>
         </div>
         <div class="col-md-6">
           <label class="form-label text-muted">Status</label>

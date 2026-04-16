@@ -65,6 +65,10 @@ export class LoadCreateComponent implements OnInit, AfterViewInit, OnDestroy {
     notes: ''
   };
   editingStopIndex: number | null = null;
+  totalDistanceKm: number | null = null;
+  calculatingDistance = false;
+  distanceError = '';
+  private routeRecalcTimer: ReturnType<typeof setTimeout> | null = null;
 
   constructor(
     private loadService: LoadService,
@@ -305,6 +309,10 @@ export class LoadCreateComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
+    if (this.routeRecalcTimer) {
+      clearTimeout(this.routeRecalcTimer);
+      this.routeRecalcTimer = null;
+    }
     if (this.pacItemMousedownListener) {
       document.removeEventListener('mousedown', this.pacItemMousedownListener, true);
       this.pacItemMousedownListener = null;
@@ -762,6 +770,7 @@ export class LoadCreateComponent implements OnInit, AfterViewInit, OnDestroy {
       if (!address) return;
       this.ngZone.run(() => {
         this.formData.origin = address;
+        this.scheduleRouteRecalculation();
         const originInputElement = document.getElementById('origin-input') as HTMLInputElement;
         if (originInputElement) {
           originInputElement.value = address;
@@ -912,6 +921,7 @@ export class LoadCreateComponent implements OnInit, AfterViewInit, OnDestroy {
       if (!address) return;
       this.ngZone.run(() => {
         this.formData.destination = address;
+        this.scheduleRouteRecalculation();
         const destinationInputElement = document.getElementById('destination-input') as HTMLInputElement;
         if (destinationInputElement) {
           destinationInputElement.value = address;
@@ -1836,6 +1846,7 @@ export class LoadCreateComponent implements OnInit, AfterViewInit, OnDestroy {
       this.stops.push({ ...this.stopForm });
     }
     this.stops.sort((a, b) => a.sequenceNo - b.sequenceNo);
+    this.scheduleRouteRecalculation();
     this.showStopModal = false;
     this.resetStopForm();
   }
@@ -1843,6 +1854,7 @@ export class LoadCreateComponent implements OnInit, AfterViewInit, OnDestroy {
   deleteStop(index: number): void {
     if (confirm('Are you sure you want to delete this stop?')) {
       this.stops.splice(index, 1);
+      this.scheduleRouteRecalculation();
     }
   }
 
@@ -2026,6 +2038,7 @@ export class LoadCreateComponent implements OnInit, AfterViewInit, OnDestroy {
     const dhDest = this.formData.deadheadDestination?.trim();
     const loadData: CreateLoadRequest = {
       ...this.formData,
+      distanceKm: this.totalDistanceKm ?? undefined,
       pickupDateTime: pickupDateTime,
       deliveryDateTime: deliveryDateTime,
       customerId: this.formData.customerId || undefined,
@@ -2201,5 +2214,90 @@ export class LoadCreateComponent implements OnInit, AfterViewInit, OnDestroy {
     if (!dateString) return '';
     const date = new Date(dateString);
     return date.toLocaleDateString() + ' ' + date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  }
+
+  getStopsSummary(): string {
+    return [...this.stops]
+      .sort((a, b) => a.sequenceNo - b.sequenceNo)
+      .map((stop) => stop.location?.trim())
+      .filter((location): location is string => !!location)
+      .join(' -> ');
+  }
+
+  onRouteInputChanged(): void {
+    this.scheduleRouteRecalculation();
+  }
+
+  private scheduleRouteRecalculation(): void {
+    if (this.routeRecalcTimer) {
+      clearTimeout(this.routeRecalcTimer);
+    }
+    this.routeRecalcTimer = setTimeout(() => {
+      this.routeRecalcTimer = null;
+      this.recalculateRouteDistance();
+    }, 450);
+  }
+
+  private recalculateRouteDistance(): void {
+    const origin = this.formData.origin?.trim();
+    const destination = this.formData.destination?.trim();
+
+    if (!origin || !destination) {
+      this.totalDistanceKm = null;
+      this.distanceError = '';
+      this.calculatingDistance = false;
+      return;
+    }
+
+    if (typeof google === 'undefined' || !google.maps || !google.maps.DirectionsService) {
+      this.distanceError = 'Distance preview unavailable.';
+      this.totalDistanceKm = null;
+      return;
+    }
+
+    this.calculatingDistance = true;
+    this.distanceError = '';
+
+    const orderedStops = [...this.stops]
+      .sort((a, b) => a.sequenceNo - b.sequenceNo)
+      .map((stop) => stop.location?.trim())
+      .filter((location) => !!location)
+      .map((location) => ({ location, stopover: true }));
+
+    const directionsService = new google.maps.DirectionsService();
+    directionsService.route(
+      {
+        origin,
+        destination,
+        waypoints: orderedStops,
+        optimizeWaypoints: false,
+        travelMode: google.maps.TravelMode.DRIVING
+      },
+      (result: any, status: any) => {
+        this.ngZone.run(() => {
+          this.calculatingDistance = false;
+
+          if (status !== google.maps.DirectionsStatus.OK || !result?.routes?.length) {
+            this.totalDistanceKm = null;
+            this.distanceError = 'Could not calculate route distance yet.';
+            return;
+          }
+
+          const totalMeters = (result.routes[0].legs || []).reduce(
+            (sum: number, leg: any) => sum + (leg.distance?.value || 0),
+            0
+          );
+
+          if (totalMeters <= 0) {
+            this.totalDistanceKm = null;
+            this.distanceError = 'Could not calculate route distance yet.';
+            return;
+          }
+
+          this.totalDistanceKm = Number((totalMeters / 1000).toFixed(2));
+          this.distanceError = '';
+        });
+      }
+    );
   }
 }

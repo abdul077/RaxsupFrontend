@@ -19,6 +19,8 @@ import { PagedResult } from '../../../core/models/load.model';
 })
 export class CustomerListComponent implements OnInit, AfterViewInit {
   customers: Customer[] = [];
+  selectedStatusFilter: 'all' | 'active' | 'inactive' = 'all';
+  selectedMcDotFilter: 'all' | 'hasMc' | 'hasDot' | 'missingBoth' = 'all';
   showCreateModal = false;
   showEditModal = false;
   /** Accountants can view but not edit or modify brokers */
@@ -68,7 +70,7 @@ export class CustomerListComponent implements OnInit, AfterViewInit {
         label: 'ID',
         sortable: true,
         width: '80px',
-        render: (customer: Customer) => String(customer.customerId)
+        render: (customer: Customer) => this.formatBrokerId(customer.customerId)
       },
       {
         key: 'name',
@@ -76,14 +78,6 @@ export class CustomerListComponent implements OnInit, AfterViewInit {
         sortable: true,
         filterable: true,
         filterType: 'text'
-      },
-      {
-        key: 'contactPerson',
-        label: 'Contact Person',
-        sortable: true,
-        filterable: true,
-        filterType: 'text',
-        render: (customer: Customer) => customer.contactPerson || '-'
       },
       {
         key: 'email',
@@ -100,6 +94,14 @@ export class CustomerListComponent implements OnInit, AfterViewInit {
         filterable: true,
         filterType: 'text',
         render: (customer: Customer) => customer.phone || '-'
+      },
+      {
+        key: 'mcNumber',
+        label: 'MC Number',
+        sortable: true,
+        filterable: true,
+        filterType: 'text',
+        render: (customer: Customer) => customer.mcNumber?.trim() || '-'
       },
       {
         key: 'isActive',
@@ -158,9 +160,41 @@ export class CustomerListComponent implements OnInit, AfterViewInit {
     });
   }
 
+  onFiltersChanged(): void {
+    this.refreshTrigger++;
+  }
+
+  clearFilters(): void {
+    this.selectedStatusFilter = 'all';
+    this.selectedMcDotFilter = 'all';
+    this.refreshTrigger++;
+  }
+
+  hasActiveCategoryFilters(): boolean {
+    return this.selectedStatusFilter !== 'all'
+      || this.selectedMcDotFilter !== 'all';
+  }
+
   // Data source function for the table
   customerDataSource = (filters: FilterState): Observable<PagedResult<Customer>> => {
     let filteredCustomers = [...this.customers];
+
+    // Apply category filters from filter bar
+    if (this.selectedStatusFilter === 'active') {
+      filteredCustomers = filteredCustomers.filter(customer => customer.isActive);
+    } else if (this.selectedStatusFilter === 'inactive') {
+      filteredCustomers = filteredCustomers.filter(customer => !customer.isActive);
+    }
+
+    if (this.selectedMcDotFilter === 'hasMc') {
+      filteredCustomers = filteredCustomers.filter(customer => !!customer.mcNumber?.trim());
+    } else if (this.selectedMcDotFilter === 'hasDot') {
+      filteredCustomers = filteredCustomers.filter(customer => !!customer.dotNumber?.trim());
+    } else if (this.selectedMcDotFilter === 'missingBoth') {
+      filteredCustomers = filteredCustomers.filter(customer =>
+        !customer.mcNumber?.trim() && !customer.dotNumber?.trim()
+      );
+    }
 
     // Apply global search
     if (filters.globalSearch) {
@@ -207,6 +241,9 @@ export class CustomerListComponent implements OnInit, AfterViewInit {
         
         return filters.sortDirection === 'desc' ? -comparison : comparison;
       });
+    } else {
+      // Default sort: latest broker first
+      filteredCustomers.sort((a, b) => b.customerId - a.customerId);
     }
 
     // Apply pagination
@@ -379,5 +416,9 @@ export class CustomerListComponent implements OnInit, AfterViewInit {
     this.showEditModal = false;
     this.selectedCustomer = null;
     this.editCustomer = null;
+  }
+
+  private formatBrokerId(customerId: number): string {
+    return `BR-${customerId}`;
   }
 }

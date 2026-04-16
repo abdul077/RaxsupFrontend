@@ -41,25 +41,11 @@
           <span class="tms-kpi-label">Available Vehicles</span>
         </div>
       </div>
-      <div class="tms-kpi-card tms-kpi-yellow">
-        <i class="fas fa-wrench tms-kpi-icon"></i>
-        <div class="tms-kpi-content">
-          <span class="tms-kpi-value">{{ stats.inMaintenance ?? 0 }}</span>
-          <span class="tms-kpi-label">In Maintenance</span>
-        </div>
-      </div>
       <div class="tms-kpi-card tms-kpi-orange">
         <i class="fas fa-user-tie tms-kpi-icon"></i>
         <div class="tms-kpi-content">
           <span class="tms-kpi-value">{{ stats.driversOnDuty ?? 0 }}</span>
           <span class="tms-kpi-label">Drivers On Duty</span>
-        </div>
-      </div>
-      <div class="tms-kpi-card tms-kpi-red">
-        <i class="fas fa-exclamation-triangle tms-kpi-icon"></i>
-        <div class="tms-kpi-content">
-          <span class="tms-kpi-value">{{ stats.driversNearHosLimit ?? 0 }}</span>
-          <span class="tms-kpi-label">HOS Warnings</span>
         </div>
       </div>
       <div class="tms-kpi-card tms-kpi-gold">
@@ -74,6 +60,13 @@
         <div class="tms-kpi-content">
           <span class="tms-kpi-value" [title]="formatCurrency(totalGrossRevenue)">{{ formatCurrencyCompact(totalGrossRevenue) }}</span>
           <span class="tms-kpi-label">Company Gross Revenue</span>
+        </div>
+      </div>
+      <div class="tms-kpi-card tms-kpi-blue">
+        <i class="fas fa-road tms-kpi-icon"></i>
+        <div class="tms-kpi-content">
+          <span class="tms-kpi-value">{{ formatRatePerMile(stats.averageRatePerMile) }}</span>
+          <span class="tms-kpi-label">Avg Rate per Mile</span>
         </div>
       </div>
     </div>

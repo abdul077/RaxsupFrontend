@@ -106,6 +106,7 @@ export interface CreateLoadRequest {
   customerId?: number;
   origin: string;
   destination: string;
+  distanceKm?: number;
   pickupDateTime?: string;
   deliveryDateTime?: string;
   totalRate?: number;

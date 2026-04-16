@@ -85,6 +85,7 @@
                   [(ngModel)]="formData.origin" 
                   name="origin"
                   placeholder="Start typing address..."
+                  (ngModelChange)="onRouteInputChanged()"
                   (input)="clearValidationError()"
                   required
                   autocomplete="off">
@@ -101,6 +102,7 @@
                   [(ngModel)]="formData.destination" 
                   name="destination"
                   placeholder="Start typing address..."
+                  (ngModelChange)="onRouteInputChanged()"
                   (input)="clearValidationError()"
                   required
                   autocomplete="off">
@@ -264,6 +266,36 @@
                 aria-valuemax="100">
               </div>
             </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card mt-3">
+        <div class="card-header">
+          <h5 class="mb-0">
+            <i class="fas fa-route me-2"></i>Route Summary
+          </h5>
+        </div>
+        <div class="card-body">
+          <div class="small mb-2"><strong>Pickup:</strong> {{ formData.origin || '-' }}</div>
+          <div class="small mb-2"><strong>Drop:</strong> {{ formData.destination || '-' }}</div>
+          <div class="small mb-2">
+            <strong>Stops:</strong>
+            <span *ngIf="stops.length === 0">None</span>
+            <span *ngIf="stops.length > 0">
+              {{ stops.length }} stop(s)
+            </span>
+          </div>
+          <div *ngIf="stops.length > 0" class="small text-muted mb-2">
+            {{ getStopsSummary() }}
+          </div>
+          <div class="border-top pt-2 mt-2">
+            <strong>Total KM:</strong>
+            <span *ngIf="calculatingDistance" class="text-muted">Calculating...</span>
+            <span *ngIf="!calculatingDistance">{{ totalDistanceKm !== null ? (totalDistanceKm | number:'1.2-2') : '-' }}</span>
+          </div>
+          <div *ngIf="distanceError" class="text-danger small mt-2">
+            {{ distanceError }}
           </div>
         </div>
       </div>

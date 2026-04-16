@@ -112,6 +112,7 @@ interface DashboardStats {
   driversOnDuty?: number;
   driversNearHosLimit?: number;
   pendingInvoicesTotal?: number;
+  averageRatePerMile?: number;
   dueForService?: number;
   engineAlerts?: number;
   lowFuelWarnings?: number;
@@ -722,6 +723,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
           driversOnDuty: get('driversOnDuty', 'DriversOnDuty') as number,
           driversNearHosLimit: get('driversNearHosLimit', 'DriversNearHosLimit') as number,
           pendingInvoicesTotal: get('pendingInvoicesTotal', 'PendingInvoicesTotal') as number,
+          averageRatePerMile: get('averageRatePerMile', 'AverageRatePerMile') as number,
           dueForService: get('dueForService', 'DueForService') as number,
           engineAlerts: get('engineAlerts', 'EngineAlerts') as number,
           lowFuelWarnings: get('lowFuelWarnings', 'LowFuelWarnings') as number,
@@ -1286,6 +1288,11 @@ export class DashboardComponent implements OnInit, OnDestroy {
       return `$${formatted}K`;
     }
     return new Intl.NumberFormat('en-US', { style: 'currency', currency }).format(amount);
+  }
+
+  formatRatePerMile(rate?: number): string {
+    const safeRate = rate ?? 0;
+    return `${new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(safeRate)}/mi`;
   }
 
   getLoadStatusPercentage(): number {
