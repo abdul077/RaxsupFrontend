@@ -11,7 +11,7 @@ const routes: Routes = [
   {
     path: ':id',
     loadComponent: () => import('./equipment-detail/equipment-detail').then(m => m.EquipmentDetailComponent),
-    canActivate: [roleGuard(['Admin', 'FleetManager', 'Driver'])]
+    canActivate: [roleGuard(['Admin', 'FleetManager', 'Dispatcher', 'Driver'])]
   }
 ];
 

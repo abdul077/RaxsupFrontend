@@ -27,23 +27,6 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Nunito+Sans:wght@300;400;600;700&display=swap" rel="stylesheet">
-  <script>
-    // Handle chunk load errors before Angular loads
-    window.addEventListener('error', function(event) {
-      if (event.message && event.message.includes('Failed to fetch dynamically imported module')) {
-        console.warn('Chunk load error detected, reloading page...');
-        window.location.reload();
-      }
-    }, true);
-    
-    window.addEventListener('unhandledrejection', function(event) {
-      if (event.reason && event.reason.message && event.reason.message.includes('Failed to fetch dynamically imported module')) {
-        console.warn('Chunk load error in promise rejection, reloading page...');
-        event.preventDefault();
-        window.location.reload();
-      }
-    });
-  </script>
 </head>
 <body>
   <app-root></app-root>

@@ -90,7 +90,9 @@ export class DriverSettlementsManagementComponent implements OnInit {
   }
 
   navigateToSettlement(settlementId: number): void {
-    this.router.navigate(['/financial/settlements', settlementId]);
+    this.router.navigate(['/financial/settlements', settlementId], {
+      queryParams: { returnUrl: this.router.url },
+    });
   }
 
   navigateToDriver(driverId: number): void {

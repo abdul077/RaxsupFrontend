@@ -1986,7 +1986,7 @@ export class LoadDetailComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   canEditLoad(): boolean {
-    return this.authService.hasAnyRole(['Admin', 'Dispatcher']);
+    return this.authService.hasAnyRole(['Admin', 'Dispatcher', 'FleetManager']);
   }
 
   canEditLoadStatus(): boolean {

@@ -1,10 +1,11 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { DriverService } from '../../../core/services/driver.service';
 import { AuthService } from '../../../core/services/auth';
 import { OwnerOperator } from '../../../core/models/driver.model';
+import { Subject, debounceTime, distinctUntilChanged, takeUntil } from 'rxjs';
 
 @Component({
   selector: 'app-owner-operator-list',
@@ -15,11 +16,14 @@ import { OwnerOperator } from '../../../core/models/driver.model';
 })
 export class OwnerOperatorListComponent implements OnInit {
   ownerOperators: OwnerOperator[] = [];
+  private allOwnerOperators: OwnerOperator[] = [];
   loading = true;
   
   // Filters
   isActiveFilter: boolean | null = null;
   searchTerm: string = '';
+  private search$ = new Subject<string>();
+  private destroy$ = new Subject<void>();
 
   constructor(
     private driverService: DriverService,
@@ -28,7 +32,18 @@ export class OwnerOperatorListComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
+    this.search$
+      .pipe(debounceTime(250), distinctUntilChanged(), takeUntil(this.destroy$))
+      .subscribe((term) => {
+        this.searchTerm = term;
+        this.ownerOperators = this.filterOwnerOperators(this.allOwnerOperators);
+      });
     this.loadOwnerOperators();
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 
   loadOwnerOperators(): void {
@@ -37,10 +52,12 @@ export class OwnerOperatorListComponent implements OnInit {
       this.isActiveFilter !== null ? this.isActiveFilter : undefined
     ).subscribe({
       next: (data) => {
-        this.ownerOperators = this.filterOwnerOperators(data);
+        this.allOwnerOperators = data || [];
+        this.ownerOperators = this.filterOwnerOperators(this.allOwnerOperators);
         this.loading = false;
       },
       error: () => {
+        this.allOwnerOperators = [];
         this.ownerOperators = [];
         this.loading = false;
       }
@@ -53,7 +70,7 @@ export class OwnerOperatorListComponent implements OnInit {
     }
     const term = this.searchTerm.toLowerCase();
     return data.filter(oo => 
-      oo.companyName.toLowerCase().includes(term) ||
+      (oo.companyName || '').toLowerCase().includes(term) ||
       oo.contactName?.toLowerCase().includes(term) ||
       oo.email?.toLowerCase().includes(term) ||
       oo.phone?.toLowerCase().includes(term)
@@ -62,6 +79,10 @@ export class OwnerOperatorListComponent implements OnInit {
 
   applyFilters(): void {
     this.loadOwnerOperators();
+  }
+
+  onSearchTermChange(value: string): void {
+    this.search$.next(value || '');
   }
 
   clearFilters(): void {

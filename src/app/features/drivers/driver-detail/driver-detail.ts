@@ -2137,7 +2137,11 @@ export class DriverDetailComponent implements OnInit, OnDestroy {
    * Navigate to settlement detail page
    */
   viewSettlement(settlementId: number): void {
-    this.router.navigate(['/financial/settlements', settlementId]);
+    // Preserve current driver profile URL (including `?tab=settlements`) so the
+    // settlement detail page can route "Back" to the originating profile.
+    this.router.navigate(['/financial/settlements', settlementId], {
+      queryParams: { returnUrl: this.router.url },
+    });
   }
 
   /**
@@ -2169,11 +2173,15 @@ export class DriverDetailComponent implements OnInit, OnDestroy {
     if (!this.driverId) return;
     
     this.loadingIncidents = true;
-    this.complianceService.getIncidents(
-      this.driverId,
-      undefined,
-      this.incidentResolvedFilter ?? undefined
-    ).subscribe({
+    const incidents$ = this.isMyProfile
+      ? this.complianceService.getMyIncidents(this.incidentResolvedFilter ?? undefined)
+      : this.complianceService.getIncidents(
+          this.driverId,
+          undefined,
+          this.incidentResolvedFilter ?? undefined
+        );
+
+    incidents$.subscribe({
       next: (data) => {
         // Sort by incident date (most recent first)
         this.incidents = data.sort((a, b) => {
@@ -2285,6 +2293,10 @@ export class DriverDetailComponent implements OnInit, OnDestroy {
    * View incident detail - navigate to compliance incident detail page
    */
   viewIncidentDetail(incidentId: number): void {
+    if (this.isMyProfile) {
+      this.router.navigate(['/drivers/my-incidents', incidentId]);
+      return;
+    }
     this.router.navigate(['/compliance/incidents', incidentId]);
   }
 

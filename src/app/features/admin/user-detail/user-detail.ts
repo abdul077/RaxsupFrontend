@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { CommonModule, DatePipe } from '@angular/common';
+import { CommonModule, DatePipe, Location } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
 import { AdminService } from '../../../core/services/admin.service';
 import { TimeZoneService } from '../../../core/services/timezone.service';
@@ -19,16 +19,21 @@ export class UserDetailComponent implements OnInit {
   branches: Branch[] = [];
   loading = true;
   activeTab: string = 'details';
+  private fromList: 'active' | 'inactive' | null = null;
 
   constructor(
     private route: ActivatedRoute,
     private router: Router,
+    private location: Location,
     private adminService: AdminService,
     private datePipe: DatePipe,
     private timeZoneService: TimeZoneService
   ) {}
 
   ngOnInit(): void {
+    const from = this.route.snapshot.queryParamMap.get('from');
+    this.fromList = from === 'inactive' ? 'inactive' : from === 'active' ? 'active' : null;
+
     const id = this.route.snapshot.paramMap.get('id');
     if (id) {
       this.loadUserDetail(+id);
@@ -81,7 +86,23 @@ export class UserDetailComponent implements OnInit {
   }
 
   goBack(): void {
-    this.router.navigate(['/admin/users']);
+    if (this.fromList === 'inactive') {
+      this.router.navigate(['/admin/inactive-users']);
+      return;
+    }
+    if (this.fromList === 'active') {
+      this.router.navigate(['/admin/users']);
+      return;
+    }
+
+    // If navigated here via browser history, prefer going back.
+    if (window.history.length > 1) {
+      this.location.back();
+      return;
+    }
+
+    // Deterministic fallback for deep links.
+    this.router.navigate([this.user?.isActive === false ? '/admin/inactive-users' : '/admin/users']);
   }
 
   getCompanyName(companyId?: number): string {

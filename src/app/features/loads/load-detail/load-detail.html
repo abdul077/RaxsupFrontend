@@ -34,9 +34,9 @@
 
     <div class="header-meta-row">
       <div class="meta-chips">
-        <span class="meta-chip" *ngIf="load.loadType">
+        <span class="meta-chip" *ngIf="load.loadType || load.equipmentType">
           <i class="fas fa-truck"></i>
-          {{ load.loadType }}
+          {{ load.loadType || load.equipmentType }}
         </span>
         <span class="meta-chip">
           <i class="fas fa-map-marker-alt"></i>
@@ -297,7 +297,7 @@
             <div class="info-row">
               <span class="info-label"><i class="fas fa-truck-loading info-row-icon"></i> Load Type</span>
               <span class="info-value">
-                <span class="load-type-badge">{{ load.loadType || 'FTL' }}</span>
+                <span class="load-type-badge">{{ load.loadType || load.equipmentType || '—' }}</span>
               </span>
             </div>
             <div class="info-row">

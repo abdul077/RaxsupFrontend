@@ -38,7 +38,14 @@
         <i class="fas fa-ellipsis-h tms-actions-dots"></i>
       </button>
       <ul class="dropdown-menu dropdown-menu-end tms-actions-dropdown">
-        <li><a class="dropdown-item" [routerLink]="['/admin/users', user.userId]">View User Details...</a></li>
+        <li>
+          <a
+            class="dropdown-item"
+            [routerLink]="['/admin/users', user.userId]"
+            [queryParams]="{ from: inactiveOnlyPage ? 'inactive' : 'active' }">
+            View User Details...
+          </a>
+        </li>
         <li><a class="dropdown-item" href="javascript:void(0)" (click)="openEditModal(user)">Edit User...</a></li>
         <li><a class="dropdown-item" href="javascript:void(0)" (click)="toggleActive(user)">Toggle Active Status</a></li>
         <li><hr class="dropdown-divider"></li>

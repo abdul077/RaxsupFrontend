@@ -94,7 +94,7 @@
             *ngFor="let row of data; trackBy: trackByFn"
             [class.clickable]="config?.rowClickable !== false"
             [ngClass]="getRowClass(row)"
-            (click)="onRowClick(row)">
+            (click)="onRowClick(row, $event)">
             <!-- Selection Checkbox -->
             <td *ngIf="config?.enableSelection">
               <input

@@ -20,7 +20,7 @@ const routes: Routes = [
   {
     path: 'dashboard',
     component: ComplianceDashboardComponent,
-    canActivate: [roleGuard(['Admin', 'FleetManager'])]
+    canActivate: [roleGuard(['Admin', 'FleetManager', 'Dispatcher'])]
   },
   {
     path: 'incidents',
