@@ -8,319 +8,144 @@
     </a>
   </div>
 
-  <div class="sidebar-search">
-    <i class="fas fa-search"></i>
-    <input type="text" placeholder="Search" class="sidebar-search-input">
+  <div class="sidebar-search" role="search">
+    <i class="fas fa-search" aria-hidden="true"></i>
+    <input
+      #menuSearchInput
+      type="search"
+      name="menuSearch"
+      class="sidebar-search-input"
+      placeholder="Find a screen…"
+      title="Search menus (Ctrl+K)"
+      [(ngModel)]="navSearchQuery"
+      (keydown)="onMenuSearchKeydown($event)"
+      aria-label="Search navigation and screens"
+      autocomplete="off"
+      spellcheck="false"
+      autocapitalize="off"
+    />
+    @if (navSearchQuery.trim()) {
+      <button
+        type="button"
+        class="sidebar-search-clear"
+        (click)="clearMenuSearch()"
+        aria-label="Clear menu search"
+      >
+        <i class="fas fa-times" aria-hidden="true"></i>
+      </button>
+    }
+    <kbd class="sidebar-search-kbd" aria-hidden="true">Ctrl+K</kbd>
   </div>
   <div class="nav-divider"></div>
-  
-  <nav class="sidebar-nav">
-    <ul class="nav">
-      <li class="nav-item">
-        <a class="nav-link" routerLink="/dashboard" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}">
-          <i class="fas fa-home"></i>
-          <span>Dashboard</span>
-        </a>
-      </li>
-      
-      <!-- Driver-specific menu items -->
-      <li class="nav-item" *ngIf="hasRole('Driver')">
-        <a class="nav-link" routerLink="/drivers/my-profile" routerLinkActive="active">
-          <i class="fas fa-user"></i>
-          <span>My Profile</span>
-        </a>
-      </li>
-      <li class="nav-item" *ngIf="hasRole('Driver')">
-        <a class="nav-link" routerLink="/drivers/my-referrals" routerLinkActive="active">
-          <i class="fas fa-users"></i>
-          <span>My Referrals</span>
-        </a>
-      </li>
-      <li class="nav-item" *ngIf="hasRole('Driver')">
-        <a class="nav-link" routerLink="/loads" routerLinkActive="active">
-          <i class="fas fa-boxes"></i>
-          <span>My Loads</span>
-        </a>
-      </li>
-      <li class="nav-item" *ngIf="hasRole('Driver')">
-        <a class="nav-link" routerLink="/drivers/my-vehicles" routerLinkActive="active">
-          <i class="fas fa-truck"></i>
-          <span>My Vehicles</span>
-        </a>
-      </li>
-      <li class="nav-item" *ngIf="hasRole('Driver')">
-        <a class="nav-link" routerLink="/drivers/my-incidents" routerLinkActive="active">
-          <i class="fas fa-exclamation-circle"></i>
-          <span>My Incidents</span>
-        </a>
-      </li>
-      
-      <li class="nav-item" *ngIf="hasAnyRole(['Admin', 'Dispatcher', 'FleetManager'])">
-        <div class="nav-item-group">
-          <div class="nav-link-wrapper">
-            <a class="nav-link" routerLink="/loads" routerLinkActive="active" [routerLinkActiveOptions]="{exact: false}">
-              <i class="fas fa-boxes"></i>
-              <span>Dispatch</span>
-            </a>
-            <i class="fas fa-chevron-down nav-chevron" [class.rotated]="isLoadsExpanded" (click)="toggleLoadsMenu($event)"></i>
-          </div>
-          <ul class="nav-submenu" [class.expanded]="isLoadsExpanded">
-            <li>
-              <a routerLink="/loads" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}">
-                <i class="fas fa-list"></i>
-                <span>All Loads</span>
-              </a>
-            </li>
-            <li *ngIf="hasRole('Admin')">
-              <a routerLink="/loads/accessorial-types" routerLinkActive="active">
-                <i class="fas fa-tags"></i>
-                <span>Accessorial Types</span>
-              </a>
-            </li>
-          </ul>
-        </div>
-      </li>
-      
-      <li class="nav-item" *ngIf="hasAnyRole(['Admin', 'Dispatcher', 'FleetManager'])">
-        <a class="nav-link" routerLink="/drivers" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}">
-          <i class="fas fa-users"></i>
-          <span>Owner Operators</span>
-        </a>
-      </li>
-      <li class="nav-item" *ngIf="hasAnyRole(['Admin', 'FleetManager'])">
-        <a class="nav-link" routerLink="/drivers/inactive" routerLinkActive="active">
-          <i class="fas fa-user-slash"></i>
-          <span>Inactive Owner Operators</span>
-        </a>
-      </li>
-      
-      <li class="nav-item" *ngIf="hasAnyRole(['Admin', 'Dispatcher', 'Accountant'])">
-        <a class="nav-link" routerLink="/customers" routerLinkActive="active">
-          <i class="fas fa-building"></i>
-          <span>Brokers</span>
-        </a>
-      </li>
-      
-      <li class="nav-item" *ngIf="hasAnyRole(['Admin', 'FleetManager'])">
-        <a class="nav-link" routerLink="/equipment" routerLinkActive="active">
-          <i class="fas fa-truck"></i>
-          <span>Equipment</span>
-        </a>
-      </li>
-      
-      <li class="nav-item" *ngIf="hasAnyRole(['Admin', 'Accountant'])">
-        <div class="nav-item-group">
-          <div class="nav-link-wrapper">
-            <a class="nav-link" routerLink="/financial" routerLinkActive="active" [routerLinkActiveOptions]="{exact: false}">
-              <i class="fas fa-dollar-sign"></i>
-              <span>Financial</span>
-            </a>
-            <i class="fas fa-chevron-down nav-chevron" [class.rotated]="isFinancialExpanded" (click)="toggleFinancialMenu($event)"></i>
-          </div>
-          <ul class="nav-submenu" [class.expanded]="isFinancialExpanded">
-            <li>
-              <a routerLink="/financial/invoices" routerLinkActive="active" [routerLinkActiveOptions]="{exact: false}">
-                <i class="fas fa-file-invoice"></i>
-                <span>Invoices</span>
-              </a>
-            </li>
-            <li>
-              <a routerLink="/financial/settlements" routerLinkActive="active" [routerLinkActiveOptions]="{exact: false}">
-                <i class="fas fa-money-check-alt"></i>
-                <span>Settlements</span>
-              </a>
-            </li>
-            <li>
-              <a routerLink="/financial/payments" routerLinkActive="active" [routerLinkActiveOptions]="{exact: false}">
-                <i class="fas fa-money-bill-wave"></i>
-                <span>All Payments</span>
-              </a>
-            </li>
-            <li>
-              <a routerLink="/financial/accounts-payable" routerLinkActive="active" [routerLinkActiveOptions]="{exact: false}">
-                <i class="fas fa-file-invoice-dollar"></i>
-                <span>Accounts Payable</span>
-              </a>
-            </li>
-            <li>
-              <a routerLink="/financial/accounts-receivable" routerLinkActive="active" [routerLinkActiveOptions]="{exact: false}">
-                <i class="fas fa-receipt"></i>
-                <span>Accounts Receivable</span>
-              </a>
-            </li>
-            <li>
-              <a routerLink="/financial/reports" routerLinkActive="active">
-                <i class="fas fa-chart-line"></i>
-                <span>Reports</span>
-              </a>
-            </li>
-          </ul>
-        </div>
-      </li>
-      
-      <li class="nav-item" *ngIf="hasAnyRole(['Admin', 'Accountant'])">
-        <a class="nav-link" routerLink="/payroll" routerLinkActive="active" [routerLinkActiveOptions]="{exact: false}">
-          <i class="fas fa-money-check"></i>
-          <span>Payroll</span>
-        </a>
-      </li>
-      
-      <li class="nav-item" *ngIf="hasAnyRole(['Admin', 'FleetManager'])">
-        <div class="nav-item-group">
-          <div class="nav-link-wrapper">
-            <a class="nav-link" routerLink="/compliance" routerLinkActive="active" [routerLinkActiveOptions]="{exact: false}">
-              <i class="fas fa-shield-alt"></i>
-              <span>Compliance</span>
-            </a>
-            <i class="fas fa-chevron-down nav-chevron" [class.rotated]="isComplianceExpanded" (click)="toggleComplianceMenu($event)"></i>
-          </div>
-          <ul class="nav-submenu" [class.expanded]="isComplianceExpanded">
-            <li>
-              <a routerLink="/compliance/dashboard" routerLinkActive="active">
-                <i class="fas fa-chart-pie"></i>
-                <span>Dashboard</span>
-              </a>
-            </li>
-            <li>
-              <a routerLink="/compliance/incidents" routerLinkActive="active" [routerLinkActiveOptions]="{exact: false}">
-                <i class="fas fa-exclamation-triangle"></i>
-                <span>Incidents</span>
-              </a>
-            </li>
-            <li>
-              <a routerLink="/compliance/incidents/create" routerLinkActive="active">
-                <i class="fas fa-plus-circle"></i>
-                <span>Report Incident</span>
-              </a>
-            </li>
-            <li>
-              <a routerLink="/compliance/calendar" routerLinkActive="active">
-                <i class="fas fa-calendar-alt"></i>
-                <span>Calendar</span>
-              </a>
-            </li>
-            <li>
-              <a routerLink="/compliance/inspections/create" routerLinkActive="active">
-                <i class="fas fa-clipboard-check"></i>
-                <span>Add Inspection</span>
-              </a>
-            </li>
-          </ul>
-        </div>
-      </li>
-      
-      <li class="nav-divider-item"><div class="nav-divider"></div></li>
-      
-      <li class="nav-item">
-        <a class="nav-link" routerLink="/messaging" routerLinkActive="active" [routerLinkActiveOptions]="{exact: false}">
-          <i class="fas fa-comments"></i>
-          <span>Messages</span>
-        </a>
-      </li>
 
-      <li class="nav-item">
-        <a class="nav-link" routerLink="/admin/notifications" routerLinkActive="active">
-          <i class="fas fa-bell"></i>
-          <span>Notifications</span>
-        </a>
-      </li>
-
-      <li class="nav-item" *ngIf="hasAnyRole(['Admin', 'FleetManager', 'Accountant'])">
-        <a class="nav-link" routerLink="/reports" routerLinkActive="active">
-          <i class="fas fa-chart-bar"></i>
-          <span>Reports</span>
-        </a>
-      </li>
-      
-      <li class="nav-divider-item" *ngIf="hasRole('Admin')"><div class="nav-divider"></div></li>
-      
-      <li class="nav-item" *ngIf="hasRole('Admin')">
-        <div class="nav-item-group">
-          <div class="nav-link-wrapper">
-            <a class="nav-link" routerLink="/admin" routerLinkActive="active" [routerLinkActiveOptions]="{exact: false}">
-              <i class="fas fa-cog"></i>
-              <span>Admin</span>
-            </a>
-            <i class="fas fa-chevron-down nav-chevron" [class.rotated]="isAdminExpanded" (click)="toggleAdminMenu($event)"></i>
-          </div>
-          <ul class="nav-submenu" [class.expanded]="isAdminExpanded">
-            <li>
-              <a routerLink="/admin" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}">
-                <i class="fas fa-chart-line"></i>
-                <span>Dashboard</span>
-              </a>
-            </li>
-            <li>
-              <a routerLink="/admin/users" routerLinkActive="active">
-                <i class="fas fa-users"></i>
-                <span>Users</span>
-              </a>
-            </li>
-            <li>
-              <a routerLink="/admin/inactive-users" routerLinkActive="active">
-                <i class="fas fa-user-slash"></i>
-                <span>Inactive Users</span>
-              </a>
-            </li>
-            <li *ngIf="false">
-              <a routerLink="/admin/companies" routerLinkActive="active">
-                <i class="fas fa-building"></i>
-                <span>Companies</span>
-              </a>
-            </li>
-            <li *ngIf="false">
-              <a routerLink="/admin/branches" routerLinkActive="active">
-                <i class="fas fa-code-branch"></i>
-                <span>Branches</span>
-              </a>
-            </li>
-            <li *ngIf="false">
-              <a routerLink="/admin/api-keys" routerLinkActive="active">
-                <i class="fas fa-key"></i>
-                <span>API Keys</span>
-              </a>
-            </li>
-            <li>
-              <a routerLink="/admin/notifications" routerLinkActive="active">
-                <i class="fas fa-bell"></i>
-                <span>Notifications</span>
-              </a>
-            </li>
-            <li>
-              <a routerLink="/admin/audit-logs" routerLinkActive="active">
-                <i class="fas fa-history"></i>
-                <span>Audit Logs</span>
-              </a>
-            </li>
-            <li>
-              <a routerLink="/admin/email-logs" routerLinkActive="active">
-                <i class="fas fa-envelope"></i>
-                <span>Email Logs</span>
-              </a>
-            </li>
-            <li>
-              <a routerLink="/admin/pending-drivers" routerLinkActive="active">
-                <i class="fas fa-user-clock"></i>
-                <span>Pending Drivers</span>
+  <nav class="sidebar-nav" [attr.aria-busy]="false">
+    @if (isMenuSearchActive) {
+      <ul class="nav" aria-label="Matching screens">
+        @for (row of menuSearchResults; track row.id) {
+          <li class="nav-item">
+            <a
+              class="nav-link nav-search-hit"
+              [routerLink]="row.routerLink"
+              routerLinkActive="active"
+              [routerLinkActiveOptions]="row.exact === true ? { exact: true } : { exact: false }"
+              (click)="onSearchResultNavigate()"
+            >
+              <i [class]="row.iconClass"></i>
+              <span class="nav-search-hit-main">
+                <span class="nav-search-hit-label">{{ row.label }}</span>
+                @if (row.groupCaption) {
+                  <span class="nav-search-hit-section">{{ row.groupCaption }}</span>
+                }
+              </span>
+              @if (row.id === 'admin-pending-drivers') {
                 <span class="badge bg-warning ms-2"></span>
-              </a>
-            </li>
-            <li>
-              <a routerLink="/admin/rejected-drivers" routerLinkActive="active">
-                <i class="fas fa-user-times"></i>
-                <span>Rejected Drivers</span>
-              </a>
-            </li>
-            <li>
-              <a routerLink="/admin/motive" routerLinkActive="active">
-                <i class="fas fa-satellite-dish"></i>
-                <span>Motive</span>
-              </a>
-            </li>
-          </ul>
-        </div>
-      </li>
-    </ul>
+              }
+            </a>
+          </li>
+        } @empty {
+          <li class="nav-item nav-search-empty" role="status">
+            <span>No screens match “{{ navSearchQuery.trim() }}”.</span>
+          </li>
+        }
+      </ul>
+    } @else {
+      <ul class="nav">
+        @for (block of sidebarNav; track trackNavBlock($index, block)) {
+          @if (navBlockVisible(block)) {
+            @switch (block.kind) {
+              @case ('divider') {
+                <li class="nav-divider-item">
+                  <div class="nav-divider"></div>
+                </li>
+              }
+              @case ('link') {
+                <li class="nav-item">
+                  <a
+                    class="nav-link"
+                    [routerLink]="block.link.routerLink"
+                    routerLinkActive="active"
+                    [routerLinkActiveOptions]="
+                      block.link.exact === true ? { exact: true } : { exact: false }
+                    "
+                  >
+                    <i [class]="block.link.iconClass"></i>
+                    <span>{{ block.link.label }}</span>
+                  </a>
+                </li>
+              }
+              @case ('group') {
+                <li class="nav-item">
+                  <div class="nav-item-group">
+                    <div class="nav-link-wrapper">
+                      <a
+                        class="nav-link"
+                        [routerLink]="block.routerLink"
+                        routerLinkActive="active"
+                        [routerLinkActiveOptions]="{ exact: false }"
+                      >
+                        <i [class]="block.iconClass"></i>
+                        <span>{{ block.label }}</span>
+                      </a>
+                      <i
+                        class="fas fa-chevron-down nav-chevron"
+                        [class.rotated]="isGroupExpanded(block.groupKey)"
+                        (click)="toggleGroup(block.groupKey, $event)"
+                        tabindex="0"
+                        role="button"
+                        [attr.aria-expanded]="isGroupExpanded(block.groupKey)"
+                        [attr.aria-label]="'Toggle ' + block.label + ' submenu'"
+                        (keydown.enter)="toggleGroup(block.groupKey, $event)"
+                        (keydown.space)="$event.preventDefault(); toggleGroup(block.groupKey, $event)"
+                      ></i>
+                    </div>
+                    <ul class="nav-submenu" [class.expanded]="isGroupExpanded(block.groupKey)">
+                      @for (child of block.children; track child.id) {
+                        @if (visibleLink(child)) {
+                          <li>
+                            <a
+                              [routerLink]="child.routerLink"
+                              routerLinkActive="active"
+                              [routerLinkActiveOptions]="
+                                child.exact === true ? { exact: true } : { exact: false }
+                              "
+                            >
+                              <i [class]="child.iconClass"></i>
+                              <span>{{ child.label }}</span>
+                              @if (child.id === 'admin-pending-drivers') {
+                                <span class="badge bg-warning ms-2"></span>
+                              }
+                            </a>
+                          </li>
+                        }
+                      }
+                    </ul>
+                  </div>
+                </li>
+              }
+            }
+          }
+        }
+      </ul>
+    }
   </nav>
 </div>
-
