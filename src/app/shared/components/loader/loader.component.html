@@ -1,11 +1,107 @@
 @if (loadingService.loading$ | async) {
-  <div class="global-loader-overlay">
-    <div class="loader-spinner">
-      <div class="spinner-ring"></div>
-      <div class="spinner-ring"></div>
-      <div class="spinner-ring"></div>
+  <div class="global-loader-overlay" role="status" aria-live="polite" aria-busy="true">
+    <div class="truck-loader" aria-hidden="true">
+      <svg class="truck-loader__svg" viewBox="0 0 172 52" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="loaderCabGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stop-color="#475569" />
+            <stop offset="100%" stop-color="#1e293b" />
+          </linearGradient>
+          <linearGradient id="loaderReeferGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stop-color="#f1f5f9" />
+            <stop offset="40%" stop-color="#ffffff" />
+            <stop offset="100%" stop-color="#e2e8f0" />
+          </linearGradient>
+          <linearGradient id="loaderUnitGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#64748b" />
+            <stop offset="100%" stop-color="#334155" />
+          </linearGradient>
+        </defs>
+
+        <line class="truck-loader__road" x1="4" y1="46" x2="168" y2="46" />
+
+        <path class="truck-loader__chassis" d="M22 33 L168 33" fill="none" />
+
+        <rect class="truck-loader__reefer-body" x="64" y="9" width="90" height="24" rx="2.5" fill="url(#loaderReeferGrad)" />
+        <line class="truck-loader__reefer-roof" x1="66" y1="10" x2="152" y2="10" />
+
+        <g class="truck-loader__ribs">
+          <line x1="72" y1="11" x2="72" y2="31" />
+          <line x1="80" y1="11" x2="80" y2="31" />
+          <line x1="88" y1="11" x2="88" y2="31" />
+          <line x1="96" y1="11" x2="96" y2="31" />
+          <line x1="104" y1="11" x2="104" y2="31" />
+          <line x1="112" y1="11" x2="112" y2="31" />
+          <line x1="120" y1="11" x2="120" y2="31" />
+          <line x1="128" y1="11" x2="128" y2="31" />
+          <line x1="136" y1="11" x2="136" y2="31" />
+          <line x1="144" y1="11" x2="144" y2="31" />
+        </g>
+
+        <rect class="truck-loader__reefer-accent" x="70" y="15" width="78" height="2.2" rx="0.5" />
+
+        <path
+          class="truck-loader__reefer-unit"
+          fill="url(#loaderUnitGrad)"
+          d="M46 32 L46 17 C46 13.5 49 11 53 11 L64 11 L64 32 Z" />
+        <rect class="truck-loader__reefer-unit-face" x="46" y="14" width="5" height="16" rx="0.5" />
+        <g class="truck-loader__reefer-grille">
+          <line x1="47.2" y1="16.5" x2="50" y2="16.5" />
+          <line x1="47.2" y1="19.5" x2="50" y2="19.5" />
+          <line x1="47.2" y1="22.5" x2="50" y2="22.5" />
+          <line x1="47.2" y1="25.5" x2="50" y2="25.5" />
+        </g>
+        <g transform="translate(57, 21)">
+          <g class="truck-loader__fan">
+            <circle class="truck-loader__reefer-fan" cx="0" cy="0" r="3.2" />
+            <line class="truck-loader__fan-blade" x1="0" y1="-2.8" x2="0" y2="2.8" />
+            <line class="truck-loader__fan-blade" x1="-2.4" y1="1.4" x2="2.4" y2="-1.4" />
+            <line class="truck-loader__fan-blade" x1="-2.4" y1="-1.4" x2="2.4" y2="1.4" />
+            <circle class="truck-loader__reefer-fan-hub" cx="0" cy="0" r="1" />
+          </g>
+        </g>
+
+        <path class="truck-loader__cab" fill="url(#loaderCabGrad)" d="M8 32 L8 13 L34 13 L46 24 L46 32 Z" />
+        <path class="truck-loader__cab-shade" d="M8 32 L8 24 L20 24 L20 32 Z" />
+        <rect class="truck-loader__window" x="14" y="16" width="17" height="11" rx="1.2" />
+        <path class="truck-loader__cab-highlight" d="M34 13 L42 21" fill="none" />
+
+        <rect class="truck-loader__fifth" x="44" y="27" width="12" height="5.5" rx="1" />
+
+        <g transform="translate(26, 40)">
+          <g class="truck-loader__wheel">
+            <circle class="truck-loader__tire" cx="0" cy="0" r="9" />
+            <circle class="truck-loader__rim" cx="0" cy="0" r="4.5" />
+            <line class="truck-loader__spoke" x1="-5" y1="0" x2="5" y2="0" />
+            <line class="truck-loader__spoke" x1="0" y1="-5" x2="0" y2="5" />
+          </g>
+        </g>
+        <g transform="translate(48, 40)">
+          <g class="truck-loader__wheel">
+            <circle class="truck-loader__tire" cx="0" cy="0" r="9" />
+            <circle class="truck-loader__rim" cx="0" cy="0" r="4.5" />
+            <line class="truck-loader__spoke" x1="-5" y1="0" x2="5" y2="0" />
+            <line class="truck-loader__spoke" x1="0" y1="-5" x2="0" y2="5" />
+          </g>
+        </g>
+        <g transform="translate(116, 40)">
+          <g class="truck-loader__wheel">
+            <circle class="truck-loader__tire" cx="0" cy="0" r="9" />
+            <circle class="truck-loader__rim" cx="0" cy="0" r="4.5" />
+            <line class="truck-loader__spoke" x1="-5" y1="0" x2="5" y2="0" />
+            <line class="truck-loader__spoke" x1="0" y1="-5" x2="0" y2="5" />
+          </g>
+        </g>
+        <g transform="translate(142, 40)">
+          <g class="truck-loader__wheel">
+            <circle class="truck-loader__tire" cx="0" cy="0" r="9" />
+            <circle class="truck-loader__rim" cx="0" cy="0" r="4.5" />
+            <line class="truck-loader__spoke" x1="-5" y1="0" x2="5" y2="0" />
+            <line class="truck-loader__spoke" x1="0" y1="-5" x2="0" y2="5" />
+          </g>
+        </g>
+      </svg>
     </div>
     <p class="loader-text">Loading...</p>
   </div>
 }
-

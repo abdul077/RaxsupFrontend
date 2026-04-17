@@ -153,7 +153,12 @@ interface DashboardStats {
   styleUrl: './dashboard.scss',
 })
 export class DashboardComponent implements OnInit, OnDestroy {
+  /** Skip global HTTP overlay; dashboard uses per-section spinners instead. */
+  private readonly skipGlobalHttpLoading = { 'X-Skip-Loading': 'true' };
+
   stats: DashboardStats | null = null;
+  /** True only until the first dashboard stats response (success or error). */
+  statsLoading = true;
   recentLoads: Load[] = [];
   currentLoads: Load[] = [];
   upcomingLoads: Load[] = [];
@@ -813,6 +818,9 @@ export class DashboardComponent implements OnInit, OnDestroy {
   }
 
   loadDashboardStats(): void {
+    if (this.stats == null) {
+      this.statsLoading = true;
+    }
     // Use driver-specific endpoint if user is a driver
     const endpoint = this.authService.hasRole('Driver') 
       ? 'reports/driver-dashboard' 
@@ -823,9 +831,8 @@ export class DashboardComponent implements OnInit, OnDestroy {
       ? undefined 
       : { chartDays: 14 };
     
-    this.apiService.get<DashboardStats>(endpoint, params).subscribe({
+    this.apiService.get<DashboardStats>(endpoint, params, this.skipGlobalHttpLoading).subscribe({
       next: (data) => {
-        console.log('Dashboard stats received:', data);
         // Normalize property names to camelCase in case backend returns PascalCase
         const d = data as Record<string, unknown>;
         const get = (k: string, k2: string, def: unknown = 0) => d[k] ?? d[k2] ?? def;
@@ -869,15 +876,13 @@ export class DashboardComponent implements OnInit, OnDestroy {
           tripStatusSummary: (get('tripStatusSummary', 'TripStatusSummary', []) as TripStatusSummary[]),
           revenueExpenseByCategory: (get('revenueExpenseByCategory', 'RevenueExpenseByCategory', []) as RevenueExpenseCategory[])
         };
-        
-        console.log('Normalized stats:', this.stats);
+        this.statsLoading = false;
         // Build chart data and alerts
         this.buildChartData();
         this.buildDashboardAlerts();
       },
       error: (error) => {
         console.error('Error loading dashboard stats:', error);
-        console.error('Error details:', JSON.stringify(error, null, 2));
         // Initialize with default values so dashboard still shows
         this.stats = {
           totalLoads: 0,
@@ -898,6 +903,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
           tripStatusSummary: [],
           revenueExpenseByCategory: []
         };
+        this.statsLoading = false;
         this.buildChartData();
         this.buildDashboardAlerts();
       }
@@ -906,7 +912,9 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
   loadTopBrokers(limit: number = 10): void {
     this.topBrokersLoading = true;
-    this.apiService.get<TopBroker[]>('reports/top-brokers', { limit, period: this.topBrokersPeriod }).subscribe({
+    this.apiService
+      .get<TopBroker[]>('reports/top-brokers', { limit, period: this.topBrokersPeriod }, this.skipGlobalHttpLoading)
+      .subscribe({
       next: (data) => {
         const brokerData = (Array.isArray(data) ? data : []) as unknown[];
         this.topBrokers = brokerData.map((item) => {
@@ -933,7 +941,9 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
   loadRevenueByTruck(): void {
     this.revenueByTruckLoading = true;
-    this.apiService.get<RevenueByTruck[]>('reports/revenue-by-truck', { period: this.revenueByTruckPeriod }).subscribe({
+    this.apiService
+      .get<RevenueByTruck[]>('reports/revenue-by-truck', { period: this.revenueByTruckPeriod }, this.skipGlobalHttpLoading)
+      .subscribe({
       next: (data) => {
         const rows = (Array.isArray(data) ? data : []) as unknown[];
         this.revenueByTruck = rows.map((item) => {
@@ -985,7 +995,9 @@ export class DashboardComponent implements OnInit, OnDestroy {
       params['endDate'] = this.dispatcherCustomEndDate;
     }
 
-    this.apiService.get<DispatcherLoadStats[]>('reports/loads-per-dispatcher', params).subscribe({
+    this.apiService
+      .get<DispatcherLoadStats[]>('reports/loads-per-dispatcher', params, this.skipGlobalHttpLoading)
+      .subscribe({
       next: (data) => {
         const rows = Array.isArray(data) ? data : [];
         this.dispatcherLoads = rows.map((item) => {
@@ -1039,7 +1051,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
   }
 
   loadTotalGrossRevenue(): void {
-    this.apiService.get<TotalGrossRevenueResponse>('reports/total-gross-revenue').subscribe({
+    this.apiService.get<TotalGrossRevenueResponse>('reports/total-gross-revenue', undefined, this.skipGlobalHttpLoading).subscribe({
       next: (data) => {
         const d = data as Record<string, unknown>;
         this.totalGrossRevenue = (d['grossRevenue'] ?? d['GrossRevenue'] ?? 0) as number;
@@ -1273,7 +1285,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
   loadCurrentLoads(): void {
     this.currentLoadsLoading = true;
-    this.loadService.getLoads(undefined, undefined, undefined, 1, 20).subscribe({
+    this.loadService.getLoads(undefined, undefined, undefined, 1, 20, undefined, undefined, this.skipGlobalHttpLoading).subscribe({
       next: (data) => {
         const now = new Date();
         this.currentLoads = data.items.filter(
@@ -1301,7 +1313,13 @@ export class DashboardComponent implements OnInit, OnDestroy {
     // Use driver-specific endpoint if user is a driver - fetch once for both recent and upcoming
     if (this.authService.hasRole('Driver')) {
       this.upcomingLoadsLoading = true;
-      this.apiService.get<{ items: Load[], totalCount: number, pageNumber: number, pageSize: number }>('loads/my-loads?pageNumber=1&pageSize=20').subscribe({
+      this.apiService
+        .get<{ items: Load[]; totalCount: number; pageNumber: number; pageSize: number }>(
+          'loads/my-loads',
+          { pageNumber: 1, pageSize: 20 },
+          this.skipGlobalHttpLoading
+        )
+        .subscribe({
         next: (data) => {
           this.recentLoads = data.items.slice(0, 5);
           const now = new Date();
@@ -1329,7 +1347,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
         }
       });
     } else {
-      this.loadService.getLoads(undefined, undefined, undefined, 1, 5).subscribe({
+      this.loadService.getLoads(undefined, undefined, undefined, 1, 5, undefined, undefined, this.skipGlobalHttpLoading).subscribe({
         next: (data) => {
           // Get the 5 most recent loads (already sorted by backend)
           this.recentLoads = data.items;
@@ -1510,7 +1528,9 @@ export class DashboardComponent implements OnInit, OnDestroy {
   loadUpcomingLoads(): void {
     this.upcomingLoadsLoading = true;
     // Get loads without status filter, then filter on frontend
-    this.apiService.get<{ items: Load[], totalCount: number }>('loads/my-loads?pageNumber=1&pageSize=20').subscribe({
+    this.apiService
+      .get<{ items: Load[]; totalCount: number }>('loads/my-loads', { pageNumber: 1, pageSize: 20 }, this.skipGlobalHttpLoading)
+      .subscribe({
       next: (data) => {
         const now = new Date();
         // Filter for Assigned/InTransit with upcoming pickup dates, then sort by pickup date
@@ -1541,7 +1561,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
   loadDriverIncidents(): void {
     this.incidentsLoading = true;
     // Load unresolved incidents first (most important)
-    this.complianceService.getMyIncidents(false).subscribe({
+    this.complianceService.getMyIncidents(false, this.skipGlobalHttpLoading).subscribe({
       next: (data) => {
         // Sort by incident date (most recent first)
         this.driverIncidents = data.sort((a, b) => {
@@ -1561,7 +1581,9 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
   loadAuditLogs(): void {
     this.auditLogsLoading = true;
-    this.adminService.getAuditLogs(undefined, undefined, undefined, undefined, undefined, 1, 5).subscribe({
+    this.adminService
+      .getAuditLogs(undefined, undefined, undefined, undefined, undefined, 1, 5, this.skipGlobalHttpLoading)
+      .subscribe({
       next: (data) => {
         this.recentAuditLogs = data.items?.slice(0, 5) ?? [];
         this.auditLogsLoading = false;

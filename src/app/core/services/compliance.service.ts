@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { HttpClient, HttpParams } from '@angular/common/http';
+import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import {
@@ -39,10 +39,16 @@ export class ComplianceService {
     return this.http.get<Incident>(`${this.apiUrl}/incidents/${id}`);
   }
 
-  getMyIncidents(resolved?: boolean): Observable<Incident[]> {
+  getMyIncidents(resolved?: boolean, extraHeaders?: Record<string, string>): Observable<Incident[]> {
     let params = new HttpParams();
     if (resolved !== undefined) params = params.set('resolved', resolved.toString());
-    return this.http.get<Incident[]>(`${this.apiUrl}/incidents/me`, { params });
+    let headers = new HttpHeaders();
+    if (extraHeaders) {
+      for (const key of Object.keys(extraHeaders)) {
+        headers = headers.set(key, extraHeaders[key]!);
+      }
+    }
+    return this.http.get<Incident[]>(`${this.apiUrl}/incidents/me`, { params, headers });
   }
 
   getMyIncidentById(id: number): Observable<Incident> {

@@ -50,7 +50,8 @@ export class LoadService {
     pageNumber: number = 1,
     pageSize: number = 20,
     assignedByUserId?: number,
-    advancedFilters?: LoadAdvancedFilterParams
+    advancedFilters?: LoadAdvancedFilterParams,
+    requestHeaders?: Record<string, string>
   ): Observable<PagedResult<Load>> {
     const params: any = {};
     if (status) params.status = status;
@@ -76,7 +77,7 @@ export class LoadService {
     }
     params.pageNumber = pageNumber;
     params.pageSize = pageSize;
-    return this.apiService.get<PagedResult<Load>>('loads', params);
+    return this.apiService.get<PagedResult<Load>>('loads', params, requestHeaders);
   }
 
   getLoadById(id: number): Observable<LoadDetail> {

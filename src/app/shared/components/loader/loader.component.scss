@@ -25,62 +25,181 @@
   }
 }
 
-.loader-spinner {
-  position: relative;
-  width: 64px;
-  height: 64px;
-  margin: 0 auto 1.5rem;
+.truck-loader {
+  width: min(220px, 58vw);
+  margin: 0 auto 0.5rem;
+  filter: drop-shadow(0 8px 18px rgba(0, 0, 0, 0.4));
 }
 
-.spinner-ring {
-  position: absolute;
+.truck-loader__svg {
+  display: block;
   width: 100%;
-  height: 100%;
-  border: 4px solid transparent;
-  border-top-color: #0d6efd;
-  border-radius: 50%;
-  animation: spin 1.2s cubic-bezier(0.5, 0, 0.5, 1) infinite;
+  height: auto;
+  overflow: visible;
 }
 
-.spinner-ring:nth-child(1) {
-  animation-delay: -0.45s;
-  border-top-color: #0d6efd;
-  opacity: 1;
+.truck-loader__road {
+  stroke: rgba(255, 255, 255, 0.45);
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-dasharray: 8 10;
+  animation: road-dash 1.1s linear infinite;
 }
 
-.spinner-ring:nth-child(2) {
-  animation-delay: -0.3s;
-  border-top-color: #0dcaf0;
-  opacity: 0.8;
-  width: 80%;
-  height: 80%;
-  top: 10%;
-  left: 10%;
-}
-
-.spinner-ring:nth-child(3) {
-  animation-delay: -0.15s;
-  border-top-color: #6610f2;
-  opacity: 0.6;
-  width: 60%;
-  height: 60%;
-  top: 20%;
-  left: 20%;
-}
-
-@keyframes spin {
-  0% {
-    transform: rotate(0deg);
+@keyframes road-dash {
+  to {
+    stroke-dashoffset: -36;
   }
-  100% {
+}
+
+.truck-loader__chassis {
+  stroke: rgba(15, 23, 42, 0.55);
+  stroke-width: 2.2;
+  stroke-linecap: round;
+}
+
+.truck-loader__reefer-body {
+  stroke: rgba(148, 163, 184, 0.85);
+  stroke-width: 1;
+}
+
+.truck-loader__reefer-roof {
+  stroke: rgba(255, 255, 255, 0.65);
+  stroke-width: 0.9;
+  stroke-linecap: round;
+}
+
+.truck-loader__ribs line {
+  stroke: rgba(203, 213, 225, 0.55);
+  stroke-width: 0.55;
+  stroke-linecap: round;
+}
+
+.truck-loader__reefer-accent {
+  fill: #1a365d;
+  opacity: 0.92;
+}
+
+.truck-loader__reefer-unit {
+  stroke: rgba(15, 23, 42, 0.35);
+  stroke-width: 0.75;
+}
+
+.truck-loader__reefer-unit-face {
+  fill: rgba(15, 23, 42, 0.45);
+}
+
+.truck-loader__reefer-grille line {
+  stroke: rgba(226, 232, 240, 0.35);
+  stroke-width: 0.65;
+  stroke-linecap: round;
+}
+
+.truck-loader__reefer-fan {
+  fill: rgba(30, 41, 59, 0.5);
+  stroke: rgba(148, 163, 184, 0.5);
+  stroke-width: 0.5;
+}
+
+.truck-loader__fan-blade {
+  stroke: rgba(203, 213, 225, 0.55);
+  stroke-width: 0.85;
+  stroke-linecap: round;
+}
+
+.truck-loader__reefer-fan-hub {
+  fill: #94a3b8;
+  stroke: #cbd5e1;
+  stroke-width: 0.35;
+}
+
+.truck-loader__fan {
+  transform-origin: 0 0;
+  transform-box: fill-box;
+  animation: fan-spin 1.8s linear infinite;
+}
+
+.truck-loader__cab {
+  stroke: rgba(255, 255, 255, 0.2);
+  stroke-width: 0.9;
+}
+
+.truck-loader__cab-shade {
+  fill: rgba(15, 23, 42, 0.22);
+}
+
+.truck-loader__window {
+  fill: rgba(125, 211, 252, 0.35);
+  stroke: rgba(255, 255, 255, 0.25);
+  stroke-width: 0.5;
+}
+
+.truck-loader__cab-highlight {
+  stroke: rgba(255, 255, 255, 0.35);
+  stroke-width: 0.85;
+}
+
+.truck-loader__fifth {
+  fill: #1e293b;
+  stroke: rgba(255, 255, 255, 0.12);
+  stroke-width: 0.4;
+}
+
+.truck-loader__tire {
+  fill: #212529;
+  stroke: #0f172a;
+  stroke-width: 1;
+}
+
+.truck-loader__rim {
+  fill: #64748b;
+  stroke: #94a3b8;
+  stroke-width: 0.6;
+}
+
+.truck-loader__spoke {
+  stroke: #475569;
+  stroke-width: 1.2;
+  stroke-linecap: round;
+}
+
+.truck-loader__wheel {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: wheel-turn 0.55s linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .truck-loader__wheel {
+    animation-duration: 1.4s;
+  }
+
+  .truck-loader__fan {
+    animation-duration: 3.5s;
+  }
+
+  .truck-loader__road {
+    animation: none;
+    stroke-dasharray: none;
+  }
+}
+
+@keyframes wheel-turn {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes fan-spin {
+  to {
     transform: rotate(360deg);
   }
 }
 
 .loader-text {
-  margin-top: 1.5rem;
+  margin-top: 1.25rem;
   margin-bottom: 0;
-  color: #6c757d;
+  color: #e9ecef;
   font-size: 0.95rem;
   font-weight: 500;
   letter-spacing: 0.5px;
@@ -88,11 +207,11 @@
 }
 
 @keyframes pulse {
-  0%, 100% {
-    opacity: 0.6;
+  0%,
+  100% {
+    opacity: 0.65;
   }
   50% {
     opacity: 1;
   }
 }
-

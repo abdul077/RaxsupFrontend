@@ -188,6 +188,19 @@ $white: #ffffff;
   margin-bottom: 1.5rem;
 }
 
+.tms-kpi-row-loading {
+  flex: 1 1 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 4.5rem;
+  padding: 1rem 1.25rem;
+  border-radius: 12px;
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+  background: $white;
+}
+
 .tms-kpi-card {
   flex: 1 1 140px;
   min-width: 120px;

@@ -12,8 +12,17 @@ export const loadingInterceptor: HttpInterceptorFn = (req, next) => {
   // 3. SignalR hub connections (negotiation, reconnect)
   // 4. All chat API calls (background polling/real-time updates)
   const url = req.url.toLowerCase();
+  // Dashboard fires many parallel requests; refcount keeps the global overlay up until the slowest finishes.
+  const dashboardReport =
+    url.includes('/reports/dashboard') ||
+    url.includes('/reports/driver-dashboard') ||
+    url.includes('/reports/top-brokers') ||
+    url.includes('/reports/revenue-by-truck') ||
+    url.includes('/reports/loads-per-dispatcher') ||
+    url.includes('/reports/total-gross-revenue');
   const skipLoading =
     req.headers.has('X-Skip-Loading') ||
+    dashboardReport ||
     url.includes('/notifications') ||
     url.includes('/notification') ||
     url.includes('/chathub') ||

@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { HttpClient, HttpParams } from '@angular/common/http';
+import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import {
@@ -122,7 +122,8 @@ export class AdminService {
     fromDate?: Date,
     toDate?: Date,
     pageNumber?: number,
-    pageSize?: number
+    pageSize?: number,
+    extraHeaders?: Record<string, string>
   ): Observable<AuditLogPagedResult> {
     let params = new HttpParams();
     if (userId) params = params.set('userId', userId.toString());
@@ -132,7 +133,13 @@ export class AdminService {
     if (toDate) params = params.set('toDate', toDate.toISOString());
     if (pageNumber) params = params.set('pageNumber', pageNumber.toString());
     if (pageSize) params = params.set('pageSize', pageSize.toString());
-    return this.http.get<AuditLogPagedResult>(`${this.apiUrl}/audit-logs`, { params });
+    let headers = new HttpHeaders();
+    if (extraHeaders) {
+      for (const key of Object.keys(extraHeaders)) {
+        headers = headers.set(key, extraHeaders[key]!);
+      }
+    }
+    return this.http.get<AuditLogPagedResult>(`${this.apiUrl}/audit-logs`, { params, headers });
   }
 
   // Email Logs
