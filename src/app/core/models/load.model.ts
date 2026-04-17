@@ -27,6 +27,9 @@ export interface Load {
   deadheadOrigin?: string;
   deadheadDestination?: string;
   deadheadAmount?: number;
+  /** Total load weight in kilograms (optional). */
+  loadWeight?: number;
+  materialName?: string;
 }
 
 export interface LoadNote {
@@ -116,6 +119,8 @@ export interface CreateLoadRequest {
   deadheadOrigin?: string;
   deadheadDestination?: string;
   deadheadAmount?: number;
+  loadWeight?: number;
+  materialName?: string;
 }
 
 export interface CreateLoadStopRequest {

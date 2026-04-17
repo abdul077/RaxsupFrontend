@@ -301,6 +301,14 @@
               </span>
             </div>
             <div class="info-row">
+              <span class="info-label"><i class="fas fa-weight-hanging info-row-icon"></i> Load weight (kg)</span>
+              <span class="info-value">{{ formatLoadWeightKg(load.loadWeight) }}</span>
+            </div>
+            <div class="info-row">
+              <span class="info-label"><i class="fas fa-box info-row-icon"></i> Material name</span>
+              <span class="info-value">{{ (load.materialName && load.materialName.trim()) || '—' }}</span>
+            </div>
+            <div class="info-row">
               <span class="info-label"><i class="fas fa-calendar-alt info-row-icon"></i> Created</span>
               <span class="info-value">{{ formatCreatedDate(load.createdAt) }}</span>
             </div>

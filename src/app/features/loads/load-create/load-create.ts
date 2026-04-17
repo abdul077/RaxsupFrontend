@@ -51,7 +51,9 @@ export class LoadCreateComponent implements OnInit, AfterViewInit, OnDestroy {
     notes: '',
     deadheadOrigin: '',
     deadheadDestination: '',
-    deadheadAmount: undefined
+    deadheadAmount: undefined,
+    loadWeight: undefined as number | undefined,
+    materialName: ''
   };
 
   // Stops management
@@ -2016,6 +2018,12 @@ export class LoadCreateComponent implements OnInit, AfterViewInit, OnDestroy {
         return;
       }
     }
+    if (this.formData.loadWeight !== undefined && this.formData.loadWeight !== null) {
+      if (this.formData.loadWeight < 0) {
+        alert('Load weight cannot be negative');
+        return;
+      }
+    }
 
     this.submitting = true;
     
@@ -2036,6 +2044,7 @@ export class LoadCreateComponent implements OnInit, AfterViewInit, OnDestroy {
 
     const dhOrigin = this.formData.deadheadOrigin?.trim();
     const dhDest = this.formData.deadheadDestination?.trim();
+    const material = this.formData.materialName?.trim();
     const loadData: CreateLoadRequest = {
       ...this.formData,
       distanceKm: this.totalDistanceKm ?? undefined,
@@ -2048,7 +2057,12 @@ export class LoadCreateComponent implements OnInit, AfterViewInit, OnDestroy {
       deadheadAmount:
         this.formData.deadheadAmount !== undefined && this.formData.deadheadAmount !== null
           ? this.formData.deadheadAmount
-          : undefined
+          : undefined,
+      loadWeight:
+        this.formData.loadWeight !== undefined && this.formData.loadWeight !== null
+          ? this.formData.loadWeight
+          : undefined,
+      materialName: material || undefined
     };
 
     this.loadService.createLoad(loadData).subscribe({

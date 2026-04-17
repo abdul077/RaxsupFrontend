@@ -124,7 +124,9 @@ export class LoadListComponent implements OnInit, OnDestroy {
     notes: '',
     deadheadOrigin: '',
     deadheadDestination: '',
-    deadheadAmount: null as number | null
+    deadheadAmount: null as number | null,
+    loadWeight: null as number | null,
+    materialName: ''
   };
 
   statusOptions = [
@@ -387,6 +389,31 @@ export class LoadListComponent implements OnInit, OnDestroy {
           render: (row) => row.ownerOperatorName || row.driverName || '-'
         },
         {
+          key: 'loadType',
+          label: 'Load Type',
+          type: 'badge',
+          sortable: true,
+          render: (row) => row.loadType || '-',
+          badgeClass: () => 'badge bg-secondary'
+        },
+        {
+          key: 'loadWeight',
+          label: 'Load weight (kg)',
+          type: 'custom',
+          sortable: true,
+          width: '120px',
+          align: 'right',
+          render: (row) => this.formatLoadWeightKg(row.loadWeight)
+        },
+        {
+          key: 'materialName',
+          label: 'Material name',
+          type: 'custom',
+          sortable: true,
+          width: '160px',
+          render: (row) => (row.materialName && String(row.materialName).trim()) || '—'
+        },
+        {
           key: 'totalRate',
           label: 'Rate',
           type: 'custom',
@@ -394,14 +421,6 @@ export class LoadListComponent implements OnInit, OnDestroy {
           align: 'right',
           width: '120px',
           render: (row) => this.formatCurrency(row.totalRate, row.currency)
-        },
-        {
-          key: 'loadType',
-          label: 'Load Type',
-          type: 'badge',
-          sortable: true,
-          render: (row) => row.loadType || '-',
-          badgeClass: () => 'badge bg-secondary'
         },
         {
           key: 'status',
@@ -435,8 +454,10 @@ export class LoadListComponent implements OnInit, OnDestroy {
       { key: 'dropoff', label: 'Dropoff' },
       { key: 'distanceKm', label: 'Distance' },
       { key: 'driverEquipment', label: 'Driver & Equipment' },
-      { key: 'totalRate', label: 'Rate' },
       { key: 'loadType', label: 'Load Type' },
+      { key: 'loadWeight', label: 'Load weight (kg)' },
+      { key: 'materialName', label: 'Material name' },
+      { key: 'totalRate', label: 'Rate' },
       { key: 'status', label: 'Status' },
       { key: 'actions', label: 'Actions', required: true }
     ];
@@ -746,7 +767,9 @@ export class LoadListComponent implements OnInit, OnDestroy {
       notes: '',
       deadheadOrigin: '',
       deadheadDestination: '',
-      deadheadAmount: null
+      deadheadAmount: null,
+      loadWeight: null,
+      materialName: ''
     };
     this.showCreateModal = true;
   }
@@ -765,7 +788,9 @@ export class LoadListComponent implements OnInit, OnDestroy {
       notes: load.notes || '',
       deadheadOrigin: load.deadheadOrigin || '',
       deadheadDestination: load.deadheadDestination || '',
-      deadheadAmount: load.deadheadAmount ?? null
+      deadheadAmount: load.deadheadAmount ?? null,
+      loadWeight: load.loadWeight ?? null,
+      materialName: load.materialName || ''
     };
     this.showEditModal = true;
   }
@@ -796,6 +821,7 @@ export class LoadListComponent implements OnInit, OnDestroy {
   createLoad(): void {
     const dhO = (this.formData.deadheadOrigin || '').trim();
     const dhD = (this.formData.deadheadDestination || '').trim();
+    const material = (this.formData.materialName || '').trim();
     const payload = {
       ...this.formData,
       pickupDateTime: this.formData.pickupDateTime || null,
@@ -804,7 +830,9 @@ export class LoadListComponent implements OnInit, OnDestroy {
       totalRate: this.formData.totalRate || null,
       deadheadOrigin: dhO || undefined,
       deadheadDestination: dhD || undefined,
-      deadheadAmount: this.formData.deadheadAmount != null ? this.formData.deadheadAmount : undefined
+      deadheadAmount: this.formData.deadheadAmount != null ? this.formData.deadheadAmount : undefined,
+      loadWeight: this.formData.loadWeight != null ? this.formData.loadWeight : undefined,
+      materialName: material || undefined
     };
 
     this.loadService.createLoad(payload).subscribe({
@@ -824,6 +852,7 @@ export class LoadListComponent implements OnInit, OnDestroy {
 
     const dhO = (this.formData.deadheadOrigin || '').trim();
     const dhD = (this.formData.deadheadDestination || '').trim();
+    const material = (this.formData.materialName || '').trim();
     const payload = {
       ...this.formData,
       pickupDateTime: this.formData.pickupDateTime || null,
@@ -833,7 +862,9 @@ export class LoadListComponent implements OnInit, OnDestroy {
       // Send strings (including empty) so the API can clear deadhead locations on update.
       deadheadOrigin: dhO,
       deadheadDestination: dhD,
-      deadheadAmount: this.formData.deadheadAmount != null ? this.formData.deadheadAmount : undefined
+      deadheadAmount: this.formData.deadheadAmount != null ? this.formData.deadheadAmount : undefined,
+      loadWeight: this.formData.loadWeight != null ? this.formData.loadWeight : undefined,
+      materialName: material
     };
 
     this.loadService.updateLoad(this.selectedLoad.loadId, payload).subscribe({
@@ -1068,6 +1099,14 @@ export class LoadListComponent implements OnInit, OnDestroy {
     return `${Math.round(n)} km`;
   }
 
+  formatLoadWeightKg(weight: number | string | null | undefined): string {
+    if (weight == null || weight === '') return '—';
+    const n = typeof weight === 'number' ? weight : Number(weight);
+    if (!Number.isFinite(n)) return '—';
+    const formatted = n.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 3 });
+    return `${formatted} kg`;
+  }
+
   formatCurrencyCompact(amount?: number, currency: string = 'USD'): string {
     if (amount == null) return '—';
     if (amount === 0) return '$0';
@@ -1088,7 +1127,7 @@ export class LoadListComponent implements OnInit, OnDestroy {
       5000
     ).subscribe({
       next: (res) => {
-        const headers = ['Load #', 'Broker', 'Origin', 'Destination', 'Driver', 'Equipment', 'Pickup', 'Delivery', 'Rate', 'Status'];
+        const headers = ['Load #', 'Broker', 'Origin', 'Destination', 'Driver', 'Equipment', 'Pickup', 'Delivery', 'Load weight (kg)', 'Material name', 'Rate', 'Status'];
         const rows = (res.items || []).map((l: Load) => [
           l.loadNumber,
           l.customerName ?? '',
@@ -1098,6 +1137,8 @@ export class LoadListComponent implements OnInit, OnDestroy {
           l.equipmentPlateNumber ?? '',
           l.pickupDateTime ? this.formatDate(l.pickupDateTime) : '',
           l.deliveryDateTime ? this.formatDate(l.deliveryDateTime) : '',
+          l.loadWeight != null ? String(l.loadWeight) : '',
+          l.materialName ?? '',
           this.formatCurrency(l.totalRate, l.currency),
           this.getStatusDisplayLabel(l.status)
         ]);
@@ -1129,7 +1170,7 @@ export class LoadListComponent implements OnInit, OnDestroy {
 
     const onData = (items: Load[]) => {
       const rows = items.map((l: Load) =>
-        `<tr><td>${l.loadNumber}</td><td>${l.customerName ?? ''}</td><td>${l.origin ?? ''} → ${l.destination ?? ''}</td><td>${(l.ownerOperatorName || l.driverName) ?? '-'}</td><td>${l.equipmentPlateNumber ?? '-'}</td><td>${this.formatCurrency(l.totalRate, l.currency)}</td><td><span class="badge badge-${(l.status || '').toLowerCase()}">${this.getStatusDisplayLabel(l.status)}</span></td></tr>`
+        `<tr><td>${l.loadNumber}</td><td>${l.customerName ?? ''}</td><td>${l.origin ?? ''} → ${l.destination ?? ''}</td><td>${(l.ownerOperatorName || l.driverName) ?? '-'}</td><td>${l.equipmentPlateNumber ?? '-'}</td><td>${this.formatLoadWeightKg(l.loadWeight)}</td><td>${(l.materialName && String(l.materialName).trim()) || '—'}</td><td>${this.formatCurrency(l.totalRate, l.currency)}</td><td><span class="badge badge-${(l.status || '').toLowerCase()}">${this.getStatusDisplayLabel(l.status)}</span></td></tr>`
       ).join('');
       w.document.open();
       w.document.write(`
@@ -1179,7 +1220,7 @@ export class LoadListComponent implements OnInit, OnDestroy {
             </div>
           </div>
           <table>
-            <thead><tr><th>Load #</th><th>Broker</th><th>Route</th><th>Driver</th><th>Equipment</th><th>Rate</th><th>Status</th></tr></thead>
+            <thead><tr><th>Load #</th><th>Broker</th><th>Route</th><th>Driver</th><th>Equipment</th><th>Load weight (kg)</th><th>Material name</th><th>Rate</th><th>Status</th></tr></thead>
             <tbody>${rows}</tbody>
           </table>
         </body>

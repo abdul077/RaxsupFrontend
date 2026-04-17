@@ -492,6 +492,20 @@
                 <span class="overview-detail-value">{{ drawerLoad.loadType || '—' }}</span>
               </div>
             </div>
+            <div class="overview-detail-row">
+              <i class="fas fa-weight-hanging overview-detail-icon"></i>
+              <div class="overview-detail-content">
+                <span class="overview-detail-label">Load weight (kg)</span>
+                <span class="overview-detail-value">{{ formatLoadWeightKg(drawerLoad.loadWeight) }}</span>
+              </div>
+            </div>
+            <div class="overview-detail-row">
+              <i class="fas fa-box overview-detail-icon"></i>
+              <div class="overview-detail-content">
+                <span class="overview-detail-label">Material name</span>
+                <span class="overview-detail-value">{{ (drawerLoad.materialName && drawerLoad.materialName.trim()) || '—' }}</span>
+              </div>
+            </div>
             <div class="overview-detail-row" *ngIf="drawerLoad.distanceKm != null">
               <i class="fas fa-road overview-detail-icon"></i>
               <div class="overview-detail-content">
@@ -703,6 +717,14 @@
                 <option value="EUR">EUR</option>
               </select>
             </div>
+            <div class="col-md-6">
+              <label class="form-label">Load weight (kg)</label>
+              <input type="number" step="0.01" min="0" class="form-control" [(ngModel)]="formData.loadWeight" name="loadWeightCreate" placeholder="Optional">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Material name</label>
+              <input type="text" class="form-control" [(ngModel)]="formData.materialName" name="materialNameCreate" maxlength="200" placeholder="Optional">
+            </div>
             <div class="col-12">
               <label class="form-label">Notes</label>
               <textarea class="form-control" rows="3" [(ngModel)]="formData.notes" name="notes"></textarea>
@@ -782,6 +804,14 @@
                 <option value="CAD">CAD</option>
                 <option value="EUR">EUR</option>
               </select>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Load weight (kg)</label>
+              <input type="number" step="0.01" min="0" class="form-control" [(ngModel)]="formData.loadWeight" name="loadWeightEdit" placeholder="Optional">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Material name</label>
+              <input type="text" class="form-control" [(ngModel)]="formData.materialName" name="materialNameEdit" maxlength="200" placeholder="Optional">
             </div>
             <div class="col-12">
               <label class="form-label">Notes</label>

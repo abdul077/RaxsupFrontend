@@ -1951,6 +1951,14 @@ export class LoadDetailComponent implements OnInit, AfterViewInit, OnDestroy {
     return new Intl.NumberFormat('en-US', { style: 'currency', currency }).format(amount);
   }
 
+  formatLoadWeightKg(weight: number | string | null | undefined): string {
+    if (weight == null || weight === '') return '—';
+    const n = typeof weight === 'number' ? weight : Number(weight);
+    if (!Number.isFinite(n)) return '—';
+    const formatted = n.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 3 });
+    return `${formatted} kg`;
+  }
+
   getTotalAccessorials(): number {
     if (!this.load || !this.load.accessorials) return 0;
     return this.load.accessorials.reduce((sum, acc) => sum + acc.amount, 0);
