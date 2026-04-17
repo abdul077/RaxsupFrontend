@@ -88,89 +88,129 @@
   </div>
 
   <div *ngIf="showAdvancedFilters" class="advanced-filters-panel mb-3">
+    <div class="advanced-filters-header">
+      <div>
+        <h6 class="advanced-filters-title mb-0">Advanced Filters</h6>
+        <p class="advanced-filters-subtitle mb-0">Narrow results with broker, assignment, date, and financial criteria.</p>
+      </div>
+      <span class="advanced-filters-badge">{{ getActiveFilterChips().length }} active</span>
+    </div>
+
     <div class="row g-3">
-      <div class="col-md-3">
-        <label class="form-label">Broker</label>
-        <select class="form-select" [(ngModel)]="advancedFilters.customerId">
-          <option [ngValue]="undefined">Any</option>
-          <option *ngFor="let customer of customers" [ngValue]="customer.customerId">BR{{ customer.customerId }} - {{ customer.name }}</option>
-        </select>
+      <div class="col-12">
+        <button type="button" class="advanced-filters-section-title section-toggle" (click)="toggleFilterSection('assignment')">
+          <span>Assignment</span>
+          <i class="fas" [ngClass]="filterSectionOpen.assignment ? 'fa-chevron-up' : 'fa-chevron-down'"></i>
+        </button>
       </div>
-      <div class="col-md-3">
-        <label class="form-label">Driver</label>
-        <select class="form-select" [(ngModel)]="advancedFilters.driverId" (ngModelChange)="onDriverFilterChange()">
-          <option [ngValue]="undefined">Any</option>
-          <option *ngFor="let driver of drivers" [ngValue]="driver.driverId">{{ driver.fullName }} (DR{{ driver.driverId }})</option>
-        </select>
+      <ng-container *ngIf="filterSectionOpen.assignment">
+        <div class="col-md-3">
+          <label class="form-label">Broker</label>
+          <select class="form-select" [(ngModel)]="advancedFilters.customerId">
+            <option [ngValue]="undefined">Any</option>
+            <option *ngFor="let customer of customers" [ngValue]="customer.customerId">BR{{ customer.customerId }} - {{ customer.name }}</option>
+          </select>
+        </div>
+        <div class="col-md-3">
+          <label class="form-label">Driver</label>
+          <select class="form-select" [(ngModel)]="advancedFilters.driverId" (ngModelChange)="onDriverFilterChange()">
+            <option [ngValue]="undefined">Any</option>
+            <option *ngFor="let driver of drivers" [ngValue]="driver.driverId">{{ driver.fullName }} (DR{{ driver.driverId }})</option>
+          </select>
+        </div>
+        <div class="col-md-3">
+          <label class="form-label">Vehicle</label>
+          <select class="form-select" [(ngModel)]="advancedFilters.equipmentId">
+            <option [ngValue]="undefined">All</option>
+            <option *ngFor="let equipment of getVisibleEquipments()" [ngValue]="equipment.equipmentId">
+              {{ getEquipmentLabelWithId(equipment) }}
+            </option>
+          </select>
+        </div>
+        <div class="col-md-3">
+          <label class="form-label">Load Type</label>
+          <select class="form-select" [(ngModel)]="advancedFilters.loadType">
+            <option [ngValue]="undefined">All</option>
+            <option *ngFor="let loadType of loadTypeOptions" [ngValue]="loadType">{{ loadType }}</option>
+          </select>
+        </div>
+      </ng-container>
+
+      <div class="col-12">
+        <button type="button" class="advanced-filters-section-title section-toggle" (click)="toggleFilterSection('dateSchedule')">
+          <span>Date & Schedule</span>
+          <i class="fas" [ngClass]="filterSectionOpen.dateSchedule ? 'fa-chevron-up' : 'fa-chevron-down'"></i>
+        </button>
       </div>
-      <div class="col-md-3">
-        <label class="form-label">Vehicle</label>
-        <select class="form-select" [(ngModel)]="advancedFilters.equipmentId">
-          <option [ngValue]="undefined">All</option>
-          <option *ngFor="let equipment of getVisibleEquipments()" [ngValue]="equipment.equipmentId">
-            {{ getEquipmentLabelWithId(equipment) }}
-          </option>
-        </select>
+      <ng-container *ngIf="filterSectionOpen.dateSchedule">
+        <div class="col-md-3">
+          <label class="form-label">Date Preset</label>
+          <select class="form-select" [(ngModel)]="selectedDatePreset" (ngModelChange)="onDatePresetChange()">
+            <option *ngFor="let preset of datePresetOptions" [ngValue]="preset">{{ preset }}</option>
+          </select>
+        </div>
+        <div class="col-md-3">
+          <label class="form-label">Pickup From</label>
+          <input class="form-control" type="date" [(ngModel)]="advancedFilters.pickupFrom">
+        </div>
+        <div class="col-md-3">
+          <label class="form-label">Pickup To</label>
+          <input class="form-control" type="date" [(ngModel)]="advancedFilters.pickupTo">
+        </div>
+        <div class="col-md-3">
+          <label class="form-label">Delivery From</label>
+          <input class="form-control" type="date" [(ngModel)]="advancedFilters.deliveryFrom">
+        </div>
+        <div class="col-md-3">
+          <label class="form-label">Delivery To</label>
+          <input class="form-control" type="date" [(ngModel)]="advancedFilters.deliveryTo">
+        </div>
+      </ng-container>
+
+      <div class="col-12">
+        <button type="button" class="advanced-filters-section-title section-toggle" (click)="toggleFilterSection('rateFlags')">
+          <span>Rate & Flags</span>
+          <i class="fas" [ngClass]="filterSectionOpen.rateFlags ? 'fa-chevron-up' : 'fa-chevron-down'"></i>
+        </button>
       </div>
-      <div class="col-md-3">
-        <label class="form-label">Load Type</label>
-        <select class="form-select" [(ngModel)]="advancedFilters.loadType">
-          <option [ngValue]="undefined">All</option>
-          <option *ngFor="let loadType of loadTypeOptions" [ngValue]="loadType">{{ loadType }}</option>
-        </select>
-      </div>
-      <div class="col-md-3">
-        <label class="form-label">Pickup From</label>
-        <input class="form-control" type="date" [(ngModel)]="advancedFilters.pickupFrom">
-      </div>
-      <div class="col-md-3">
-        <label class="form-label">Pickup To</label>
-        <input class="form-control" type="date" [(ngModel)]="advancedFilters.pickupTo">
-      </div>
-      <div class="col-md-3">
-        <label class="form-label">Delivery From</label>
-        <input class="form-control" type="date" [(ngModel)]="advancedFilters.deliveryFrom">
-      </div>
-      <div class="col-md-3">
-        <label class="form-label">Delivery To</label>
-        <input class="form-control" type="date" [(ngModel)]="advancedFilters.deliveryTo">
-      </div>
-      <div class="col-md-3">
-        <label class="form-label">Min Rate</label>
-        <input class="form-control" type="number" [(ngModel)]="advancedFilters.minRate" placeholder="0">
-      </div>
-      <div class="col-md-3">
-        <label class="form-label">Max Rate</label>
-        <input class="form-control" type="number" [(ngModel)]="advancedFilters.maxRate" placeholder="10000">
-      </div>
-      <div class="col-md-2">
-        <label class="form-label">Overdue</label>
-        <select class="form-select" [(ngModel)]="advancedFilters.isOverdue">
-          <option [ngValue]="undefined">Any</option>
-          <option [ngValue]="true">Yes</option>
-          <option [ngValue]="false">No</option>
-        </select>
-      </div>
-      <div class="col-md-2">
-        <label class="form-label">Unassigned</label>
-        <select class="form-select" [(ngModel)]="advancedFilters.isUnassigned">
-          <option [ngValue]="undefined">Any</option>
-          <option [ngValue]="true">Yes</option>
-          <option [ngValue]="false">No</option>
-        </select>
-      </div>
-      <div class="col-md-2">
-        <label class="form-label">High Value</label>
-        <select class="form-select" [(ngModel)]="advancedFilters.isHighValue">
-          <option [ngValue]="undefined">Any</option>
-          <option [ngValue]="true">Yes</option>
-          <option [ngValue]="false">No</option>
-        </select>
-      </div>
-      <div class="col-md-2">
-        <label class="form-label">High Value >=</label>
-        <input class="form-control" type="number" [(ngModel)]="advancedFilters.highValueThreshold">
-      </div>
+      <ng-container *ngIf="filterSectionOpen.rateFlags">
+        <div class="col-md-3">
+          <label class="form-label">Min Rate</label>
+          <input class="form-control" type="number" [(ngModel)]="advancedFilters.minRate" placeholder="0">
+        </div>
+        <div class="col-md-3">
+          <label class="form-label">Max Rate</label>
+          <input class="form-control" type="number" [(ngModel)]="advancedFilters.maxRate" placeholder="10000">
+        </div>
+        <div class="col-md-2">
+          <label class="form-label">Overdue</label>
+          <select class="form-select" [(ngModel)]="advancedFilters.isOverdue">
+            <option [ngValue]="undefined">Any</option>
+            <option [ngValue]="true">Yes</option>
+            <option [ngValue]="false">No</option>
+          </select>
+        </div>
+        <div class="col-md-2">
+          <label class="form-label">Unassigned</label>
+          <select class="form-select" [(ngModel)]="advancedFilters.isUnassigned">
+            <option [ngValue]="undefined">Any</option>
+            <option [ngValue]="true">Yes</option>
+            <option [ngValue]="false">No</option>
+          </select>
+        </div>
+        <div class="col-md-2">
+          <label class="form-label">High Value</label>
+          <select class="form-select" [(ngModel)]="advancedFilters.isHighValue">
+            <option [ngValue]="undefined">Any</option>
+            <option [ngValue]="true">Yes</option>
+            <option [ngValue]="false">No</option>
+          </select>
+        </div>
+        <div class="col-md-2">
+          <label class="form-label">High Value >=</label>
+          <input class="form-control" type="number" [(ngModel)]="advancedFilters.highValueThreshold">
+        </div>
+      </ng-container>
     </div>
     <div class="advanced-filters-actions mt-3">
       <button type="button" class="btn btn-sm btn-tms-primary" (click)="applyAdvancedFilters()">Apply Filters</button>
@@ -197,6 +237,35 @@
   </ng-template>
 
   <!-- Pickup / Delivery cell: label, then date + address for each -->
+  <ng-template #pickupCell let-load>
+    <div class="pickup-delivery-cell">
+      <div class="pickup-delivery-row pickup-row">
+        <div class="pickup-delivery-detail">
+          <span class="pickup-delivery-line">
+            <span class="pickup-delivery-datetime">{{ formatPickupDeliveryDateTime(load.pickupDateTime) }}</span>
+            <span class="pickup-delivery-sep">·</span>
+            <span class="pickup-delivery-location" [title]="load.origin">{{ load.origin || '—' }}</span>
+          </span>
+        </div>
+      </div>
+    </div>
+  </ng-template>
+
+  <ng-template #dropoffCell let-load>
+    <div class="pickup-delivery-cell">
+      <div class="pickup-delivery-row delivery-row">
+        <div class="pickup-delivery-detail">
+          <span class="pickup-delivery-line">
+            <span class="pickup-delivery-datetime">{{ formatPickupDeliveryDateTime(load.deliveryDateTime) }}</span>
+            <span class="pickup-delivery-sep">·</span>
+            <span class="pickup-delivery-location" [title]="load.destination">{{ load.destination || '—' }}</span>
+          </span>
+        </div>
+      </div>
+    </div>
+  </ng-template>
+
+  <!-- Pickup / Delivery combined cell (legacy) -->
   <ng-template #pickupDeliveryCell let-load>
     <div class="pickup-delivery-cell">
       <div class="pickup-delivery-row pickup-row">
@@ -311,6 +380,21 @@
     <div class="load-list-card-header">
       <h5><i class="fas fa-list me-2"></i>Loads</h5>
       <div class="load-list-card-actions">
+        <div class="column-picker" (click)="$event.stopPropagation()">
+          <button type="button" class="btn btn-sm btn-tms-outline" (click)="toggleColumnMenu()" title="Choose columns">
+            <i class="fas fa-columns me-1"></i>Columns
+          </button>
+          <div *ngIf="showColumnMenu" class="column-picker-menu">
+            <label *ngFor="let option of columnOptions" class="column-picker-item">
+              <input
+                type="checkbox"
+                [checked]="isColumnVisible(option.key)"
+                [disabled]="option.required"
+                (change)="toggleColumnVisibility(option.key)" />
+              <span>{{ option.label }}</span>
+            </label>
+          </div>
+        </div>
         <button type="button" class="btn btn-sm btn-tms-outline" (click)="exportCsv()" title="Export CSV">
           <i class="fas fa-file-csv me-1"></i>CSV
         </button>

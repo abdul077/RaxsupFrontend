@@ -76,6 +76,7 @@
               *ngFor="let column of getVisibleColumns()"
               [style.width]="column.width"
               [style.text-align]="column.align || 'left'"
+              [class.sticky-col]="column.sticky"
               [class.sortable]="column.sortable"
               [class.sorted]="currentSortColumn === column.key"
               (click)="onSort(column)">
@@ -107,6 +108,7 @@
             <!-- Data Cells -->
             <td
               *ngFor="let column of getVisibleColumns()"
+              [class.sticky-col]="column.sticky"
               [style.text-align]="column.align || 'left'">
               <!-- Template Type -->
               <ng-container *ngIf="column.type === 'template' && column.cellTemplate">

@@ -25,14 +25,33 @@ export interface TodayKpis {
 }
 
 interface FilterChip {
-  key: keyof LoadListAdvancedFilters | 'status';
+  key: keyof LoadListAdvancedFilters | 'status' | 'datePreset';
   label: string;
 }
+
+interface ColumnOption {
+  key: string;
+  label: string;
+  required?: boolean;
+}
+
+type DatePresetOption =
+  | 'All'
+  | 'Today'
+  | 'Yesterday'
+  | 'This Week'
+  | 'Last Week'
+  | 'This Month'
+  | 'Last Month';
+
+type FilterSectionKey = 'assignment' | 'dateSchedule' | 'rateFlags';
 
 interface LoadListAdvancedFilters {
   customerId?: number;
   driverId?: number;
   equipmentId?: number;
+  createdFrom?: string;
+  createdTo?: string;
   pickupFrom?: string;
   pickupTo?: string;
   deliveryFrom?: string;
@@ -82,11 +101,15 @@ export class LoadListComponent implements OnInit, OnDestroy {
   // Table
   tableConfig!: TableConfig<Load>;
   tableRefreshTrigger = 0;
+  showColumnMenu = false;
+  columnOptions: ColumnOption[] = [];
   @ViewChild('loadActionsCell', { static: true }) loadActionsCell!: TemplateRef<{ $implicit: Load }>;
   @ViewChild('smartRouteCell', { static: true }) smartRouteCell!: TemplateRef<{ $implicit: Load }>;
   @ViewChild('driverEquipmentCell', { static: true }) driverEquipmentCell!: TemplateRef<{ $implicit: Load }>;
   @ViewChild('pickupDeliveryCell', { static: true }) pickupDeliveryCell!: TemplateRef<{ $implicit: Load }>;
   @ViewChild('routePickupDeliveryCell', { static: true }) routePickupDeliveryCell!: TemplateRef<{ $implicit: Load }>;
+  @ViewChild('pickupCell', { static: true }) pickupCell!: TemplateRef<{ $implicit: Load }>;
+  @ViewChild('dropoffCell', { static: true }) dropoffCell!: TemplateRef<{ $implicit: Load }>;
 
   // Form data
   formData: any = {
@@ -122,6 +145,21 @@ export class LoadListComponent implements OnInit, OnDestroy {
     'HOTSHOT',
     'INTERMODAL'
   ];
+  datePresetOptions: DatePresetOption[] = [
+    'All',
+    'Today',
+    'Yesterday',
+    'This Week',
+    'Last Week',
+    'This Month',
+    'Last Month'
+  ];
+  selectedDatePreset: DatePresetOption = 'All';
+  filterSectionOpen: Record<FilterSectionKey, boolean> = {
+    assignment: true,
+    dateSchedule: true,
+    rateFlags: true
+  };
   /** Status options for manual update; excludes Assigned (set automatically when driver is assigned). */
   get statusOptionsForUpdate(): string[] {
     if (!this.selectedLoad) {
@@ -172,6 +210,8 @@ export class LoadListComponent implements OnInit, OnDestroy {
       customerId: this.parseOptionalNumber(params.get('customerId')),
       driverId: this.parseOptionalNumber(params.get('driverId')),
       equipmentId: this.parseOptionalNumber(params.get('equipmentId')),
+      createdFrom: params.get('createdFrom') || undefined,
+      createdTo: params.get('createdTo') || undefined,
       pickupFrom: params.get('pickupFrom') || undefined,
       pickupTo: params.get('pickupTo') || undefined,
       deliveryFrom: params.get('deliveryFrom') || undefined,
@@ -184,6 +224,8 @@ export class LoadListComponent implements OnInit, OnDestroy {
       isHighValue: this.parseOptionalBoolean(params.get('isHighValue')),
       highValueThreshold: this.parseOptionalNumber(params.get('highValueThreshold')) ?? 5000
     };
+    const preset = params.get('datePreset') as DatePresetOption | null;
+    this.selectedDatePreset = preset && this.datePresetOptions.includes(preset) ? preset : 'All';
   }
 
   ngOnDestroy(): void {
@@ -309,12 +351,31 @@ export class LoadListComponent implements OnInit, OnDestroy {
           render: (row) => row.loadNumber
         },
         {
-          key: 'routePickupDelivery',
-          label: 'Route / Pickup & Delivery',
+          key: 'pickup',
+          label: 'Pickup',
           type: 'template',
-          cellTemplate: this.routePickupDeliveryCell,
-          sortable: false,
-          width: '320px'
+          cellTemplate: this.pickupCell,
+          sortable: true,
+          width: '230px',
+          render: (row) => row.pickupDateTime || ''
+        },
+        {
+          key: 'dropoff',
+          label: 'Dropoff',
+          type: 'template',
+          cellTemplate: this.dropoffCell,
+          sortable: true,
+          width: '230px',
+          render: (row) => row.deliveryDateTime || ''
+        },
+        {
+          key: 'distanceKm',
+          label: 'Distance',
+          type: 'custom',
+          sortable: true,
+          width: '120px',
+          align: 'right',
+          render: (row) => this.formatDistanceKm(row.distanceKm)
         },
         {
           key: 'driverEquipment',
@@ -322,7 +383,7 @@ export class LoadListComponent implements OnInit, OnDestroy {
           type: 'template',
           cellTemplate: this.driverEquipmentCell,
           sortable: true,
-          width: '200px',
+          width: '220px',
           render: (row) => row.ownerOperatorName || row.driverName || '-'
         },
         {
@@ -355,8 +416,9 @@ export class LoadListComponent implements OnInit, OnDestroy {
           label: 'Actions',
           type: 'template',
           cellTemplate: this.loadActionsCell,
-          width: '50px',
-          align: 'right'
+          width: '72px',
+          align: 'right',
+          sticky: true
         }
       ],
       enableSelection: false,
@@ -366,6 +428,38 @@ export class LoadListComponent implements OnInit, OnDestroy {
       pageSizeOptions: [10, 20, 50, 100],
       emptyMessage: 'No loads found. Try adjusting your filters or create a new load.',
       rowClickable: true,
+    };
+    this.columnOptions = [
+      { key: 'loadNumber', label: 'Load #', required: true },
+      { key: 'pickup', label: 'Pickup' },
+      { key: 'dropoff', label: 'Dropoff' },
+      { key: 'distanceKm', label: 'Distance' },
+      { key: 'driverEquipment', label: 'Driver & Equipment' },
+      { key: 'totalRate', label: 'Rate' },
+      { key: 'loadType', label: 'Load Type' },
+      { key: 'status', label: 'Status' },
+      { key: 'actions', label: 'Actions', required: true }
+    ];
+  }
+
+  toggleColumnMenu(): void {
+    this.showColumnMenu = !this.showColumnMenu;
+  }
+
+  isColumnVisible(columnKey: string): boolean {
+    const column = this.tableConfig.columns.find((col) => col.key === columnKey);
+    return !!column && !column.hidden;
+  }
+
+  toggleColumnVisibility(columnKey: string): void {
+    const option = this.columnOptions.find((o) => o.key === columnKey);
+    if (option?.required) return;
+    const column = this.tableConfig.columns.find((col) => col.key === columnKey);
+    if (!column) return;
+    column.hidden = !column.hidden;
+    this.tableConfig = {
+      ...this.tableConfig,
+      columns: [...this.tableConfig.columns]
     };
   }
 
@@ -422,6 +516,10 @@ export class LoadListComponent implements OnInit, OnDestroy {
     this.showAdvancedFilters = !this.showAdvancedFilters;
   }
 
+  toggleFilterSection(section: FilterSectionKey): void {
+    this.filterSectionOpen[section] = !this.filterSectionOpen[section];
+  }
+
   applyAdvancedFilters(): void {
     if (this.advancedFilters.minRate != null && this.advancedFilters.maxRate != null) {
       if (this.advancedFilters.minRate > this.advancedFilters.maxRate) {
@@ -437,8 +535,20 @@ export class LoadListComponent implements OnInit, OnDestroy {
 
   clearAdvancedFilters(): void {
     this.advancedFilters = { highValueThreshold: 5000 };
+    this.selectedDatePreset = 'All';
     this.syncFiltersToRoute();
     this.tableRefreshTrigger++;
+  }
+
+  onDatePresetChange(): void {
+    const range = this.getDateRangeFromPreset(this.selectedDatePreset);
+    if (!range) {
+      this.advancedFilters.createdFrom = undefined;
+      this.advancedFilters.createdTo = undefined;
+      return;
+    }
+    this.advancedFilters.createdFrom = range.from;
+    this.advancedFilters.createdTo = range.to;
   }
 
   resetAllFilters(): void {
@@ -455,6 +565,9 @@ export class LoadListComponent implements OnInit, OnDestroy {
 
     if (this.statusFilter) {
       chips.push({ key: 'status', label: `Status: ${this.getStatusDisplayLabel(this.statusFilter)}` });
+    }
+    if (this.selectedDatePreset !== 'All') {
+      chips.push({ key: 'datePreset', label: `Date preset: ${this.selectedDatePreset}` });
     }
     if (this.advancedFilters.customerId) chips.push({ key: 'customerId', label: `Broker: BR${this.advancedFilters.customerId}` });
     if (this.advancedFilters.driverId) chips.push({ key: 'driverId', label: `Driver: ${this.getDriverLabelWithId(this.advancedFilters.driverId)}` });
@@ -484,6 +597,10 @@ export class LoadListComponent implements OnInit, OnDestroy {
   removeFilterChip(chip: FilterChip): void {
     if (chip.key === 'status') {
       this.statusFilter = '';
+    } else if (chip.key === 'datePreset') {
+      this.selectedDatePreset = 'All';
+      this.advancedFilters.createdFrom = undefined;
+      this.advancedFilters.createdTo = undefined;
     } else if (chip.key === 'highValueThreshold') {
       this.advancedFilters.highValueThreshold = 5000;
     } else {
@@ -526,6 +643,8 @@ export class LoadListComponent implements OnInit, OnDestroy {
       customerId: this.advancedFilters.customerId ?? null,
       driverId: this.advancedFilters.driverId ?? null,
       equipmentId: this.advancedFilters.equipmentId ?? null,
+      createdFrom: this.advancedFilters.createdFrom ?? null,
+      createdTo: this.advancedFilters.createdTo ?? null,
       pickupFrom: this.advancedFilters.pickupFrom ?? null,
       pickupTo: this.advancedFilters.pickupTo ?? null,
       deliveryFrom: this.advancedFilters.deliveryFrom ?? null,
@@ -536,7 +655,8 @@ export class LoadListComponent implements OnInit, OnDestroy {
       isOverdue: this.advancedFilters.isOverdue ?? null,
       isUnassigned: this.advancedFilters.isUnassigned ?? null,
       isHighValue: this.advancedFilters.isHighValue ?? null,
-      highValueThreshold: this.advancedFilters.highValueThreshold ?? 5000
+      highValueThreshold: this.advancedFilters.highValueThreshold ?? 5000,
+      datePreset: this.selectedDatePreset !== 'All' ? this.selectedDatePreset : null
     };
 
     this.router.navigate([], {
@@ -557,6 +677,60 @@ export class LoadListComponent implements OnInit, OnDestroy {
     if (value === 'true') return true;
     if (value === 'false') return false;
     return undefined;
+  }
+
+  private getDateRangeFromPreset(preset: DatePresetOption): { from: string; to: string } | null {
+    if (preset === 'All') return null;
+
+    const now = new Date();
+    const toDateString = (d: Date): string => {
+      const year = d.getFullYear();
+      const month = String(d.getMonth() + 1).padStart(2, '0');
+      const day = String(d.getDate()).padStart(2, '0');
+      return `${year}-${month}-${day}`;
+    };
+
+    const start = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const end = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+    if (preset === 'Today') {
+      return { from: toDateString(start), to: toDateString(end) };
+    }
+
+    if (preset === 'Yesterday') {
+      start.setDate(start.getDate() - 1);
+      end.setDate(end.getDate() - 1);
+      return { from: toDateString(start), to: toDateString(end) };
+    }
+
+    if (preset === 'This Week' || preset === 'Last Week') {
+      const day = start.getDay();
+      const mondayOffset = day === 0 ? -6 : 1 - day;
+      start.setDate(start.getDate() + mondayOffset);
+      end.setTime(start.getTime());
+      end.setDate(start.getDate() + 6);
+
+      if (preset === 'Last Week') {
+        start.setDate(start.getDate() - 7);
+        end.setDate(end.getDate() - 7);
+      }
+
+      return { from: toDateString(start), to: toDateString(end) };
+    }
+
+    if (preset === 'This Month') {
+      const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+      const monthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+      return { from: toDateString(monthStart), to: toDateString(monthEnd) };
+    }
+
+    if (preset === 'Last Month') {
+      const monthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+      const monthEnd = new Date(now.getFullYear(), now.getMonth(), 0);
+      return { from: toDateString(monthStart), to: toDateString(monthEnd) };
+    }
+
+    return null;
   }
 
   openCreateModal(): void {

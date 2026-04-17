@@ -22,6 +22,8 @@ export interface LoadAdvancedFilterParams {
   customerId?: number;
   driverId?: number;
   equipmentId?: number;
+  createdFrom?: string;
+  createdTo?: string;
   pickupFrom?: string;
   pickupTo?: string;
   deliveryFrom?: string;
@@ -58,6 +60,8 @@ export class LoadService {
     if (advancedFilters) {
       if (advancedFilters.driverId) params.driverId = advancedFilters.driverId;
       if (advancedFilters.equipmentId) params.equipmentId = advancedFilters.equipmentId;
+      if (advancedFilters.createdFrom) params.createdFrom = advancedFilters.createdFrom;
+      if (advancedFilters.createdTo) params.createdTo = advancedFilters.createdTo;
       if (advancedFilters.pickupFrom) params.pickupFrom = advancedFilters.pickupFrom;
       if (advancedFilters.pickupTo) params.pickupTo = advancedFilters.pickupTo;
       if (advancedFilters.deliveryFrom) params.deliveryFrom = advancedFilters.deliveryFrom;
