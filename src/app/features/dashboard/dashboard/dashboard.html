@@ -10,6 +10,95 @@
         <p class="tms-subtitle">Welcome back, <strong>{{ authService.getCurrentUser()?.fullName }}</strong></p>
       </div>
     </div>
+    <div class="tms-header-search" *ngIf="canUseGlobalSearch()" #globalSearchPanel>
+      <div class="input-group input-group-sm tms-global-search-input-group">
+        <span class="input-group-text"><i class="fas fa-search"></i></span>
+        <input
+          type="search"
+          class="form-control"
+          placeholder="Search loads, brokers (MC/DOT), invoices, drivers…"
+          [ngModel]="searchQuery"
+          (ngModelChange)="onGlobalSearchInput($event)"
+          (focus)="onGlobalSearchFocus()"
+          autocomplete="off"
+          aria-label="Universal search"
+        />
+      </div>
+      <div
+        class="tms-global-search-dropdown"
+        *ngIf="searchPanelOpen && searchQuery.trim().length >= 2"
+        (click)="$event.stopPropagation()">
+        <ng-container *ngIf="globalSearchResults">
+          <div *ngIf="!hasGlobalSearchHits()" class="tms-global-search-empty">No matches</div>
+
+          <div class="tms-global-search-section" *ngIf="globalSearchResults.loads.length > 0">
+            <div class="tms-global-search-section-title">Loads</div>
+            <button
+              type="button"
+              class="tms-global-search-hit"
+              *ngFor="let item of globalSearchResults.loads"
+              (click)="navigateToSearchHit('load', item.loadId)">
+              <span class="tms-global-search-hit-main">{{ item.loadNumber }}</span>
+              <span class="tms-global-search-hit-sub" *ngIf="item.route">{{ item.route }}</span>
+              <span class="tms-global-search-hit-meta" *ngIf="item.status">{{ item.status }}</span>
+            </button>
+          </div>
+
+          <div class="tms-global-search-section" *ngIf="globalSearchResults.brokers.length > 0">
+            <div class="tms-global-search-section-title">Brokers</div>
+            <button
+              type="button"
+              class="tms-global-search-hit"
+              *ngFor="let item of globalSearchResults.brokers"
+              (click)="navigateToSearchHit('broker', item.customerId)">
+              <span class="tms-global-search-hit-main">{{ item.name }}</span>
+              <span class="tms-global-search-hit-sub" *ngIf="item.mcNumber || item.dotNumber">
+                <ng-container *ngIf="item.mcNumber">MC {{ item.mcNumber }}</ng-container>
+                <ng-container *ngIf="item.mcNumber && item.dotNumber"> · </ng-container>
+                <ng-container *ngIf="item.dotNumber">DOT {{ item.dotNumber }}</ng-container>
+              </span>
+            </button>
+          </div>
+
+          <div class="tms-global-search-section" *ngIf="globalSearchResults.invoices.length > 0">
+            <div class="tms-global-search-section-title">Invoices</div>
+            <button
+              type="button"
+              class="tms-global-search-hit"
+              *ngFor="let item of globalSearchResults.invoices"
+              (click)="navigateToSearchHit('invoice', item.invoiceId)">
+              <span class="tms-global-search-hit-main">{{ item.invoiceNumber }}</span>
+              <span class="tms-global-search-hit-sub" *ngIf="item.customerName">{{ item.customerName }}</span>
+              <span class="tms-global-search-hit-meta" *ngIf="item.loadNumber">Load {{ item.loadNumber }}</span>
+            </button>
+          </div>
+
+          <div class="tms-global-search-section" *ngIf="globalSearchResults.drivers.length > 0">
+            <div class="tms-global-search-section-title">Drivers</div>
+            <button
+              type="button"
+              class="tms-global-search-hit"
+              *ngFor="let item of globalSearchResults.drivers"
+              (click)="navigateToSearchHit('driver', item.driverId)">
+              <span class="tms-global-search-hit-main">{{ item.fullName }}</span>
+              <span class="tms-global-search-hit-sub" *ngIf="item.email">{{ item.email }}</span>
+            </button>
+          </div>
+
+          <div class="tms-global-search-section" *ngIf="globalSearchResults.ownerOperators.length > 0">
+            <div class="tms-global-search-section-title">Owner operators</div>
+            <button
+              type="button"
+              class="tms-global-search-hit"
+              *ngFor="let item of globalSearchResults.ownerOperators"
+              (click)="navigateToSearchHit('ownerOperator', item.ownerOperatorId)">
+              <span class="tms-global-search-hit-main">{{ item.companyName }}</span>
+              <span class="tms-global-search-hit-sub" *ngIf="item.email">{{ item.email }}</span>
+            </button>
+          </div>
+        </ng-container>
+      </div>
+    </div>
     <div class="tms-header-actions">
       <button *ngIf="canCreateLoad()" class="btn btn-tms-primary" routerLink="/loads/create">
         <i class="fas fa-plus me-2"></i>Create New Load

@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, HostListener, ViewChild, ElementRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule, Router, NavigationEnd } from '@angular/router';
@@ -15,7 +15,20 @@ import { TimeZoneService } from '../../../core/services/timezone.service';
 import { Load } from '../../../core/models/load.model';
 import { Incident } from '../../../core/models/compliance.model';
 import { AuditLog } from '../../../core/models/admin.model';
-import { Subscription, filter } from 'rxjs';
+import {
+  Subscription,
+  Subject,
+  EMPTY,
+  of,
+  filter,
+  debounceTime,
+  distinctUntilChanged,
+  switchMap,
+  takeUntil,
+  catchError,
+} from 'rxjs';
+import { GlobalSearchService } from '../../../core/services/global-search.service';
+import { GlobalSearchResult } from '../../../core/models/global-search.model';
 
 interface LoadsByPeriod {
   date: string;
@@ -175,6 +188,14 @@ export class DashboardComponent implements OnInit, OnDestroy {
   ];
   private routerSubscription?: Subscription;
   private notificationsSubscription?: Subscription;
+  private readonly destroy$ = new Subject<void>();
+  private readonly globalSearchInput$ = new Subject<string>();
+
+  @ViewChild('globalSearchPanel', { read: ElementRef }) globalSearchPanel?: ElementRef<HTMLElement>;
+
+  searchQuery = '';
+  searchPanelOpen = false;
+  globalSearchResults: GlobalSearchResult | null = null;
 
   // Chart data
   loadStatusChartData!: ChartData<'doughnut'>;
@@ -224,10 +245,43 @@ export class DashboardComponent implements OnInit, OnDestroy {
     private complianceService: ComplianceService,
     private notificationService: NotificationService,
     private timeZoneService: TimeZoneService,
-    private router: Router
+    private router: Router,
+    private globalSearchService: GlobalSearchService
   ) {}
 
   ngOnInit(): void {
+    this.globalSearchInput$
+      .pipe(
+        debounceTime(300),
+        distinctUntilChanged(),
+        switchMap((q) => {
+          const trimmed = q.trim();
+          if (trimmed.length < 2) {
+            this.globalSearchResults = null;
+            return EMPTY;
+          }
+          return this.globalSearchService.search(trimmed, 8).pipe(
+            catchError(() => {
+              this.globalSearchResults = null;
+              return of(null);
+            })
+          );
+        }),
+        takeUntil(this.destroy$)
+      )
+      .subscribe((data) => {
+        if (!data) {
+          return;
+        }
+        this.globalSearchResults = {
+          loads: data.loads ?? [],
+          brokers: data.brokers ?? [],
+          invoices: data.invoices ?? [],
+          drivers: data.drivers ?? [],
+          ownerOperators: data.ownerOperators ?? [],
+        };
+      });
+
     this.initializeChartOptions();
     this.loadDashboardStats();
     this.loadRecentLoads();
@@ -280,6 +334,78 @@ export class DashboardComponent implements OnInit, OnDestroy {
   ngOnDestroy(): void {
     this.routerSubscription?.unsubscribe();
     this.notificationsSubscription?.unsubscribe();
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
+
+  canUseGlobalSearch(): boolean {
+    return this.authService.hasAnyRole([
+      'Admin',
+      'Dispatcher',
+      'FleetManager',
+      'Accountant',
+      'Driver',
+      'OwnerOperator',
+    ]);
+  }
+
+  onGlobalSearchInput(value: string): void {
+    this.searchQuery = value;
+    this.globalSearchInput$.next(value);
+  }
+
+  onGlobalSearchFocus(): void {
+    this.searchPanelOpen = true;
+  }
+
+  closeGlobalSearchPanel(): void {
+    this.searchPanelOpen = false;
+  }
+
+  @HostListener('document:click', ['$event'])
+  onDocumentClick(event: MouseEvent): void {
+    if (!this.searchPanelOpen) {
+      return;
+    }
+    const root = this.globalSearchPanel?.nativeElement;
+    if (root && !root.contains(event.target as Node)) {
+      this.searchPanelOpen = false;
+    }
+  }
+
+  hasGlobalSearchHits(): boolean {
+    const r = this.globalSearchResults;
+    if (!r) {
+      return false;
+    }
+    return (
+      r.loads.length > 0 ||
+      r.brokers.length > 0 ||
+      r.invoices.length > 0 ||
+      r.drivers.length > 0 ||
+      r.ownerOperators.length > 0
+    );
+  }
+
+  navigateToSearchHit(kind: 'load' | 'broker' | 'invoice' | 'driver' | 'ownerOperator', id: number): void {
+    this.closeGlobalSearchPanel();
+    switch (kind) {
+      case 'load':
+        void this.router.navigate(['/loads', id]);
+        break;
+      case 'broker':
+        void this.router.navigate(['/customers', id]);
+        break;
+      case 'invoice':
+        void this.router.navigate(['/financial/invoices', id]);
+        break;
+      case 'driver':
+        void this.router.navigate(['/drivers', id]);
+        break;
+      case 'ownerOperator':
+        void this.router.navigate(['/owner-operators', id]);
+        break;
+    }
   }
 
   /** Build combined alerts from notifications + stats-based operational alerts */

@@ -26,7 +26,7 @@ $white: #ffffff;
 .tms-dashboard-header {
   display: flex;
   justify-content: space-between;
-  align-items: center;
+  align-items: flex-start;
   flex-wrap: wrap;
   gap: 1rem;
   margin-bottom: 1.5rem;
@@ -40,6 +40,118 @@ $white: #ffffff;
     display: flex;
     align-items: center;
     gap: 1rem;
+  }
+
+  .tms-header-search {
+    position: relative;
+    flex: 1 1 260px;
+    min-width: 200px;
+    max-width: 480px;
+    margin: 0 auto;
+    align-self: center;
+  }
+
+  .tms-global-search-input-group {
+    border-radius: 10px;
+    overflow: hidden;
+    border: 1px solid $gray-border;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+
+    .input-group-text {
+      background: $gray-light;
+      border: 0;
+      color: $navy;
+    }
+
+    .form-control {
+      border: 0;
+      font-size: 0.9rem;
+
+      &:focus {
+        box-shadow: none;
+      }
+    }
+  }
+
+  .tms-global-search-dropdown {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: calc(100% + 0.35rem);
+    background: $white;
+    border: 1px solid $gray-border;
+    border-radius: 10px;
+    box-shadow: 0 10px 28px rgba(0, 0, 0, 0.12);
+    max-height: min(420px, 70vh);
+    overflow-y: auto;
+    z-index: 1080;
+    padding: 0.35rem 0;
+  }
+
+  .tms-global-search-empty {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1rem;
+    color: $gray-muted;
+    font-size: 0.875rem;
+  }
+
+  .tms-global-search-section {
+    padding: 0.25rem 0;
+    border-bottom: 1px solid $gray-mid;
+
+    &:last-child {
+      border-bottom: 0;
+    }
+  }
+
+  .tms-global-search-section-title {
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: $gray-muted;
+    padding: 0.35rem 1rem 0.25rem;
+  }
+
+  .tms-global-search-hit {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.1rem;
+    width: 100%;
+    text-align: left;
+    padding: 0.5rem 1rem;
+    border: 0;
+    background: transparent;
+    cursor: pointer;
+    color: $gray-dark;
+    transition: background 0.15s;
+
+    &:hover {
+      background: rgba($navy, 0.06);
+    }
+  }
+
+  .tms-global-search-hit-main {
+    font-weight: 600;
+    font-size: 0.9rem;
+  }
+
+  .tms-global-search-hit-sub {
+    font-size: 0.8rem;
+    color: $gray-muted;
+    line-height: 1.3;
+  }
+
+  .tms-global-search-hit-meta {
+    font-size: 0.75rem;
+    color: $gray-text;
+  }
+
+  .tms-header-actions {
+    align-self: center;
   }
 
   .tms-header-icon {

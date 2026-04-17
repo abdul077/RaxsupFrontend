@@ -7,7 +7,7 @@ export const loadingInterceptor: HttpInterceptorFn = (req, next) => {
   const loadingService = inject(LoadingService);
 
   // Skip loading indicator for certain requests
-  // 1. Requests with X-Skip-Loading header
+  // 1. Requests with X-Skip-Loading header (e.g. dashboard universal search)
   // 2. Notification API calls (background polling/updates)
   // 3. SignalR hub connections (negotiation, reconnect)
   // 4. All chat API calls (background polling/real-time updates)
