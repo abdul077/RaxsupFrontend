@@ -1,7 +1,6 @@
 import { Component, signal, OnInit, OnDestroy } from '@angular/core';
 import { Title } from '@angular/platform-browser';
 import { RouterOutlet } from '@angular/router';
-import { LoaderComponent } from './shared/components/loader/loader.component';
 import { AuthService } from './core/services/auth';
 import { NotificationService } from './core/services/notification.service';
 import { SignalRService } from './core/services/signalr.service';
@@ -10,7 +9,7 @@ import { environment } from '../environments/environment';
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet, LoaderComponent],
+  imports: [RouterOutlet],
   templateUrl: './app.html',
   styleUrl: './app.scss'
 })
