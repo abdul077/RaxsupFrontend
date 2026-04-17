@@ -1238,6 +1238,98 @@ $white: #ffffff;
       i {
         font-size: 0.75rem;
       }
+
+      .status-tab-count {
+        margin-left: 0.4rem;
+        font-size: 0.72rem;
+        background: rgba($gray-dark, 0.08);
+        color: $gray-dark;
+        border-radius: 999px;
+        padding: 0.1rem 0.45rem;
+        line-height: 1.2;
+      }
+
+      &.active .status-tab-count {
+        background: rgba($navy, 0.15);
+        color: $navy;
+      }
+    }
+  }
+}
+
+.loads-filter-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  .loads-filter-toolbar-left {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+
+  .loads-reset-btn {
+    text-decoration: none;
+    font-size: 0.8rem;
+    color: $gray-muted;
+    padding: 0;
+
+    &:hover {
+      color: $navy;
+      text-decoration: underline;
+    }
+  }
+}
+
+.advanced-filters-panel {
+  background: $white;
+  border: 1px solid $gray-border;
+  border-radius: 12px;
+  padding: 1rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+
+  .form-label {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: $gray-muted;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+}
+
+.advanced-filters-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.filter-chip-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+  background: $white;
+  border: 1px solid $gray-border;
+  border-radius: 10px;
+  padding: 0.65rem 0.75rem;
+
+  .filter-chip-title {
+    font-size: 0.78rem;
+    color: $gray-muted;
+    font-weight: 600;
+  }
+
+  .filter-chip {
+    border: 1px solid rgba($navy, 0.2);
+    border-radius: 999px;
+    background: rgba($navy, 0.06);
+    color: $navy;
+    font-size: 0.78rem;
+    padding: 0.22rem 0.62rem;
+    line-height: 1.2;
+    cursor: pointer;
+
+    &:hover {
+      background: rgba($navy, 0.12);
     }
   }
 }
@@ -1843,6 +1935,19 @@ $white: #ffffff;
         font-size: 0.8rem;
       }
     }
+  }
+
+  .advanced-filters-panel {
+    padding: 0.8rem;
+  }
+
+  .advanced-filters-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .filter-chip-row {
+    gap: 0.4rem;
   }
 }
 

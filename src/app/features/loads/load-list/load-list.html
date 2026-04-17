@@ -73,8 +73,116 @@
         [class.active]="statusFilter === status"
         (click)="selectStatusTab(status)">
         <i [class]="'fas ' + getStatusIcon(status) + ' me-1'"></i>{{ getStatusDisplayLabel(status) }}
+        <span class="status-tab-count">{{ getStatusCount(status) }}</span>
       </button>
     </div>
+  </div>
+
+  <div class="loads-filter-toolbar mb-3">
+    <div class="loads-filter-toolbar-left">
+      <button type="button" class="btn btn-sm btn-tms-outline" (click)="toggleAdvancedFilters()">
+        <i class="fas fa-sliders-h me-1"></i>{{ showAdvancedFilters ? 'Hide Filters' : 'Advanced Filters' }}
+      </button>
+      <button *ngIf="hasActiveAdvancedFilters()" type="button" class="btn btn-sm btn-link loads-reset-btn" (click)="resetAllFilters()">Reset All</button>
+    </div>
+  </div>
+
+  <div *ngIf="showAdvancedFilters" class="advanced-filters-panel mb-3">
+    <div class="row g-3">
+      <div class="col-md-3">
+        <label class="form-label">Broker</label>
+        <select class="form-select" [(ngModel)]="advancedFilters.customerId">
+          <option [ngValue]="undefined">Any</option>
+          <option *ngFor="let customer of customers" [ngValue]="customer.customerId">BR{{ customer.customerId }} - {{ customer.name }}</option>
+        </select>
+      </div>
+      <div class="col-md-3">
+        <label class="form-label">Driver</label>
+        <select class="form-select" [(ngModel)]="advancedFilters.driverId" (ngModelChange)="onDriverFilterChange()">
+          <option [ngValue]="undefined">Any</option>
+          <option *ngFor="let driver of drivers" [ngValue]="driver.driverId">{{ driver.fullName }} (DR{{ driver.driverId }})</option>
+        </select>
+      </div>
+      <div class="col-md-3">
+        <label class="form-label">Vehicle</label>
+        <select class="form-select" [(ngModel)]="advancedFilters.equipmentId">
+          <option [ngValue]="undefined">All</option>
+          <option *ngFor="let equipment of getVisibleEquipments()" [ngValue]="equipment.equipmentId">
+            {{ getEquipmentLabelWithId(equipment) }}
+          </option>
+        </select>
+      </div>
+      <div class="col-md-3">
+        <label class="form-label">Load Type</label>
+        <select class="form-select" [(ngModel)]="advancedFilters.loadType">
+          <option [ngValue]="undefined">All</option>
+          <option *ngFor="let loadType of loadTypeOptions" [ngValue]="loadType">{{ loadType }}</option>
+        </select>
+      </div>
+      <div class="col-md-3">
+        <label class="form-label">Pickup From</label>
+        <input class="form-control" type="date" [(ngModel)]="advancedFilters.pickupFrom">
+      </div>
+      <div class="col-md-3">
+        <label class="form-label">Pickup To</label>
+        <input class="form-control" type="date" [(ngModel)]="advancedFilters.pickupTo">
+      </div>
+      <div class="col-md-3">
+        <label class="form-label">Delivery From</label>
+        <input class="form-control" type="date" [(ngModel)]="advancedFilters.deliveryFrom">
+      </div>
+      <div class="col-md-3">
+        <label class="form-label">Delivery To</label>
+        <input class="form-control" type="date" [(ngModel)]="advancedFilters.deliveryTo">
+      </div>
+      <div class="col-md-3">
+        <label class="form-label">Min Rate</label>
+        <input class="form-control" type="number" [(ngModel)]="advancedFilters.minRate" placeholder="0">
+      </div>
+      <div class="col-md-3">
+        <label class="form-label">Max Rate</label>
+        <input class="form-control" type="number" [(ngModel)]="advancedFilters.maxRate" placeholder="10000">
+      </div>
+      <div class="col-md-2">
+        <label class="form-label">Overdue</label>
+        <select class="form-select" [(ngModel)]="advancedFilters.isOverdue">
+          <option [ngValue]="undefined">Any</option>
+          <option [ngValue]="true">Yes</option>
+          <option [ngValue]="false">No</option>
+        </select>
+      </div>
+      <div class="col-md-2">
+        <label class="form-label">Unassigned</label>
+        <select class="form-select" [(ngModel)]="advancedFilters.isUnassigned">
+          <option [ngValue]="undefined">Any</option>
+          <option [ngValue]="true">Yes</option>
+          <option [ngValue]="false">No</option>
+        </select>
+      </div>
+      <div class="col-md-2">
+        <label class="form-label">High Value</label>
+        <select class="form-select" [(ngModel)]="advancedFilters.isHighValue">
+          <option [ngValue]="undefined">Any</option>
+          <option [ngValue]="true">Yes</option>
+          <option [ngValue]="false">No</option>
+        </select>
+      </div>
+      <div class="col-md-2">
+        <label class="form-label">High Value >=</label>
+        <input class="form-control" type="number" [(ngModel)]="advancedFilters.highValueThreshold">
+      </div>
+    </div>
+    <div class="advanced-filters-actions mt-3">
+      <button type="button" class="btn btn-sm btn-tms-primary" (click)="applyAdvancedFilters()">Apply Filters</button>
+      <button type="button" class="btn btn-sm btn-outline-secondary" (click)="clearAdvancedFilters()">Clear Filters</button>
+    </div>
+  </div>
+
+  <div *ngIf="hasActiveAdvancedFilters()" class="filter-chip-row mb-3">
+    <span class="filter-chip-title">Active filters:</span>
+    <button type="button" *ngFor="let chip of getActiveFilterChips()" class="filter-chip" (click)="removeFilterChip(chip)">
+      {{ chip.label }} <i class="fas fa-times ms-1"></i>
+    </button>
   </div>
 
   <!-- Smart Route cell: Origin → Destination, stops -->
@@ -215,7 +323,7 @@
       <app-data-table
         [config]="tableConfig"
         [dataSource]="dataSource"
-        [emptyMessage]="'No loads found. Try adjusting your filters or create a new load.'"
+        [emptyMessage]="hasActiveAdvancedFilters() ? 'No matching loads for current filters. Try reset all or adjust criteria.' : 'No loads found. Try adjusting your filters or create a new load.'"
         [refreshTrigger]="tableRefreshTrigger"
         (rowClick)="viewLoadDetails($event)"
         (dataLoaded)="onTableDataLoaded($event)">
@@ -467,7 +575,7 @@
               <select class="form-select" [(ngModel)]="formData.customerId" name="customerId">
                 <option [value]="null">Select Broker</option>
                 <option *ngFor="let customer of customers" [value]="customer.customerId">
-                  RE{{ customer.customerId }} - {{ customer.name }}
+                  BR{{ customer.customerId }} - {{ customer.name }}
                 </option>
               </select>
             </div>
@@ -547,7 +655,7 @@
               <select class="form-select" [(ngModel)]="formData.customerId" name="customerId">
                 <option [value]="null">Select Broker</option>
                 <option *ngFor="let customer of customers" [value]="customer.customerId">
-                  RE{{ customer.customerId }} - {{ customer.name }}
+                  BR{{ customer.customerId }} - {{ customer.name }}
                 </option>
               </select>
             </div>

@@ -9,6 +9,10 @@ import { AuthService } from '../../../core/services/auth';
 import { TimeZoneService } from '../../../core/services/timezone.service';
 import { Load, LoadDetail, LoadAssignment, PagedResult } from '../../../core/models/load.model';
 import { Customer } from '../../../core/models/customer.model';
+import { Driver } from '../../../core/models/driver.model';
+import { DriverService } from '../../../core/services/driver.service';
+import { Equipment } from '../../../core/models/equipment.model';
+import { EquipmentService } from '../../../core/services/equipment.service';
 import { DataTableComponent } from '../../../shared/components/data-table/data-table';
 import { TableConfig, FilterState } from '../../../shared/components/data-table/data-table.models';
 
@@ -20,6 +24,28 @@ export interface TodayKpis {
   revenueToday: number;
 }
 
+interface FilterChip {
+  key: keyof LoadListAdvancedFilters | 'status';
+  label: string;
+}
+
+interface LoadListAdvancedFilters {
+  customerId?: number;
+  driverId?: number;
+  equipmentId?: number;
+  pickupFrom?: string;
+  pickupTo?: string;
+  deliveryFrom?: string;
+  deliveryTo?: string;
+  minRate?: number;
+  maxRate?: number;
+  loadType?: string;
+  isOverdue?: boolean;
+  isUnassigned?: boolean;
+  isHighValue?: boolean;
+  highValueThreshold?: number;
+}
+
 @Component({
   selector: 'app-load-list',
   imports: [CommonModule, FormsModule, RouterModule, DataTableComponent],
@@ -29,6 +55,8 @@ export interface TodayKpis {
 })
 export class LoadListComponent implements OnInit, OnDestroy {
   customers: Customer[] = [];
+  drivers: Driver[] = [];
+  equipments: Equipment[] = [];
   showCreateModal = false;
   showEditModal = false;
   showStatusModal = false;
@@ -36,6 +64,11 @@ export class LoadListComponent implements OnInit, OnDestroy {
   
   statusFilter: string = '';
   assignedByUserIdFilter?: number;
+  showAdvancedFilters = false;
+  statusCounts: Record<string, number> = {};
+  advancedFilters: LoadListAdvancedFilters = {
+    highValueThreshold: 5000
+  };
   
   // Today KPIs - derived from table data (no separate dashboard API)
   todayKpis: TodayKpis | null = null;
@@ -81,6 +114,14 @@ export class LoadListComponent implements OnInit, OnDestroy {
     'Settled',
     'Cancelled'
   ];
+  loadTypeOptions = [
+    'DRY VAN',
+    'REEFER',
+    'FLAT BED',
+    'LTL',
+    'HOTSHOT',
+    'INTERMODAL'
+  ];
   /** Status options for manual update; excludes Assigned (set automatically when driver is assigned). */
   get statusOptionsForUpdate(): string[] {
     if (!this.selectedLoad) {
@@ -94,6 +135,8 @@ export class LoadListComponent implements OnInit, OnDestroy {
   constructor(
     private loadService: LoadService,
     private apiService: ApiService,
+    private driverService: DriverService,
+    private equipmentService: EquipmentService,
     private router: Router,
     private route: ActivatedRoute,
     public authService: AuthService,
@@ -105,6 +148,8 @@ export class LoadListComponent implements OnInit, OnDestroy {
     this.applyRouteFilters();
     if (!this.authService.hasRole('Driver')) {
       this.loadCustomers();
+      this.loadDrivers();
+      this.loadEquipments();
     }
     this.initializeTableConfig();
   }
@@ -122,6 +167,23 @@ export class LoadListComponent implements OnInit, OnDestroy {
       const parsed = Number(assignedByUserId);
       this.assignedByUserIdFilter = Number.isFinite(parsed) ? parsed : undefined;
     }
+
+    this.advancedFilters = {
+      customerId: this.parseOptionalNumber(params.get('customerId')),
+      driverId: this.parseOptionalNumber(params.get('driverId')),
+      equipmentId: this.parseOptionalNumber(params.get('equipmentId')),
+      pickupFrom: params.get('pickupFrom') || undefined,
+      pickupTo: params.get('pickupTo') || undefined,
+      deliveryFrom: params.get('deliveryFrom') || undefined,
+      deliveryTo: params.get('deliveryTo') || undefined,
+      minRate: this.parseOptionalNumber(params.get('minRate')),
+      maxRate: this.parseOptionalNumber(params.get('maxRate')),
+      loadType: params.get('loadType') || undefined,
+      isOverdue: this.parseOptionalBoolean(params.get('isOverdue')),
+      isUnassigned: this.parseOptionalBoolean(params.get('isUnassigned')),
+      isHighValue: this.parseOptionalBoolean(params.get('isHighValue')),
+      highValueThreshold: this.parseOptionalNumber(params.get('highValueThreshold')) ?? 5000
+    };
   }
 
   ngOnDestroy(): void {
@@ -130,6 +192,7 @@ export class LoadListComponent implements OnInit, OnDestroy {
 
   /** Compute KPI cards from the table's loaded data (no separate dashboard API). */
   onTableDataLoaded(result: PagedResult<Load>): void {
+    this.statusCounts = this.buildStatusCounts(result.items || []);
     if (this.authService.hasRole('Driver')) return;
     const items = result.items || [];
     const totalCount = result.totalCount ?? 0;
@@ -168,6 +231,70 @@ export class LoadListComponent implements OnInit, OnDestroy {
         this.customers = [];
       }
     });
+  }
+
+  loadDrivers(): void {
+    this.driverService.getDrivers(undefined, undefined, undefined, undefined, 1, 1000).subscribe({
+      next: (result) => {
+        this.drivers = result.items || [];
+      },
+      error: () => {
+        this.drivers = [];
+      }
+    });
+  }
+
+  loadEquipments(): void {
+    this.equipmentService.getEquipments().subscribe({
+      next: (data) => {
+        this.equipments = data || [];
+      },
+      error: () => {
+        this.equipments = [];
+      }
+    });
+  }
+
+  onDriverFilterChange(): void {
+    const selectedEquipmentId = this.advancedFilters.equipmentId;
+    if (!selectedEquipmentId) return;
+    const isStillVisible = this.getVisibleEquipments().some((equipment) => equipment.equipmentId === selectedEquipmentId);
+    if (!isStillVisible) {
+      this.advancedFilters.equipmentId = undefined;
+    }
+  }
+
+  getVisibleEquipments(): Equipment[] {
+    const driverId = this.advancedFilters.driverId;
+    if (!driverId) {
+      return this.equipments;
+    }
+    return this.equipments.filter((equipment) => equipment.assignedToDriverId === driverId);
+  }
+
+  getEquipmentLabelWithId(equipment: Equipment): string {
+    const plate = equipment.plateNumber?.trim();
+    const type = this.toTitleCase(equipment.equipmentType?.trim());
+    if (plate && type) {
+      return `${plate} - ${type}`;
+    }
+    if (plate) {
+      return plate;
+    }
+    if (type) {
+      return type;
+    }
+    return 'Vehicle';
+  }
+
+  private toTitleCase(value?: string): string | undefined {
+    if (!value) return undefined;
+    return value
+      .toLowerCase()
+      .split(/[\s_-]+/)
+      .filter(Boolean)
+      .map((part) => part[0].toUpperCase() + part.slice(1))
+      .join(' ');
   }
 
   initializeTableConfig(): void {
@@ -270,11 +397,12 @@ export class LoadListComponent implements OnInit, OnDestroy {
 
     return this.loadService.getLoads(
       this.statusFilter || undefined,
-      undefined,
+      this.advancedFilters.customerId,
       search,
       pageNumber,
       pageSize,
-      this.assignedByUserIdFilter
+      this.assignedByUserIdFilter,
+      this.advancedFilters
     ).pipe(
       map((data) => ({
         ...data,
@@ -286,7 +414,149 @@ export class LoadListComponent implements OnInit, OnDestroy {
 
   selectStatusTab(status: string): void {
     this.statusFilter = status;
+    this.syncFiltersToRoute();
     this.tableRefreshTrigger++;
+  }
+
+  toggleAdvancedFilters(): void {
+    this.showAdvancedFilters = !this.showAdvancedFilters;
+  }
+
+  applyAdvancedFilters(): void {
+    if (this.advancedFilters.minRate != null && this.advancedFilters.maxRate != null) {
+      if (this.advancedFilters.minRate > this.advancedFilters.maxRate) {
+        const swap = this.advancedFilters.minRate;
+        this.advancedFilters.minRate = this.advancedFilters.maxRate;
+        this.advancedFilters.maxRate = swap;
+      }
+    }
+
+    this.syncFiltersToRoute();
+    this.tableRefreshTrigger++;
+  }
+
+  clearAdvancedFilters(): void {
+    this.advancedFilters = { highValueThreshold: 5000 };
+    this.syncFiltersToRoute();
+    this.tableRefreshTrigger++;
+  }
+
+  resetAllFilters(): void {
+    this.statusFilter = '';
+    this.clearAdvancedFilters();
+  }
+
+  hasActiveAdvancedFilters(): boolean {
+    return this.getActiveFilterChips().length > 0;
+  }
+
+  getActiveFilterChips(): FilterChip[] {
+    const chips: FilterChip[] = [];
+
+    if (this.statusFilter) {
+      chips.push({ key: 'status', label: `Status: ${this.getStatusDisplayLabel(this.statusFilter)}` });
+    }
+    if (this.advancedFilters.customerId) chips.push({ key: 'customerId', label: `Broker: BR${this.advancedFilters.customerId}` });
+    if (this.advancedFilters.driverId) chips.push({ key: 'driverId', label: `Driver: ${this.getDriverLabelWithId(this.advancedFilters.driverId)}` });
+    if (this.advancedFilters.equipmentId) {
+      const selectedEquipment = this.equipments.find((equipment) => equipment.equipmentId === this.advancedFilters.equipmentId);
+      chips.push({
+        key: 'equipmentId',
+        label: selectedEquipment
+          ? `Vehicle: ${this.getEquipmentLabelWithId(selectedEquipment)}`
+          : 'Vehicle selected'
+      });
+    }
+    if (this.advancedFilters.pickupFrom) chips.push({ key: 'pickupFrom', label: `Pickup from: ${this.advancedFilters.pickupFrom}` });
+    if (this.advancedFilters.pickupTo) chips.push({ key: 'pickupTo', label: `Pickup to: ${this.advancedFilters.pickupTo}` });
+    if (this.advancedFilters.deliveryFrom) chips.push({ key: 'deliveryFrom', label: `Delivery from: ${this.advancedFilters.deliveryFrom}` });
+    if (this.advancedFilters.deliveryTo) chips.push({ key: 'deliveryTo', label: `Delivery to: ${this.advancedFilters.deliveryTo}` });
+    if (this.advancedFilters.minRate != null) chips.push({ key: 'minRate', label: `Min rate: ${this.formatCurrency(this.advancedFilters.minRate)}` });
+    if (this.advancedFilters.maxRate != null) chips.push({ key: 'maxRate', label: `Max rate: ${this.formatCurrency(this.advancedFilters.maxRate)}` });
+    if (this.advancedFilters.loadType) chips.push({ key: 'loadType', label: `Load type: ${this.advancedFilters.loadType}` });
+    if (this.advancedFilters.isOverdue != null) chips.push({ key: 'isOverdue', label: `Overdue: ${this.advancedFilters.isOverdue ? 'Yes' : 'No'}` });
+    if (this.advancedFilters.isUnassigned != null) chips.push({ key: 'isUnassigned', label: `Unassigned: ${this.advancedFilters.isUnassigned ? 'Yes' : 'No'}` });
+    if (this.advancedFilters.isHighValue != null) chips.push({ key: 'isHighValue', label: `High value: ${this.advancedFilters.isHighValue ? 'Yes' : 'No'}` });
+
+    return chips;
+  }
+
+  removeFilterChip(chip: FilterChip): void {
+    if (chip.key === 'status') {
+      this.statusFilter = '';
+    } else if (chip.key === 'highValueThreshold') {
+      this.advancedFilters.highValueThreshold = 5000;
+    } else {
+      delete this.advancedFilters[chip.key];
+    }
+    this.syncFiltersToRoute();
+    this.tableRefreshTrigger++;
+  }
+
+  getStatusCount(status: string): number {
+    return this.statusCounts[status] ?? 0;
+  }
+
+  getDriverLabelWithId(driverId: number | undefined): string {
+    if (!driverId) return '';
+    const driver = this.drivers.find((d) => d.driverId === driverId);
+    if (!driver) {
+      return `RO${driverId}`;
+    }
+    return `${driver.fullName} (RO${driver.driverId})`;
+  }
+
+  private buildStatusCounts(items: Load[]): Record<string, number> {
+    const counts: Record<string, number> = {};
+    for (const status of this.statusOptions) {
+      counts[status] = 0;
+    }
+    for (const item of items) {
+      if (item.status && counts[item.status] != null) {
+        counts[item.status]++;
+      }
+    }
+    return counts;
+  }
+
+  private syncFiltersToRoute(): void {
+    const queryParams: Record<string, unknown> = {
+      status: this.statusFilter || null,
+      assignedByUserId: this.assignedByUserIdFilter ?? null,
+      customerId: this.advancedFilters.customerId ?? null,
+      driverId: this.advancedFilters.driverId ?? null,
+      equipmentId: this.advancedFilters.equipmentId ?? null,
+      pickupFrom: this.advancedFilters.pickupFrom ?? null,
+      pickupTo: this.advancedFilters.pickupTo ?? null,
+      deliveryFrom: this.advancedFilters.deliveryFrom ?? null,
+      deliveryTo: this.advancedFilters.deliveryTo ?? null,
+      minRate: this.advancedFilters.minRate ?? null,
+      maxRate: this.advancedFilters.maxRate ?? null,
+      loadType: this.advancedFilters.loadType ?? null,
+      isOverdue: this.advancedFilters.isOverdue ?? null,
+      isUnassigned: this.advancedFilters.isUnassigned ?? null,
+      isHighValue: this.advancedFilters.isHighValue ?? null,
+      highValueThreshold: this.advancedFilters.highValueThreshold ?? 5000
+    };
+
+    this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams,
+      queryParamsHandling: 'merge'
+    });
+  }
+
+  private parseOptionalNumber(value: string | null): number | undefined {
+    if (value == null || value === '') return undefined;
+    const parsed = Number(value);
+    return Number.isFinite(parsed) ? parsed : undefined;
+  }
+
+  private parseOptionalBoolean(value: string | null): boolean | undefined {
+    if (value == null || value === '') return undefined;
+    if (value === 'true') return true;
+    if (value === 'false') return false;
+    return undefined;
   }
 
   openCreateModal(): void {

@@ -18,6 +18,23 @@ import {
   AddLoadNoteRequest
 } from '../models/load.model';
 
+export interface LoadAdvancedFilterParams {
+  customerId?: number;
+  driverId?: number;
+  equipmentId?: number;
+  pickupFrom?: string;
+  pickupTo?: string;
+  deliveryFrom?: string;
+  deliveryTo?: string;
+  minRate?: number;
+  maxRate?: number;
+  loadType?: string;
+  isOverdue?: boolean;
+  isUnassigned?: boolean;
+  isHighValue?: boolean;
+  highValueThreshold?: number;
+}
+
 @Injectable({
   providedIn: 'root',
 })
@@ -30,13 +47,29 @@ export class LoadService {
     searchTerm?: string,
     pageNumber: number = 1,
     pageSize: number = 20,
-    assignedByUserId?: number
+    assignedByUserId?: number,
+    advancedFilters?: LoadAdvancedFilterParams
   ): Observable<PagedResult<Load>> {
     const params: any = {};
     if (status) params.status = status;
     if (customerId) params.customerId = customerId;
     if (searchTerm) params.searchTerm = searchTerm;
     if (assignedByUserId) params.assignedByUserId = assignedByUserId;
+    if (advancedFilters) {
+      if (advancedFilters.driverId) params.driverId = advancedFilters.driverId;
+      if (advancedFilters.equipmentId) params.equipmentId = advancedFilters.equipmentId;
+      if (advancedFilters.pickupFrom) params.pickupFrom = advancedFilters.pickupFrom;
+      if (advancedFilters.pickupTo) params.pickupTo = advancedFilters.pickupTo;
+      if (advancedFilters.deliveryFrom) params.deliveryFrom = advancedFilters.deliveryFrom;
+      if (advancedFilters.deliveryTo) params.deliveryTo = advancedFilters.deliveryTo;
+      if (advancedFilters.minRate != null) params.minRate = advancedFilters.minRate;
+      if (advancedFilters.maxRate != null) params.maxRate = advancedFilters.maxRate;
+      if (advancedFilters.loadType) params.loadType = advancedFilters.loadType;
+      if (advancedFilters.isOverdue != null) params.isOverdue = advancedFilters.isOverdue;
+      if (advancedFilters.isUnassigned != null) params.isUnassigned = advancedFilters.isUnassigned;
+      if (advancedFilters.isHighValue != null) params.isHighValue = advancedFilters.isHighValue;
+      if (advancedFilters.highValueThreshold != null) params.highValueThreshold = advancedFilters.highValueThreshold;
+    }
     params.pageNumber = pageNumber;
     params.pageSize = pageSize;
     return this.apiService.get<PagedResult<Load>>('loads', params);
