@@ -18,10 +18,10 @@ import { TableConfig, FilterState } from '../../../shared/components/data-table/
 
 export interface TodayKpis {
   totalLoads: number;
-  inTransit: number;
-  late: number;
+  inProgress: number;
   delivered: number;
-  revenueToday: number;
+  lateOverdue: number;
+  unassigned: number;
 }
 
 interface FilterChip {
@@ -43,6 +43,8 @@ type DatePresetOption =
   | 'Last Week'
   | 'This Month'
   | 'Last Month';
+
+type QuickTimeFilterOption = 'All Time' | 'Today' | 'Weekly' | 'Monthly';
 
 type FilterSectionKey = 'assignment' | 'dateSchedule' | 'rateFlags';
 
@@ -73,6 +75,7 @@ interface LoadListAdvancedFilters {
   styleUrl: './load-list.scss',
 })
 export class LoadListComponent implements OnInit, OnDestroy {
+  readonly lateOverdueStatusValue = '__LATE_OVERDUE__';
   customers: Customer[] = [];
   drivers: Driver[] = [];
   equipments: Equipment[] = [];
@@ -82,9 +85,11 @@ export class LoadListComponent implements OnInit, OnDestroy {
   selectedLoad: Load | null = null;
   
   statusFilter: string = '';
+  selectedStatusFilterOption: string = '';
   assignedByUserIdFilter?: number;
   showAdvancedFilters = false;
   statusCounts: Record<string, number> = {};
+  lateOverdueCount = 0;
   advancedFilters: LoadListAdvancedFilters = {
     highValueThreshold: 5000
   };
@@ -156,6 +161,8 @@ export class LoadListComponent implements OnInit, OnDestroy {
     'This Month',
     'Last Month'
   ];
+  quickTimeOptions: QuickTimeFilterOption[] = ['All Time', 'Today', 'Weekly', 'Monthly'];
+  selectedQuickTimeFilter: QuickTimeFilterOption = 'All Time';
   selectedDatePreset: DatePresetOption = 'All';
   filterSectionOpen: Record<FilterSectionKey, boolean> = {
     assignment: true,
@@ -228,6 +235,9 @@ export class LoadListComponent implements OnInit, OnDestroy {
     };
     const preset = params.get('datePreset') as DatePresetOption | null;
     this.selectedDatePreset = preset && this.datePresetOptions.includes(preset) ? preset : 'All';
+    this.selectedQuickTimeFilter = this.getQuickTimeFilterFromPreset(this.selectedDatePreset);
+    this.selectedStatusFilterOption =
+      !status && this.advancedFilters.isOverdue ? this.lateOverdueStatusValue : this.statusFilter;
   }
 
   ngOnDestroy(): void {
@@ -237,33 +247,23 @@ export class LoadListComponent implements OnInit, OnDestroy {
   /** Compute KPI cards from the table's loaded data (no separate dashboard API). */
   onTableDataLoaded(result: PagedResult<Load>): void {
     this.statusCounts = this.buildStatusCounts(result.items || []);
+    this.lateOverdueCount = (result.items || []).filter((l) => this.isOverdueLoad(l)).length;
     if (this.authService.hasRole('Driver')) return;
     const items = result.items || [];
     const totalCount = result.totalCount ?? 0;
-    const inTransit = items.filter((l) =>
+    const inProgress = items.filter((l) =>
       l.status === 'Dispatched' || l.status === 'PickedUp' || l.status === 'InTransit'
     ).length;
-    const late = items.filter((l) => this.isOverdueLoad(l)).length;
     const delivered = items.filter((l) => l.status === 'Delivered').length;
-    const revenueToday = items
-      .filter((l) =>
-        (l.status === 'Delivered' || l.status === 'Completed') && this.isDeliveryToday(l)
-      )
-      .reduce((sum, l) => sum + (l.totalRate || 0), 0);
+    const lateOverdue = items.filter((l) => this.isOverdueLoad(l)).length;
+    const unassigned = items.filter((l) => !l.driverName && !l.ownerOperatorName).length;
     this.todayKpis = {
       totalLoads: totalCount,
-      inTransit,
-      late,
+      inProgress,
       delivered,
-      revenueToday
+      lateOverdue,
+      unassigned
     };
-  }
-
-  private isDeliveryToday(load: Load): boolean {
-    if (!load.deliveryDateTime) return false;
-    const d = new Date(load.deliveryDateTime);
-    const now = new Date();
-    return d.getDate() === now.getDate() && d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
   }
 
   loadCustomers(): void {
@@ -527,8 +527,22 @@ export class LoadListComponent implements OnInit, OnDestroy {
     );
   };
 
-  selectStatusTab(status: string): void {
-    this.statusFilter = status;
+  onStatusFilterChange(status: string): void {
+    this.selectedStatusFilterOption = status;
+    if (status === this.lateOverdueStatusValue) {
+      this.statusFilter = '';
+      this.advancedFilters.isOverdue = true;
+    } else {
+      this.statusFilter = status;
+      this.advancedFilters.isOverdue = undefined;
+    }
+    this.syncFiltersToRoute();
+    this.tableRefreshTrigger++;
+  }
+
+  onQuickTimeFilterChange(): void {
+    this.selectedDatePreset = this.getDatePresetFromQuickTimeFilter(this.selectedQuickTimeFilter);
+    this.onDatePresetChange();
     this.syncFiltersToRoute();
     this.tableRefreshTrigger++;
   }
@@ -557,11 +571,13 @@ export class LoadListComponent implements OnInit, OnDestroy {
   clearAdvancedFilters(): void {
     this.advancedFilters = { highValueThreshold: 5000 };
     this.selectedDatePreset = 'All';
+    this.selectedQuickTimeFilter = 'All Time';
     this.syncFiltersToRoute();
     this.tableRefreshTrigger++;
   }
 
   onDatePresetChange(): void {
+    this.selectedQuickTimeFilter = this.getQuickTimeFilterFromPreset(this.selectedDatePreset);
     const range = this.getDateRangeFromPreset(this.selectedDatePreset);
     if (!range) {
       this.advancedFilters.createdFrom = undefined;
@@ -574,6 +590,7 @@ export class LoadListComponent implements OnInit, OnDestroy {
 
   resetAllFilters(): void {
     this.statusFilter = '';
+    this.selectedStatusFilterOption = '';
     this.clearAdvancedFilters();
   }
 
@@ -586,6 +603,8 @@ export class LoadListComponent implements OnInit, OnDestroy {
 
     if (this.statusFilter) {
       chips.push({ key: 'status', label: `Status: ${this.getStatusDisplayLabel(this.statusFilter)}` });
+    } else if (this.selectedStatusFilterOption === this.lateOverdueStatusValue) {
+      chips.push({ key: 'status', label: 'Status: Late/Overdue' });
     }
     if (this.selectedDatePreset !== 'All') {
       chips.push({ key: 'datePreset', label: `Date preset: ${this.selectedDatePreset}` });
@@ -608,7 +627,9 @@ export class LoadListComponent implements OnInit, OnDestroy {
     if (this.advancedFilters.minRate != null) chips.push({ key: 'minRate', label: `Min rate: ${this.formatCurrency(this.advancedFilters.minRate)}` });
     if (this.advancedFilters.maxRate != null) chips.push({ key: 'maxRate', label: `Max rate: ${this.formatCurrency(this.advancedFilters.maxRate)}` });
     if (this.advancedFilters.loadType) chips.push({ key: 'loadType', label: `Load type: ${this.advancedFilters.loadType}` });
-    if (this.advancedFilters.isOverdue != null) chips.push({ key: 'isOverdue', label: `Overdue: ${this.advancedFilters.isOverdue ? 'Yes' : 'No'}` });
+    if (this.advancedFilters.isOverdue != null && this.selectedStatusFilterOption !== this.lateOverdueStatusValue) {
+      chips.push({ key: 'isOverdue', label: `Overdue: ${this.advancedFilters.isOverdue ? 'Yes' : 'No'}` });
+    }
     if (this.advancedFilters.isUnassigned != null) chips.push({ key: 'isUnassigned', label: `Unassigned: ${this.advancedFilters.isUnassigned ? 'Yes' : 'No'}` });
     if (this.advancedFilters.isHighValue != null) chips.push({ key: 'isHighValue', label: `High value: ${this.advancedFilters.isHighValue ? 'Yes' : 'No'}` });
 
@@ -618,6 +639,8 @@ export class LoadListComponent implements OnInit, OnDestroy {
   removeFilterChip(chip: FilterChip): void {
     if (chip.key === 'status') {
       this.statusFilter = '';
+      this.selectedStatusFilterOption = '';
+      this.advancedFilters.isOverdue = undefined;
     } else if (chip.key === 'datePreset') {
       this.selectedDatePreset = 'All';
       this.advancedFilters.createdFrom = undefined;
@@ -633,6 +656,13 @@ export class LoadListComponent implements OnInit, OnDestroy {
 
   getStatusCount(status: string): number {
     return this.statusCounts[status] ?? 0;
+  }
+
+  getStatusDropdownCount(status: string): number {
+    if (status === this.lateOverdueStatusValue) {
+      return this.lateOverdueCount;
+    }
+    return this.getStatusCount(status);
   }
 
   getDriverLabelWithId(driverId: number | undefined): string {
@@ -698,6 +728,23 @@ export class LoadListComponent implements OnInit, OnDestroy {
     if (value === 'true') return true;
     if (value === 'false') return false;
     return undefined;
+  }
+
+  private getDatePresetFromQuickTimeFilter(filter: QuickTimeFilterOption): DatePresetOption {
+    const presetMap: Record<QuickTimeFilterOption, DatePresetOption> = {
+      'All Time': 'All',
+      Today: 'Today',
+      Weekly: 'This Week',
+      Monthly: 'This Month'
+    };
+    return presetMap[filter];
+  }
+
+  private getQuickTimeFilterFromPreset(preset: DatePresetOption): QuickTimeFilterOption {
+    if (preset === 'Today') return 'Today';
+    if (preset === 'This Week') return 'Weekly';
+    if (preset === 'This Month') return 'Monthly';
+    return 'All Time';
   }
 
   private getDateRangeFromPreset(preset: DatePresetOption): { from: string; to: string } | null {

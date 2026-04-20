@@ -30,15 +30,15 @@
       <div class="load-list-kpi-card load-list-kpi-blue">
         <i class="fas fa-truck load-list-kpi-icon"></i>
         <div class="load-list-kpi-content">
-          <span class="load-list-kpi-value">{{ todayKpis.inTransit }}</span>
-          <span class="load-list-kpi-label">En route</span>
+          <span class="load-list-kpi-value">{{ todayKpis.inProgress }}</span>
+          <span class="load-list-kpi-label">In progress</span>
         </div>
       </div>
       <div class="load-list-kpi-card load-list-kpi-red">
         <i class="fas fa-exclamation-circle load-list-kpi-icon"></i>
         <div class="load-list-kpi-content">
-          <span class="load-list-kpi-value">{{ todayKpis.late }}</span>
-          <span class="load-list-kpi-label">Late</span>
+          <span class="load-list-kpi-value">{{ todayKpis.lateOverdue }}</span>
+          <span class="load-list-kpi-label">Late/Overdue</span>
         </div>
       </div>
       <div class="load-list-kpi-card load-list-kpi-green">
@@ -49,37 +49,35 @@
         </div>
       </div>
       <div class="load-list-kpi-card load-list-kpi-gold">
-        <i class="fas fa-dollar-sign load-list-kpi-icon"></i>
+        <i class="fas fa-user-slash load-list-kpi-icon"></i>
         <div class="load-list-kpi-content">
-          <span class="load-list-kpi-value" [title]="formatCurrency(todayKpis.revenueToday)">{{ formatCurrencyCompact(todayKpis.revenueToday) }}</span>
-          <span class="load-list-kpi-label">Revenue</span>
+          <span class="load-list-kpi-value">{{ todayKpis.unassigned }}</span>
+          <span class="load-list-kpi-label">Unassigned</span>
         </div>
       </div>
     </ng-container>
   </div>
 
-  <!-- Status Filter Tabs -->
-  <div class="status-tabs-container mb-4">
-    <div class="status-tabs">
-      <button 
-        class="status-tab" 
-        [class.active]="!statusFilter"
-        (click)="selectStatusTab('')">
-        <i class="fas fa-th-list me-1"></i>All
-      </button>
-      <button 
-        *ngFor="let status of statusOptions" 
-        class="status-tab" 
-        [class.active]="statusFilter === status"
-        (click)="selectStatusTab(status)">
-        <i [class]="'fas ' + getStatusIcon(status) + ' me-1'"></i>{{ getStatusDisplayLabel(status) }}
-        <span class="status-tab-count">{{ getStatusCount(status) }}</span>
-      </button>
-    </div>
-  </div>
-
   <div class="loads-filter-toolbar mb-3">
     <div class="loads-filter-toolbar-left">
+      <div class="toolbar-filter-group">
+        <label class="toolbar-filter-label">Status</label>
+        <select class="form-select form-select-sm toolbar-filter-select" [(ngModel)]="selectedStatusFilterOption" (ngModelChange)="onStatusFilterChange($event)">
+          <option value="">All Statuses</option>
+          <option *ngIf="!authService.hasRole('Driver')" [ngValue]="lateOverdueStatusValue">
+            Late/Overdue ({{ getStatusDropdownCount(lateOverdueStatusValue) }})
+          </option>
+          <option *ngFor="let status of statusOptions" [ngValue]="status">
+            {{ getStatusDisplayLabel(status) }} ({{ getStatusDropdownCount(status) }})
+          </option>
+        </select>
+      </div>
+      <div class="toolbar-filter-group">
+        <label class="toolbar-filter-label">Time</label>
+        <select class="form-select form-select-sm toolbar-filter-select" [(ngModel)]="selectedQuickTimeFilter" (ngModelChange)="onQuickTimeFilterChange()">
+          <option *ngFor="let option of quickTimeOptions" [ngValue]="option">{{ option }}</option>
+        </select>
+      </div>
       <button type="button" class="btn btn-sm btn-tms-outline" (click)="toggleAdvancedFilters()">
         <i class="fas fa-sliders-h me-1"></i>{{ showAdvancedFilters ? 'Hide Filters' : 'Advanced Filters' }}
       </button>

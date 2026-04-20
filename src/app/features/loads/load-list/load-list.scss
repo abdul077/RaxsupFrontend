@@ -1228,87 +1228,48 @@ $white: #ffffff;
   --card-color: #f6c23e;
 }
 
-// Status Tabs - card style, navy active (align with dashboard)
-.status-tabs-container {
-  background: $white;
-  border-radius: 12px;
-  border: 1px solid $gray-border;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
-  padding: 0;
-  overflow-x: auto;
-
-  .status-tabs {
-    display: flex;
-    gap: 0;
-    border-bottom: 2px solid $gray-border;
-    min-width: fit-content;
-
-    .status-tab {
-      padding: 0.875rem 1.5rem;
-      background: transparent;
-      border: none;
-      border-bottom: 3px solid transparent;
-      cursor: pointer;
-      font-size: 0.875rem;
-      font-weight: 500;
-      color: $gray-muted;
-      white-space: nowrap;
-      transition: all 0.2s ease;
-      position: relative;
-      display: flex;
-      align-items: center;
-
-      &:hover {
-        color: $navy;
-        background: $gray-light;
-      }
-
-      &.active {
-        color: $navy;
-        border-bottom-color: $navy;
-        background: $gray-light;
-        font-weight: 600;
-      }
-
-      &:first-child {
-        border-radius: 12px 0 0 0;
-      }
-
-      &:last-child {
-        border-radius: 0 12px 0 0;
-      }
-
-      i {
-        font-size: 0.75rem;
-      }
-
-      .status-tab-count {
-        margin-left: 0.4rem;
-        font-size: 0.72rem;
-        background: rgba($gray-dark, 0.08);
-        color: $gray-dark;
-        border-radius: 999px;
-        padding: 0.1rem 0.45rem;
-        line-height: 1.2;
-      }
-
-      &.active .status-tab-count {
-        background: rgba($navy, 0.15);
-        color: $navy;
-      }
-    }
-  }
-}
-
 .loads-filter-toolbar {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  background: $white;
+  border: 1px solid $gray-border;
+  border-radius: 12px;
+  padding: 0.75rem 1rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
 
   .loads-filter-toolbar-left {
     display: flex;
     align-items: center;
+    flex-wrap: wrap;
     gap: 0.75rem;
+  }
+
+  .toolbar-filter-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    min-width: 180px;
+  }
+
+  .toolbar-filter-label {
+    font-size: 0.68rem;
+    font-weight: 600;
+    color: $gray-muted;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+
+  .toolbar-filter-select {
+    min-height: 2rem;
+    border-radius: 8px;
+    border: 1px solid #d7dce3;
+    font-size: 0.82rem;
+
+    &:focus {
+      border-color: rgba($navy, 0.5);
+      box-shadow: 0 0 0 3px rgba($navy, 0.12);
+    }
   }
 
   .loads-reset-btn {
@@ -2035,16 +1996,15 @@ $white: #ffffff;
     }
   }
 
-  .status-tabs-container {
-    .status-tabs {
-      .status-tab {
-        padding: 0.75rem 1rem;
-        font-size: 0.8rem;
+  .loads-filter-toolbar {
+    padding: 0.75rem;
 
-        i {
-          display: none;
-        }
-      }
+    .loads-filter-toolbar-left {
+      width: 100%;
+    }
+
+    .toolbar-filter-group {
+      min-width: 100%;
     }
   }
 
