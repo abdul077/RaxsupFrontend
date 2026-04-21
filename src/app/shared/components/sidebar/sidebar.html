@@ -8,144 +8,83 @@
     </a>
   </div>
 
-  <div class="sidebar-search" role="search">
-    <i class="fas fa-search" aria-hidden="true"></i>
-    <input
-      #menuSearchInput
-      type="search"
-      name="menuSearch"
-      class="sidebar-search-input"
-      placeholder="Find a screen…"
-      title="Search menus (Ctrl+K)"
-      [(ngModel)]="navSearchQuery"
-      (keydown)="onMenuSearchKeydown($event)"
-      aria-label="Search navigation and screens"
-      autocomplete="off"
-      spellcheck="false"
-      autocapitalize="off"
-    />
-    @if (navSearchQuery.trim()) {
-      <button
-        type="button"
-        class="sidebar-search-clear"
-        (click)="clearMenuSearch()"
-        aria-label="Clear menu search"
-      >
-        <i class="fas fa-times" aria-hidden="true"></i>
-      </button>
-    }
-    <kbd class="sidebar-search-kbd" aria-hidden="true">Ctrl+K</kbd>
-  </div>
-  <div class="nav-divider"></div>
-
   <nav class="sidebar-nav" [attr.aria-busy]="false">
-    @if (isMenuSearchActive) {
-      <ul class="nav" aria-label="Matching screens">
-        @for (row of menuSearchResults; track row.id) {
-          <li class="nav-item">
-            <a
-              class="nav-link nav-search-hit"
-              [routerLink]="row.routerLink"
-              routerLinkActive="active"
-              [routerLinkActiveOptions]="row.exact === true ? { exact: true } : { exact: false }"
-              (click)="onSearchResultNavigate()"
-            >
-              <i [class]="row.iconClass"></i>
-              <span class="nav-search-hit-main">
-                <span class="nav-search-hit-label">{{ row.label }}</span>
-                @if (row.groupCaption) {
-                  <span class="nav-search-hit-section">{{ row.groupCaption }}</span>
-                }
-              </span>
-              @if (row.id === 'admin-pending-drivers') {
-                <span class="badge bg-warning ms-2"></span>
-              }
-            </a>
-          </li>
-        } @empty {
-          <li class="nav-item nav-search-empty" role="status">
-            <span>No screens match “{{ navSearchQuery.trim() }}”.</span>
-          </li>
-        }
-      </ul>
-    } @else {
-      <ul class="nav">
-        @for (block of sidebarNav; track trackNavBlock($index, block)) {
-          @if (navBlockVisible(block)) {
-            @switch (block.kind) {
-              @case ('divider') {
-                <li class="nav-divider-item">
-                  <div class="nav-divider"></div>
-                </li>
-              }
-              @case ('link') {
-                <li class="nav-item">
-                  <a
-                    class="nav-link"
-                    [routerLink]="block.link.routerLink"
-                    routerLinkActive="active"
-                    [routerLinkActiveOptions]="
-                      block.link.exact === true ? { exact: true } : { exact: false }
-                    "
-                  >
-                    <i [class]="block.link.iconClass"></i>
-                    <span>{{ block.link.label }}</span>
-                  </a>
-                </li>
-              }
-              @case ('group') {
-                <li class="nav-item">
-                  <div class="nav-item-group">
-                    <div class="nav-link-wrapper">
-                      <a
-                        class="nav-link"
-                        [routerLink]="block.routerLink"
-                        routerLinkActive="active"
-                        [routerLinkActiveOptions]="{ exact: false }"
-                      >
-                        <i [class]="block.iconClass"></i>
-                        <span>{{ block.label }}</span>
-                      </a>
-                      <i
-                        class="fas fa-chevron-down nav-chevron"
-                        [class.rotated]="isGroupExpanded(block.groupKey)"
-                        (click)="toggleGroup(block.groupKey, $event)"
-                        tabindex="0"
-                        role="button"
-                        [attr.aria-expanded]="isGroupExpanded(block.groupKey)"
-                        [attr.aria-label]="'Toggle ' + block.label + ' submenu'"
-                        (keydown.enter)="toggleGroup(block.groupKey, $event)"
-                        (keydown.space)="$event.preventDefault(); toggleGroup(block.groupKey, $event)"
-                      ></i>
-                    </div>
-                    <ul class="nav-submenu" [class.expanded]="isGroupExpanded(block.groupKey)">
-                      @for (child of block.children; track child.id) {
-                        @if (visibleLink(child)) {
-                          <li>
-                            <a
-                              [routerLink]="child.routerLink"
-                              routerLinkActive="active"
-                              [routerLinkActiveOptions]="
-                                child.exact === true ? { exact: true } : { exact: false }
-                              "
-                            >
-                              <i [class]="child.iconClass"></i>
-                              <span>{{ child.label }}</span>
-                              @if (child.id === 'admin-pending-drivers') {
-                                <span class="badge bg-warning ms-2"></span>
-                              }
-                            </a>
-                          </li>
-                        }
-                      }
-                    </ul>
+    <ul class="nav">
+      @for (block of sidebarNav; track trackNavBlock($index, block)) {
+        @if (navBlockVisible(block)) {
+          @switch (block.kind) {
+            @case ('divider') {
+              <li class="nav-divider-item">
+                <div class="nav-divider"></div>
+              </li>
+            }
+            @case ('link') {
+              <li class="nav-item">
+                <a
+                  class="nav-link"
+                  [routerLink]="block.link.routerLink"
+                  routerLinkActive="active"
+                  [routerLinkActiveOptions]="
+                    block.link.exact === true ? { exact: true } : { exact: false }
+                  "
+                >
+                  <i [class]="block.link.iconClass"></i>
+                  <span>{{ block.link.label }}</span>
+                </a>
+              </li>
+            }
+            @case ('group') {
+              <li class="nav-item">
+                <div class="nav-item-group">
+                  <div class="nav-link-wrapper">
+                    <a
+                      class="nav-link"
+                      [routerLink]="block.routerLink"
+                      routerLinkActive="active"
+                      [routerLinkActiveOptions]="{ exact: false }"
+                    >
+                      <i [class]="block.iconClass"></i>
+                      <span>{{ block.label }}</span>
+                    </a>
+                    <i
+                      class="fas fa-chevron-down nav-chevron"
+                      [class.rotated]="isGroupExpanded(block.groupKey)"
+                      (click)="toggleGroup(block.groupKey, $event)"
+                      tabindex="0"
+                      role="button"
+                      [attr.aria-expanded]="isGroupExpanded(block.groupKey)"
+                      [attr.aria-label]="'Toggle ' + block.label + ' submenu'"
+                      (keydown.enter)="toggleGroup(block.groupKey, $event)"
+                      (keydown.space)="$event.preventDefault(); toggleGroup(block.groupKey, $event)"
+                    ></i>
                   </div>
-                </li>
-              }
+                  <ul class="nav-submenu" [class.expanded]="isGroupExpanded(block.groupKey)">
+                    @for (child of block.children; track child.id) {
+                      @if (visibleLink(child)) {
+                        <li>
+                          <a
+                            [routerLink]="child.routerLink"
+                            routerLinkActive="active"
+                            [routerLinkActiveOptions]="
+                              child.exact === true ? { exact: true } : { exact: false }
+                            "
+                          >
+                            <i [class]="child.iconClass"></i>
+                            <span>{{ child.label }}</span>
+                            @if (child.id === 'admin-pending-drivers') {
+                              <span class="badge bg-warning ms-2"></span>
+                            }
+                          </a>
+                        </li>
+                      }
+                    }
+                  </ul>
+                </div>
+              </li>
             }
           }
         }
-      </ul>
-    }
+      }
+    </ul>
   </nav>
 </div>

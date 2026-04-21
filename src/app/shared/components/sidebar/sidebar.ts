@@ -1,13 +1,9 @@
 import {
   Component,
-  HostListener,
   OnInit,
   OnDestroy,
-  ViewChild,
-  ElementRef,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
 import { RouterModule, Router, NavigationEnd } from '@angular/router';
 import { AuthService } from '../../../core/services/auth';
 import { LayoutService } from '../../../core/services/layout.service';
@@ -22,21 +18,10 @@ import {
   SidebarNavDivider,
   SidebarNavLeaf,
 } from './sidebar-nav.config';
-
-export interface SidebarSearchResult {
-  id: string;
-  label: string;
-  routerLink: string;
-  iconClass: string;
-  exact?: boolean;
-  /** Parent section label for nested items */
-  groupCaption?: string;
-}
-
 @Component({
   selector: 'app-sidebar',
   standalone: true,
-  imports: [CommonModule, RouterModule, FormsModule],
+  imports: [CommonModule, RouterModule],
   templateUrl: './sidebar.html',
   styleUrl: './sidebar.scss',
 })
@@ -49,10 +34,7 @@ export class SidebarComponent implements OnInit, OnDestroy {
   isFinancialExpanded = false;
   isComplianceExpanded = false;
   pendingDriversCount = 0;
-  navSearchQuery = '';
   private navSub?: Subscription;
-
-  @ViewChild('menuSearchInput') menuSearchInput?: ElementRef<HTMLInputElement>;
 
   constructor(
     public authService: AuthService,
@@ -67,7 +49,6 @@ export class SidebarComponent implements OnInit, OnDestroy {
       .subscribe(event => {
         this.layoutService.closeSidebar();
         this.syncExpandStateFromUrl(event.urlAfterRedirects || event.url);
-        this.navSearchQuery = '';
       });
 
     this.syncExpandStateFromUrl(this.router.url);
@@ -194,108 +175,4 @@ export class SidebarComponent implements OnInit, OnDestroy {
     return `d-${_index}`;
   }
 
-  get isMenuSearchActive(): boolean {
-    return this.navSearchQuery.trim().length > 0;
-  }
-
-  get menuSearchResults(): SidebarSearchResult[] {
-    const q = this.navSearchQuery.trim().toLowerCase();
-    if (!q) {
-      return [];
-    }
-    const rows: SidebarSearchResult[] = [];
-    for (const block of SIDEBAR_NAV) {
-      if (block.kind === 'divider') {
-        continue;
-      }
-      if (block.kind === 'link') {
-        if (!this.visibleLink(block.link)) {
-          continue;
-        }
-        if (this.matchTextForLink(block.link).includes(q)) {
-          rows.push(this.toSearchResult(block.link));
-        }
-        continue;
-      }
-      if (!this.hasAnyRole(block.rolesAny)) {
-        continue;
-      }
-      if (this.matchTextForGroup(block).includes(q)) {
-        rows.push({
-          id: `${block.id}__root`,
-          label: block.label,
-          routerLink: block.routerLink,
-          iconClass: block.iconClass,
-          exact: block.exact,
-        });
-      }
-      for (const child of block.children) {
-        if (!this.visibleLink(child)) {
-          continue;
-        }
-        if (this.matchTextForLink(child, block.label).includes(q)) {
-          rows.push({
-            ...this.toSearchResult(child),
-            groupCaption: block.label,
-          });
-        }
-      }
-    }
-    return rows;
-  }
-
-  private toSearchResult(link: SidebarNavLeaf): SidebarSearchResult {
-    return {
-      id: link.id,
-      label: link.label,
-      routerLink: link.routerLink,
-      iconClass: link.iconClass,
-      exact: link.exact,
-    };
-  }
-
-  private matchTextForLink(link: SidebarNavLeaf, parentSection?: string): string {
-    const parts = [link.label, link.routerLink.replace(/\//g, ' '), ...(link.keywords ?? [])];
-    if (parentSection) {
-      parts.push(parentSection);
-    }
-    return parts.join(' ').toLowerCase();
-  }
-
-  private matchTextForGroup(group: Extract<SidebarNavBlock, { kind: 'group' }>): string {
-    return [group.label, group.routerLink.replace(/\//g, ' '), ...(group.keywords ?? [])]
-      .join(' ')
-      .toLowerCase();
-  }
-
-  clearMenuSearch(): void {
-    this.navSearchQuery = '';
-  }
-
-  onSearchResultNavigate(): void {
-    this.navSearchQuery = '';
-  }
-
-  onMenuSearchKeydown(ev: KeyboardEvent): void {
-    if (ev.key === 'Escape') {
-      this.clearMenuSearch();
-      (ev.target as HTMLInputElement)?.blur();
-    }
-  }
-
-  @HostListener('document:keydown', ['$event'])
-  onDocumentKeydown(ev: KeyboardEvent): void {
-    if ((ev.ctrlKey || ev.metaKey) && (ev.key === 'k' || ev.key === 'K')) {
-      const t = ev.target as HTMLElement | null;
-      if (t && ['INPUT', 'TEXTAREA', 'SELECT'].includes(t.tagName) && t !== this.menuSearchInput?.nativeElement) {
-        return;
-      }
-      ev.preventDefault();
-      queueMicrotask(() => this.focusMenuSearch());
-    }
-  }
-
-  private focusMenuSearch(): void {
-    this.menuSearchInput?.nativeElement?.focus();
-  }
 }
