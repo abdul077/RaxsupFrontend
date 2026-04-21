@@ -116,6 +116,9 @@ export class DriverDetailComponent implements OnInit, OnDestroy {
   incidentSeverityOptions = ['Low', 'Medium', 'High', 'Critical'];
   incidentTypeOptions = ['Accident', 'NearMiss', 'Injury', 'PropertyDamage', 'Other'];
   complianceItemFilter: 'all' | 'expired' | 'expiring' | 'missing' | 'rejected' = 'all';
+  showComplianceAlertModal = false;
+  sendingComplianceAlert = false;
+  complianceAlertMessage = '';
   
   // Equipments Management
   equipments: Equipment[] = [];
@@ -845,6 +848,16 @@ export class DriverDetailComponent implements OnInit, OnDestroy {
     this.router.navigate(['/drivers', this.driverId, 'edit']);
   }
 
+  navigateToCreateSettlement(): void {
+    if (!this.driverId) {
+      alert('Driver ID is not available. Please refresh the page.');
+      return;
+    }
+    this.router.navigate(['/financial/settlements/create'], {
+      queryParams: { driverId: this.driverId }
+    });
+  }
+
   navigateBack(): void {
     this.router.navigate(['/drivers']);
   }
@@ -900,6 +913,55 @@ export class DriverDetailComponent implements OnInit, OnDestroy {
 
   getComplianceOverallStatusClass(): string {
     return this.getComplianceSummary().isCompliant ? 'bg-success' : 'bg-danger';
+  }
+
+  canSendComplianceAlert(): boolean {
+    return (
+      this.authService.hasAnyRole(['Admin']) &&
+      !this.isMyProfile &&
+      (!!this.driver?.ownerOperatorId || !!this.driver?.email)
+    );
+  }
+
+  openComplianceAlertModal(): void {
+    if (!this.driver?.ownerOperatorId && !this.driver?.email) {
+      alert('No email recipient found. Add a driver email or assign an owner operator.');
+      return;
+    }
+    this.complianceAlertMessage = '';
+    this.showComplianceAlertModal = true;
+  }
+
+  closeComplianceAlertModal(): void {
+    this.showComplianceAlertModal = false;
+    this.complianceAlertMessage = '';
+  }
+
+  sendComplianceAlertToOwnerOperator(): void {
+    if (!this.driverId || this.sendingComplianceAlert) {
+      return;
+    }
+    if (!this.driver?.ownerOperatorId && !this.driver?.email) {
+      alert('No email recipient found for this compliance alert.');
+      return;
+    }
+
+    this.sendingComplianceAlert = true;
+    this.driverService.sendComplianceAlertToOwnerOperator(
+      this.driverId,
+      this.complianceAlertMessage?.trim() || undefined
+    ).subscribe({
+      next: (response) => {
+        this.sendingComplianceAlert = false;
+        this.showComplianceAlertModal = false;
+        this.complianceAlertMessage = '';
+        alert(response?.message || 'Compliance alert email sent successfully.');
+      },
+      error: (err) => {
+        this.sendingComplianceAlert = false;
+        alert(err?.error?.message || 'Failed to send compliance alert email.');
+      }
+    });
   }
 
   getComplianceChecklistItems(): Array<{
@@ -1411,6 +1473,11 @@ export class DriverDetailComponent implements OnInit, OnDestroy {
     return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(amount);
   }
 
+  formatRoId(id: number | undefined | null): string {
+    if (id === undefined || id === null) return '-';
+    return `RO${id}`;
+  }
+
   getStatusBadgeClass(status: string): string {
     switch (status) {
       case 'Active':
@@ -1854,8 +1921,8 @@ export class DriverDetailComponent implements OnInit, OnDestroy {
       return [tree];
     }
 
-    // Process all drivers first
-    const processedDrivers = level2Drivers.map(driver => this.processReferralDriver(driver));
+    // Process all drivers first and enforce Tier 4 visibility rules.
+    const processedDrivers = level2Drivers.map(driver => this.processReferralDriver(driver, 2));
 
     // Split into groups of 2: [0,1], [2,3], [4,5], etc.
     for (let i = 0; i < processedDrivers.length; i += 2) {
@@ -1888,8 +1955,14 @@ export class DriverDetailComponent implements OnInit, OnDestroy {
    * Returns the processed driver with limited children (first 2 only)
    * This ensures each tree shows max 2 direct referrals per user
    */
-  private processReferralDriver(driver: ReferralDriver): ReferralDriver {
+  private processReferralDriver(driver: ReferralDriver, currentLevel: number): ReferralDriver {
     if (!driver.children || driver.children.length === 0) {
+      return { ...driver, children: [] };
+    }
+
+    // Tier mapping: Level 2 => Tier 1, Level 3 => Tier 2, Level 4 => Tier 3, Level 5 => Tier 4.
+    // If user is not Tier 4 eligible, do not render Tier 4 descendants (Level 5).
+    if (!this.isTier4Eligible() && currentLevel >= 4) {
       return { ...driver, children: [] };
     }
 
@@ -1897,7 +1970,7 @@ export class DriverDetailComponent implements OnInit, OnDestroy {
 
     // Process only first 2 children recursively (each child can also have max 2 children)
     driver.children.slice(0, 2).forEach((child) => {
-      const processedChild = this.processReferralDriver(child);
+      const processedChild = this.processReferralDriver(child, currentLevel + 1);
       processedChildren.push(processedChild);
     });
 
@@ -1907,6 +1980,10 @@ export class DriverDetailComponent implements OnInit, OnDestroy {
       children: processedChildren,
       referralCount: driver.children.length // Keep original count for display
     };
+  }
+
+  isTier4Eligible(): boolean {
+    return !!this.driver?.isTier4ReferralEligible;
   }
 
   /**

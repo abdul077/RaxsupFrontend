@@ -127,6 +127,7 @@ export class DriverCreateComponent implements OnInit {
           terminationDate: driver.terminationDate,
           isDQFComplete: driver.isDQFComplete,
           dqfCompletionDate: driver.dqfCompletionDate,
+          isTier4ReferralEligible: driver.isTier4ReferralEligible ?? false,
           referredBy: driver.referredBy
         };
         this.loading = false;

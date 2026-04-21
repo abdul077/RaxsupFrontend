@@ -321,6 +321,81 @@
   }
 }
 
+.referrals-shell-card {
+  border: 1px solid #e6ebf2;
+}
+
+.referrals-header {
+  background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 100%) !important;
+  border-bottom: none !important;
+  color: #ffffff;
+
+  .referral-title {
+    font-weight: 700;
+    color: #ffffff;
+  }
+
+  .referral-subtitle {
+    color: rgba(255, 255, 255, 0.8);
+    font-size: 0.85rem;
+  }
+}
+
+.referrals-view-toggle .btn {
+  border-width: 1px;
+}
+
+.tier-rate-strip {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: 0.65rem;
+}
+
+.tier-rate-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  padding: 0.45rem 0.75rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+  border: 1px solid transparent;
+}
+
+.tier-rate-pill.tier-1 { background: #eafaf0; color: #146c43; border-color: #b7e4c7; }
+.tier-rate-pill.tier-2 { background: #e7f8fb; color: #0c5460; border-color: #bee5eb; }
+.tier-rate-pill.tier-3 { background: #fff7e8; color: #8a5b00; border-color: #ffe2b6; }
+.tier-rate-pill.tier-4 { background: #f3eefe; color: #5a32a3; border-color: #d9c8f7; }
+
+.referral-summary-card {
+  background: linear-gradient(180deg, #fbfdff 0%, #f5f9ff 100%);
+  border: 1px solid #dde8fb;
+
+  .summary-metric {
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    padding: 0.75rem 0.5rem;
+    background: #ffffff;
+
+    h5 {
+      font-weight: 700;
+      color: #0f172a;
+    }
+
+    small {
+      color: #64748b;
+      font-weight: 600;
+      text-transform: uppercase;
+      font-size: 0.7rem;
+      letter-spacing: 0.03em;
+    }
+
+    &.success h5 { color: #15803d; }
+    &.warning h5 { color: #b45309; }
+    &.primary h5 { color: #1d4ed8; }
+  }
+}
+
 .table-borderless {
   td {
     padding: 0.75rem 0.5rem;

@@ -213,19 +213,19 @@
           </p>
           <div class="commission-list mb-4">
             <div class="commission-item">
-              <span class="commission-level">Level 2 (Direct Referrals)</span>
-              <span class="commission-rate">10% commission</span>
+              <span class="commission-level">Tier 1 (Direct Referrals)</span>
+              <span class="commission-rate">10% commission (Actual Line Haul: 1.50%)</span>
             </div>
             <div class="commission-item">
-              <span class="commission-level">Level 3</span>
-              <span class="commission-rate">8% commission</span>
+              <span class="commission-level">Tier 2</span>
+              <span class="commission-rate">5% commission (Actual Line Haul: 0.75%)</span>
             </div>
             <div class="commission-item">
-              <span class="commission-level">Level 4</span>
-              <span class="commission-rate">5% commission</span>
+              <span class="commission-level">Tier 3</span>
+              <span class="commission-rate">2% commission (Actual Line Haul: 0.30%)</span>
             </div>
             <div class="commission-item">
-              <span class="commission-level">Level 5</span>
+              <span class="commission-level">Tier 4 (Owner Operator Eligible)</span>
               <span class="commission-rate">2% commission</span>
             </div>
           </div>
@@ -244,7 +244,7 @@
           <div class="referral-info mt-3">
             <small class="text-muted">
               <i class="fas fa-info-circle me-1"></i>
-              Your Referral Code: <strong>{{ driver.driverId }}</strong>
+              Your Referral Code: <strong>{{ formatRoId(driver.driverId) }}</strong>
             </small>
           </div>
         </div>

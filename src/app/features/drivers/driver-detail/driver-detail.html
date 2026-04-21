@@ -295,19 +295,19 @@
               </p>
               <div class="commission-list mb-4">
                 <div class="commission-item">
-                  <span class="commission-level">Level 2 (Direct Referrals)</span>
-                  <span class="commission-rate">10% commission</span>
+                  <span class="commission-level">Tier 1 (Direct Referrals)</span>
+                  <span class="commission-rate">10% commission (Actual Line Haul: 1.50%)</span>
                 </div>
                 <div class="commission-item">
-                  <span class="commission-level">Level 3</span>
-                  <span class="commission-rate">8% commission</span>
+                  <span class="commission-level">Tier 2</span>
+                  <span class="commission-rate">5% commission (Actual Line Haul: 0.75%)</span>
                 </div>
                 <div class="commission-item">
-                  <span class="commission-level">Level 4</span>
-                  <span class="commission-rate">5% commission</span>
+                  <span class="commission-level">Tier 3</span>
+                  <span class="commission-rate">2% commission (Actual Line Haul: 0.30%)</span>
                 </div>
-                <div class="commission-item">
-                  <span class="commission-level">Level 5</span>
+                <div class="commission-item" *ngIf="isTier4Eligible()">
+                  <span class="commission-level">Tier 4 (Owner Operator Eligible)</span>
                   <span class="commission-rate">2% commission</span>
                 </div>
               </div>
@@ -326,7 +326,7 @@
               <div class="referral-info mt-3">
                 <small class="text-muted">
                   <i class="fas fa-info-circle me-1"></i>
-                  Your Referral Code: <strong>{{ driver.driverId }}</strong>
+                  Your Referral Code: <strong>{{ formatRoId(driver.driverId) }}</strong>
                 </small>
               </div>
             </div>
@@ -580,12 +580,20 @@
 
       <div class="row mb-3">
         <div class="col-12">
-          <div class="compliance-filter-chips">
-            <button class="btn btn-sm" [class.btn-primary]="complianceItemFilter === 'all'" [class.btn-outline-primary]="complianceItemFilter !== 'all'" (click)="complianceItemFilter = 'all'">All</button>
-            <button class="btn btn-sm" [class.btn-danger]="complianceItemFilter === 'expired'" [class.btn-outline-danger]="complianceItemFilter !== 'expired'" (click)="complianceItemFilter = 'expired'">Expired</button>
-            <button class="btn btn-sm" [class.btn-warning]="complianceItemFilter === 'expiring'" [class.btn-outline-warning]="complianceItemFilter !== 'expiring'" (click)="complianceItemFilter = 'expiring'">Expiring Soon</button>
-            <button class="btn btn-sm" [class.btn-secondary]="complianceItemFilter === 'missing'" [class.btn-outline-secondary]="complianceItemFilter !== 'missing'" (click)="complianceItemFilter = 'missing'">Missing</button>
-            <button class="btn btn-sm" [class.btn-dark]="complianceItemFilter === 'rejected'" [class.btn-outline-dark]="complianceItemFilter !== 'rejected'" (click)="complianceItemFilter = 'rejected'">Rejected</button>
+          <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
+            <div class="compliance-filter-chips">
+              <button class="btn btn-sm" [class.btn-primary]="complianceItemFilter === 'all'" [class.btn-outline-primary]="complianceItemFilter !== 'all'" (click)="complianceItemFilter = 'all'">All</button>
+              <button class="btn btn-sm" [class.btn-danger]="complianceItemFilter === 'expired'" [class.btn-outline-danger]="complianceItemFilter !== 'expired'" (click)="complianceItemFilter = 'expired'">Expired</button>
+              <button class="btn btn-sm" [class.btn-warning]="complianceItemFilter === 'expiring'" [class.btn-outline-warning]="complianceItemFilter !== 'expiring'" (click)="complianceItemFilter = 'expiring'">Expiring Soon</button>
+              <button class="btn btn-sm" [class.btn-secondary]="complianceItemFilter === 'missing'" [class.btn-outline-secondary]="complianceItemFilter !== 'missing'" (click)="complianceItemFilter = 'missing'">Missing</button>
+              <button class="btn btn-sm" [class.btn-dark]="complianceItemFilter === 'rejected'" [class.btn-outline-dark]="complianceItemFilter !== 'rejected'" (click)="complianceItemFilter = 'rejected'">Rejected</button>
+            </div>
+            @if (canSendComplianceAlert()) {
+              <button type="button" class="btn btn-sm btn-primary" (click)="openComplianceAlertModal()">
+                <i class="fas fa-envelope me-1"></i>
+                Send Compliance Alert
+              </button>
+            }
           </div>
         </div>
       </div>
@@ -962,10 +970,13 @@
     @if (activeTab === 'referrals') {
       <div class="row">
         <div class="col-12">
-          <div class="card mb-4">
-            <div class="card-header d-flex justify-content-between align-items-center">
-              <h5 class="mb-0">Referral Tree</h5>
-              <div class="btn-group btn-group-sm" role="group">
+          <div class="card mb-4 referrals-shell-card">
+            <div class="card-header referrals-header d-flex justify-content-between align-items-center">
+              <div>
+                <h5 class="mb-1 referral-title">Referral Network</h5>
+                <p class="mb-0 referral-subtitle">Track your tier progress and commission distribution</p>
+              </div>
+              <div class="btn-group btn-group-sm referrals-view-toggle" role="group">
                 <button 
                   type="button" 
                   class="btn" 
@@ -985,6 +996,25 @@
               </div>
             </div>
             <div class="card-body">
+              <div class="tier-rate-strip mb-4">
+                <span class="tier-rate-pill tier-1">Tier 1: 10% (1.50% line haul)</span>
+                <span class="tier-rate-pill tier-2">Tier 2: 5% (0.75% line haul)</span>
+                <span class="tier-rate-pill tier-3">Tier 3: 2% (0.30% line haul)</span>
+                @if (isTier4Eligible()) {
+                  <span class="tier-rate-pill tier-4">Tier 4: 2% (owner-operator eligible)</span>
+                }
+              </div>
+              <div class="mb-3">
+                @if (isTier4Eligible()) {
+                  <span class="badge bg-success">
+                    <i class="fas fa-check-circle me-1"></i>Tier 4 Eligible
+                  </span>
+                } @else {
+                  <span class="badge bg-secondary">
+                    <i class="fas fa-lock me-1"></i>Tier 4: Not Eligible Yet
+                  </span>
+                }
+              </div>
               @if (loadingReferralTree) {
                 <div class="text-center py-5">
                   <div class="spinner-border text-primary" role="status">
@@ -995,24 +1025,32 @@
               @if (!loadingReferralTree && processedReferralTrees && processedReferralTrees.length > 0) {
                 <!-- Summary Card (Overall) -->
                 @if (referralTree) {
-                  <div class="card mb-4 bg-light">
-                    <div class="card-body">
-                      <div class="row text-center">
+                  <div class="card mb-4 referral-summary-card">
+                    <div class="card-body py-3">
+                      <div class="row text-center g-3">
                         <div class="col-md-3">
-                          <h5 class="mb-0">{{ referralTree.totalReferrals }}</h5>
-                          <small class="text-muted">Total Referrals</small>
+                          <div class="summary-metric">
+                            <h5 class="mb-0">{{ referralTree.totalReferrals }}</h5>
+                            <small>Total Referrals</small>
+                          </div>
                         </div>
                         <div class="col-md-3">
-                          <h5 class="mb-0 text-success">{{ formatCurrency(referralTree.totalEarnings) }}</h5>
-                          <small class="text-muted">Total Earnings</small>
+                          <div class="summary-metric success">
+                            <h5 class="mb-0">{{ formatCurrency(referralTree.totalEarnings) }}</h5>
+                            <small>Total Earnings</small>
+                          </div>
                         </div>
                         <div class="col-md-3">
-                          <h5 class="mb-0 text-warning">{{ formatCurrency(referralTree.pendingEarnings) }}</h5>
-                          <small class="text-muted">Pending</small>
+                          <div class="summary-metric warning">
+                            <h5 class="mb-0">{{ formatCurrency(referralTree.pendingEarnings) }}</h5>
+                            <small>Pending</small>
+                          </div>
                         </div>
                         <div class="col-md-3">
-                          <h5 class="mb-0 text-primary">{{ formatCurrency(referralTree.paidEarnings) }}</h5>
-                          <small class="text-muted">Paid</small>
+                          <div class="summary-metric primary">
+                            <h5 class="mb-0">{{ formatCurrency(referralTree.paidEarnings) }}</h5>
+                            <small>Paid</small>
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -1044,7 +1082,7 @@
                                 <i class="fas fa-user-circle"></i>
                               </div>
                               <h5 class="mb-2">{{ tree.driverName }}</h5>
-                              <span class="badge generation-badge generation-1 mb-2">1st Generation (You)</span>
+                              <span class="badge generation-badge generation-1 mb-2">Owner Operator</span>
                               <div class="mt-3">
                                 <small class="text-muted d-block">Total Referrals</small>
                                 <strong class="text-primary">{{ tree.totalReferrals }}</strong>
@@ -1062,17 +1100,17 @@
                                 <div class="generation-header mb-3">
                                   <h5 class="mb-0">
                                     @if (level.level === 2) {
-                                      <span class="generation-badge generation-2 me-2">2nd Generation</span>
-                                      <span class="commission-badge">10% Commission</span>
+                                      <span class="generation-badge generation-2 me-2">Tier 1</span>
+                                      <span class="commission-badge">10% (Actual Line Haul: 1.50%)</span>
                                     } @else if (level.level === 3) {
-                                      <span class="generation-badge generation-3 me-2">3rd Generation</span>
-                                      <span class="commission-badge">8% Commission</span>
+                                      <span class="generation-badge generation-3 me-2">Tier 2</span>
+                                      <span class="commission-badge">5% (Actual Line Haul: 0.75%)</span>
                                     } @else if (level.level === 4) {
-                                      <span class="generation-badge generation-4 me-2">4th Generation</span>
-                                      <span class="commission-badge">5% Commission</span>
+                                      <span class="generation-badge generation-4 me-2">Tier 3</span>
+                                      <span class="commission-badge">2% (Actual Line Haul: 0.30%)</span>
                                     } @else if (level.level === 5) {
-                                      <span class="generation-badge generation-5 me-2">5th Generation</span>
-                                      <span class="commission-badge">2% Commission</span>
+                                      <span class="generation-badge generation-5 me-2">Tier 4</span>
+                                      <span class="commission-badge">2% (Owner Operator eligible)</span>
                                     }
                                     <span class="badge bg-info ms-2">{{ level.count }} Referral(s)</span>
                                     <span class="badge bg-success ms-2">{{ formatCurrency(level.totalEarnings) }}</span>
@@ -1117,11 +1155,11 @@
                                                         <div class="d-flex gap-2 mt-1">
                                                           <span class="badge generation-badge generation-{{ child.children && child.children.length > 0 ? (level.level + 1) : (level.level + 1) }} small-badge">
                                                             @if (level.level === 2) {
-                                                              3rd Gen
+                                                              Tier 2
                                                             } @else if (level.level === 3) {
-                                                              4th Gen
+                                                              Tier 3
                                                             } @else if (level.level === 4) {
-                                                              5th Gen
+                                                              Tier 4
                                                             }
                                                           </span>
                                                           <small class="text-success">
@@ -1143,9 +1181,9 @@
                                                                 <div class="d-flex gap-2 mt-1">
                                                                   <span class="badge generation-badge generation-{{ level.level + 2 }} small-badge">
                                                                     @if (level.level === 2) {
-                                                                      4th Gen
+                                                                      Tier 3
                                                                     } @else if (level.level === 3) {
-                                                                      5th Gen
+                                                                      Tier 4
                                                                     }
                                                                   </span>
                                                                   <small class="text-success">
@@ -1164,7 +1202,7 @@
                                                                       <i class="fas fa-user text-muted me-2" style="font-size: 0.65rem;"></i>
                                                                       <div class="flex-grow-1">
                                                                         <small class="d-block">{{ greatGrandchild.fullName }}</small>
-                                                                        <span class="badge generation-badge generation-5 small-badge mt-1">5th Gen</span>
+                                                                        <span class="badge generation-badge generation-5 small-badge mt-1">Tier 4</span>
                                                                         <small class="text-success d-block">
                                                                           <i class="fas fa-dollar-sign"></i> {{ formatCurrency(greatGrandchild.totalEarnings) }}
                                                                         </small>
@@ -1221,11 +1259,11 @@
                                 <span class="avatar-initials">{{ getUserInitials(tree.driverName) }}</span>
                               </div>
                               <div class="node-content">
-                                <div class="node-id">{{ tree.driverId }}</div>
+                                <div class="node-id">{{ formatRoId(tree.driverId) }}</div>
                                 <div class="node-name">{{ tree.driverName }}</div>
                               </div>
                               <div class="node-badges">
-                                <div class="level-badge root-level-badge">Level 1</div>
+                                <div class="level-badge root-level-badge">Owner Operator</div>
                                 <button type="button" class="info-btn root-info-btn" title="View Details" (click)="showDriverInfo(tree.driverId); $event.stopPropagation()">
                                   <i class="fas fa-info-circle"></i>
                                 </button>
@@ -1273,7 +1311,7 @@
                                 </div>
                                 <div class="node-info">
                                   <strong>{{ tree.driverName }}</strong>
-                                  <small class="level-badge">1st Generation (You)</small>
+                                  <small class="level-badge">Owner Operator</small>
                                   <small class="text-muted">{{ tree.totalReferrals }} Total Referrals</small>
                                 </div>
                               </div>
@@ -1311,24 +1349,24 @@
                                           <strong>{{ node.driver.fullName }}</strong>
                                           <small class="level-badge">
                                             @if (levelData.level === 2) {
-                                              2nd Generation
+                                              Tier 1
                                             } @else if (levelData.level === 3) {
-                                              3rd Generation
+                                              Tier 2
                                             } @else if (levelData.level === 4) {
-                                              4th Generation
+                                              Tier 3
                                             } @else if (levelData.level === 5) {
-                                              5th Generation
+                                              Tier 4
                                             }
                                           </small>
                                           <small class="commission-badge">
                                             @if (levelData.level === 2) {
-                                              10% Commission
+                                              10% (1.50% line haul)
                                             } @else if (levelData.level === 3) {
-                                              8% Commission
+                                              5% (0.75% line haul)
                                             } @else if (levelData.level === 4) {
-                                              5% Commission
+                                              2% (0.30% line haul)
                                             } @else if (levelData.level === 5) {
-                                              2% Commission
+                                              2% (owner operator eligible)
                                             }
                                           </small>
                                           <small class="text-success">{{ formatCurrency(node.driver.totalEarnings) }}</small>
@@ -1392,8 +1430,8 @@
                     <thead>
                       <tr>
                         <th>Referred Driver</th>
-                        <th>Level</th>
-                        <th>Base Amount (15% RaxUp Cut)</th>
+                        <th>Tier Level</th>
+                        <th>Base Amount (Line Haul)</th>
                         <th>Commission Rate</th>
                         <th>Commission Amount</th>
                         <th>Period</th>
@@ -1405,7 +1443,7 @@
                       @for (earning of referralEarnings; track earning.referralEarningId) {
                         <tr>
                           <td>{{ earning.referredDriverName }}</td>
-                          <td><span class="badge bg-info">Level {{ earning.referralLevel }}</span></td>
+                          <td><span class="badge bg-info">Tier {{ earning.referralLevel - 1 }}</span></td>
                           <td>{{ formatCurrency(earning.baseAmount) }}</td>
                           <td>{{ (earning.commissionRate * 100).toFixed(0) }}%</td>
                           <td><strong>{{ formatCurrency(earning.commissionAmount) }}</strong></td>
@@ -1531,7 +1569,7 @@
             <div class="card-header d-flex justify-content-between align-items-center">
               <h5 class="mb-0">Driver Settlements</h5>
               @if (!isMyProfile) {
-                <button class="btn btn-sm btn-primary" (click)="openSettlementModal()">
+                <button class="btn btn-sm btn-primary" (click)="navigateToCreateSettlement()">
                   <i class="fas fa-plus me-2"></i>Create Settlement
                 </button>
               }
@@ -2122,6 +2160,45 @@
     </div>
   }
 
+  <!-- Compliance Alert Modal -->
+  @if (showComplianceAlertModal) {
+    <div class="modal fade" [class.show]="showComplianceAlertModal" [style.display]="showComplianceAlertModal ? 'block' : 'none'">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">Send Compliance Alert Email</h5>
+            <button type="button" class="btn-close" (click)="closeComplianceAlertModal()" [disabled]="sendingComplianceAlert"></button>
+          </div>
+          <div class="modal-body">
+            <p class="mb-2">
+              A professional email with complete compliance details will be sent to the driver and assigned owner operator (if available).
+            </p>
+            <label class="form-label">Additional Message (Optional)</label>
+            <textarea
+              class="form-control"
+              rows="4"
+              [(ngModel)]="complianceAlertMessage"
+              maxlength="1500"
+              placeholder="Add specific instructions or deadline details..."
+            ></textarea>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" (click)="closeComplianceAlertModal()" [disabled]="sendingComplianceAlert">Cancel</button>
+            <button type="button" class="btn btn-primary" (click)="sendComplianceAlertToOwnerOperator()" [disabled]="sendingComplianceAlert">
+              @if (sendingComplianceAlert) {
+                <span class="spinner-border spinner-border-sm me-2"></span>
+                Sending...
+              } @else {
+                <i class="fas fa-paper-plane me-2"></i>
+                Send Alert
+              }
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  }
+
   <!-- Driver Info Modal -->
   @if (showDriverInfoModal && selectedDriverInfo) {
     <div class="modal fade" [class.show]="showDriverInfoModal" [style.display]="showDriverInfoModal ? 'block' : 'none'">
@@ -2142,7 +2219,7 @@
                 <table class="table table-borderless mb-4">
                   <tr>
                     <td width="40%"><strong>Driver ID:</strong></td>
-                    <td>{{ selectedDriverInfo.driverId }}</td>
+                    <td>{{ formatRoId(selectedDriverInfo.driverId) }}</td>
                   </tr>
                   <tr>
                     <td><strong>Full Name:</strong></td>
@@ -2207,7 +2284,7 @@
                     <div class="list-group-item d-flex justify-content-between align-items-center">
                       <div>
                         <strong>{{ child.fullName }}</strong>
-                        <small class="text-muted d-block">ID: {{ child.driverId }}</small>
+                        <small class="text-muted d-block">ID: {{ formatRoId(child.driverId) }}</small>
                         @if (child.email) {
                           <small class="text-muted d-block">{{ child.email }}</small>
                         }
@@ -2235,8 +2312,8 @@
   }
 
   <!-- Modal Backdrop -->
-  @if (showDocumentModal || showTrainingModal || showSettlementModal || showRejectModal || showDriverInfoModal) {
-    <div class="modal-backdrop fade" [class.show]="showDocumentModal || showTrainingModal || showSettlementModal || showRejectModal || showDriverInfoModal"></div>
+  @if (showDocumentModal || showTrainingModal || showSettlementModal || showRejectModal || showComplianceAlertModal || showDriverInfoModal) {
+    <div class="modal-backdrop fade" [class.show]="showDocumentModal || showTrainingModal || showSettlementModal || showRejectModal || showComplianceAlertModal || showDriverInfoModal"></div>
   }
 </div>
 
