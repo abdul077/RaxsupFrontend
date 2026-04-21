@@ -80,7 +80,7 @@
       <div class="row g-3">
         <div class="col-md-3">
           <label class="form-label">Driver ID</label>
-          <input type="number" class="form-control" [(ngModel)]="driverIdFilter" placeholder="Filter by driver ID">
+          <input type="number" class="form-control" [(ngModel)]="driverIdFilter" placeholder="Filter by RO Driver ID">
         </div>
         <div class="col-md-2">
           <label class="form-label">Document Type</label>
@@ -161,7 +161,7 @@
                 </td>
                 <td>
                   <a href="javascript:void(0)" (click)="navigateToDriver(doc.driverId)" class="text-primary">
-                    {{ doc.driverName }} (ID: {{ doc.driverId }})
+                    {{ doc.driverName }} (ID: RO{{ doc.driverId }})
                   </a>
                 </td>
                 <td>{{ doc.documentType }}</td>

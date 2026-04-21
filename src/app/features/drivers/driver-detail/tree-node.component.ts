@@ -36,11 +36,11 @@ import { ReferralDriver } from '../../../core/models/driver.model';
             <span class="avatar-initials">{{ getUserInitials(driver.fullName || '') }}</span>
           </div>
           <div class="node-content">
-            <div class="node-id">{{ driver.driverId }}</div>
+            <div class="node-id">{{ formatRoId(driver.driverId) }}</div>
             <div class="node-name">{{ driver.fullName || 'N/A' }}</div>
           </div>
           <div class="node-badges">
-            <div class="level-badge">Level {{ level }}</div>
+            <div class="level-badge">Tier {{ level - 1 }}</div>
             <button type="button" class="info-btn" title="View Details" (click)="onInfoClick($event)">
               <i class="fas fa-info-circle"></i>
             </button>
@@ -95,6 +95,11 @@ export class TreeNodeComponent {
       return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
     }
     return name.substring(0, 2).toUpperCase();
+  }
+
+  formatRoId(id: number | undefined | null): string {
+    if (id === undefined || id === null) return '-';
+    return `RO${id}`;
   }
 
   isChildExpanded(driverId: number): boolean {

@@ -25,6 +25,11 @@ export class DriverProfileTabComponent {
     return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(amount);
   }
 
+  formatRoId(id: number | undefined | null): string {
+    if (id === undefined || id === null) return '-';
+    return `RO${id}`;
+  }
+
   getStatusBadgeClass(status: string): string {
     switch (status) {
       case 'Active':
