@@ -20,6 +20,7 @@ export interface Driver {
   referredBy?: number;
   referrerName?: string;
   referralCount?: number;
+  isTier4ReferralEligible?: boolean;
 }
 
 export interface DriverDetail extends Driver {
@@ -120,6 +121,8 @@ export interface OwnerOperator {
   isActive: boolean;
   createdAt: string;
   driverCount?: number;
+  hasCompletedMiniFleet?: boolean;
+  remainingMiniFleetSlots?: number;
   referredBy?: number;
   referrerCompanyName?: string;
 }
@@ -168,6 +171,7 @@ export interface UpdateDriverRequest extends CreateDriverRequest {
   terminationDate?: string;
   isDQFComplete?: boolean;
   dqfCompletionDate?: string;
+  isTier4ReferralEligible?: boolean;
 }
 
 export interface UpdateDriverStatusRequest {
@@ -339,6 +343,7 @@ export interface ReferralEarning {
   referredDriverName: string;
   settlementId: number;
   referralLevel: number;
+  tier?: number;
   baseAmount: number;
   commissionRate: number;
   commissionAmount: number;

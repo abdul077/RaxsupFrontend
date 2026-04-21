@@ -200,7 +200,7 @@
               class="form-control">
               <option [value]="undefined">None (No Referrer)</option>
               <option *ngFor="let driver of availableReferrers" [value]="driver.driverId">
-                {{ driver.fullName }} (ID: {{ driver.driverId }}, {{ driver.email }})
+                {{ driver.fullName }} (ID: RO{{ driver.driverId }}, {{ driver.email }})
               </option>
             </select>
             
@@ -211,10 +211,10 @@
                 [(ngModel)]="manualReferralId" 
                 name="manualReferralId"
                 class="form-control"
-                placeholder="Enter Driver ID (e.g., 5)"
+                placeholder="Enter Driver ID (e.g., RO5)"
                 (blur)="onManualReferralIdChange()"
               >
-              <small class="text-muted">Enter the Driver ID of the referrer</small>
+              <small class="text-muted">Enter the referrer Driver ID (RO format)</small>
             </div>
             
             <small class="text-muted d-block mt-2">

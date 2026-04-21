@@ -152,6 +152,19 @@
                          title="Last day of employment">
                   <small class="form-hint">Leave blank if driver is still active</small>
                 </div>
+                <div class="col-md-6">
+                  <div class="form-check form-switch mt-4 pt-1">
+                    <input class="form-check-input"
+                           type="checkbox"
+                           id="tier4Eligibility"
+                           [(ngModel)]="updateFormData.isTier4ReferralEligible"
+                           name="isTier4ReferralEligible">
+                    <label class="form-check-label" for="tier4Eligibility">
+                      Tier 4 Referral Eligibility (Owner Operator)
+                    </label>
+                  </div>
+                  <small class="form-hint">Enable this to allow Tier 4 MLM commissions for this owner operator.</small>
+                </div>
               }
             </div>
           </div>

@@ -236,6 +236,13 @@ export class DriverService {
     return this.apiService.post<any>(`drivers/documents/${documentId}/reject`, { reason });
   }
 
+  sendComplianceAlertToOwnerOperator(driverId: number, additionalMessage?: string): Observable<{ message: string }> {
+    return this.apiService.post<{ message: string }>(
+      `drivers/${driverId}/compliance/notify-owner-operator`,
+      { additionalMessage }
+    );
+  }
+
   getDriverLoads(
     driverId: number,
     status?: string,

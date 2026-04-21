@@ -179,17 +179,17 @@
               <i class="fas fa-user-friends"></i>
             </span>
             <input type="text" id="reg-referralCode" class="form-control" formControlName="referralCode"
-              placeholder="Enter referral code (Driver ID)"
+              placeholder="Enter referral code (RO Driver ID)"
               [class.is-invalid]="registerForm.get('referralCode')?.invalid && registerForm.get('referralCode')?.touched" />
           </div>
           <small class="text-muted d-block mt-1">
             <i class="fas fa-info-circle me-1"></i>
-            If you were referred by another driver, enter their referral code (Driver ID).
+            If you were referred by another driver, enter their referral code (RO Driver ID).
             They will earn commissions from your completed loads.
           </small>
           <div class="alert alert-info mt-2 mb-0" *ngIf="referralDriverId">
             <i class="fas fa-check-circle me-2"></i>
-            Referral code detected from link: <strong>{{ referralDriverId }}</strong>
+            Referral code detected from link: <strong>RO{{ referralDriverId }}</strong>
           </div>
         </div>
       </div>
