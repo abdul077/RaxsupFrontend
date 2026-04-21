@@ -34,6 +34,65 @@
     </div>
   </div>
 
+  <!-- Owner-Operator summary cards -->
+  <div class="owner-operator-stats-grid mb-4" *ngIf="!inactiveOnlyPage">
+    <div class="owner-operator-stat-card pulse-card">
+      <div class="stat-card-header">
+        <h5 class="mb-0"><i class="fas fa-heartbeat me-2"></i>Fleet Status Card (Pulse)</h5>
+      </div>
+      <div class="stat-card-body">
+        <div class="main-stat">
+          <div class="main-stat-value">
+            {{ ownerOperatorCardsLoading ? '--' : ownerOperatorCards.fleetStatus.activeOO }} / {{ ownerOperatorCardsLoading ? '--' : ownerOperatorCards.fleetStatus.totalOO }}
+          </div>
+          <div class="main-stat-label">Total Active OOs / Total Registered OOs</div>
+        </div>
+        <div class="sub-stats-row">
+          <div class="sub-stat-item">
+            <span class="sub-stat-label">On Road</span>
+            <span class="sub-stat-value">{{ ownerOperatorCardsLoading ? '--' : ownerOperatorCards.fleetStatus.onRoad }}</span>
+          </div>
+          <div class="sub-stat-item">
+            <span class="sub-stat-label">Idle</span>
+            <span class="sub-stat-value">{{ ownerOperatorCardsLoading ? '--' : ownerOperatorCards.fleetStatus.idle }}</span>
+          </div>
+          <div class="sub-stat-item">
+            <span class="sub-stat-label">Off-Duty</span>
+            <span class="sub-stat-value">{{ ownerOperatorCardsLoading ? '--' : ownerOperatorCards.fleetStatus.offDuty }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="owner-operator-stat-card risk-card">
+      <div class="stat-card-header">
+        <h5 class="mb-0"><i class="fas fa-shield-alt me-2"></i>Compliance & Health Card (Risk)</h5>
+      </div>
+      <div class="stat-card-body">
+        <div class="main-stat">
+          <div class="main-stat-value">
+            {{ ownerOperatorCardsLoading ? '--' : ownerOperatorCards.complianceHealth.healthScore }}%
+          </div>
+          <div class="main-stat-label">Average Fleet Health Score</div>
+        </div>
+        <div class="sub-stats-row">
+          <div class="sub-stat-item">
+            <span class="sub-stat-label">Expired/Expiring Docs</span>
+            <span class="sub-stat-value">{{ ownerOperatorCardsLoading ? '--' : ownerOperatorCards.complianceHealth.expiredOrExpiringDocs }}</span>
+          </div>
+          <div class="sub-stat-item">
+            <span class="sub-stat-label">Safety Alerts</span>
+            <span class="sub-stat-value">{{ ownerOperatorCardsLoading ? '--' : ownerOperatorCards.complianceHealth.safetyAlerts }}</span>
+          </div>
+          <div class="sub-stat-item">
+            <span class="sub-stat-label">Action Required</span>
+            <span class="sub-stat-value">{{ ownerOperatorCardsLoading ? '--' : ownerOperatorCards.complianceHealth.actionRequired }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- Actions cell template -->
   <ng-template #driverActionsCell let-driver>
     <div class="dropdown" (click)="$event.stopPropagation()">

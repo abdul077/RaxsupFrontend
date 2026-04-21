@@ -18,6 +18,22 @@ import { PagedResult } from '../../../core/models/load.model';
   styleUrl: './driver-list.scss',
 })
 export class DriverListComponent implements OnInit {
+  ownerOperatorCardsLoading = false;
+  ownerOperatorCards = {
+    fleetStatus: {
+      activeOO: 0,
+      totalOO: 0,
+      onRoad: 0,
+      idle: 0,
+      offDuty: 0
+    },
+    complianceHealth: {
+      healthScore: 0,
+      expiredOrExpiringDocs: 0,
+      safetyAlerts: 0,
+      actionRequired: 0
+    }
+  };
   showStatusModal = false;
   showBulkStatusModal = false;
   selectedDriver: Driver | null = null;
@@ -55,6 +71,9 @@ export class DriverListComponent implements OnInit {
       this.statusFilter = 'Inactive';
     }
     this.initializeTableConfig();
+    if (!this.inactiveOnlyPage) {
+      this.loadOwnerOperatorCardStats();
+    }
   }
 
   initializeTableConfig(): void {
@@ -165,6 +184,7 @@ export class DriverListComponent implements OnInit {
   selectStatusTab(status: string): void {
     this.statusFilter = status;
     this.tableRefreshTrigger++;
+    this.loadOwnerOperatorCardStats();
   }
 
   onSelectionChange(rows: Driver[]): void {
@@ -185,6 +205,7 @@ export class DriverListComponent implements OnInit {
         this.showStatusModal = false;
         this.selectedDriver = null;
         this.tableRefreshTrigger++;
+        this.loadOwnerOperatorCardStats();
       },
       error: (err) => {
         console.error('Error updating driver status:', err);
@@ -345,6 +366,7 @@ export class DriverListComponent implements OnInit {
         alert(`${this.selectedDrivers.size} driver(s) updated successfully`);
         this.selectedDrivers = new Set();
         this.tableRefreshTrigger++;
+        this.loadOwnerOperatorCardStats();
       },
       error: (err) => {
         console.error('Error updating drivers:', err);
@@ -404,5 +426,58 @@ export class DriverListComponent implements OnInit {
       },
       error: () => alert('Failed to export drivers')
     });
+  }
+
+  private loadOwnerOperatorCardStats(): void {
+    this.ownerOperatorCardsLoading = true;
+    this.driverService.getDrivers(
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      1,
+      5000
+    ).subscribe({
+      next: (result) => {
+        const allOwnerOperators = result.items || [];
+        const filteredOwnerOperators = this.statusFilter
+          ? allOwnerOperators.filter((oo) => oo.status === this.statusFilter)
+          : allOwnerOperators;
+
+        this.ownerOperatorCards = {
+          fleetStatus: this.computeFleetStatus(filteredOwnerOperators),
+          complianceHealth: this.computeComplianceHealth(filteredOwnerOperators)
+        };
+        this.ownerOperatorCardsLoading = false;
+      },
+      error: () => {
+        this.ownerOperatorCardsLoading = false;
+      }
+    });
+  }
+
+  private computeFleetStatus(ownerOperators: Driver[]) {
+    const activeStatuses = new Set(['Active', 'Available', 'OnTrip']);
+    return {
+      activeOO: ownerOperators.filter((oo) => activeStatuses.has(oo.status)).length,
+      totalOO: ownerOperators.length,
+      onRoad: ownerOperators.filter((oo) => oo.status === 'OnTrip').length,
+      idle: ownerOperators.filter((oo) => oo.status === 'Available').length,
+      offDuty: ownerOperators.filter((oo) => oo.status === 'OffDuty').length
+    };
+  }
+
+  private computeComplianceHealth(ownerOperators: Driver[]) {
+    const expiredOrExpiringDocs = ownerOperators.filter((oo) => oo.isLicenseExpired || oo.isLicenseExpiringSoon).length;
+    const actionRequired = ownerOperators.filter((oo) => oo.isLicenseExpired || oo.status === 'Inactive').length;
+    const compliantCount = ownerOperators.filter((oo) => !oo.isLicenseExpired && !oo.isLicenseExpiringSoon && oo.status !== 'Inactive').length;
+    const healthScore = ownerOperators.length > 0 ? Math.round((compliantCount / ownerOperators.length) * 100) : 0;
+
+    return {
+      healthScore,
+      expiredOrExpiringDocs,
+      safetyAlerts: 0,
+      actionRequired
+    };
   }
 }

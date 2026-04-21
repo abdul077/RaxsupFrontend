@@ -113,7 +113,7 @@
           <label class="form-label">Driver</label>
           <select class="form-select" [(ngModel)]="advancedFilters.driverId" (ngModelChange)="onDriverFilterChange()">
             <option [ngValue]="undefined">Any</option>
-            <option *ngFor="let driver of drivers" [ngValue]="driver.driverId">{{ driver.fullName }} (DR{{ driver.driverId }})</option>
+            <option *ngFor="let driver of drivers" [ngValue]="driver.driverId">{{ driver.fullName }} (RO{{ driver.driverId }})</option>
           </select>
         </div>
         <div class="col-md-3">

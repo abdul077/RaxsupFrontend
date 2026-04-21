@@ -171,6 +171,17 @@
             <strong>Total Drivers:</strong>
             <p class="h4">{{ ownerOperator.driverCount || 0 }}</p>
           </div>
+          <div class="mb-3" *ngIf="authService.hasRole('Admin')">
+            <strong>Mini Fleet Progress:</strong>
+            <p class="mb-1">
+              <span class="badge bg-success" *ngIf="ownerOperator.hasCompletedMiniFleet">
+                Completed (3/3)
+              </span>
+              <span class="badge bg-warning text-dark" *ngIf="!ownerOperator.hasCompletedMiniFleet">
+                Pending ({{ ownerOperator.remainingMiniFleetSlots ?? 0 }} remaining)
+              </span>
+            </p>
+          </div>
           <div class="mb-3">
             <strong>Created:</strong>
             <p>{{ ownerOperator.createdAt | date:'short' }}</p>

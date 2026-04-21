@@ -128,7 +128,7 @@ export class PaymentsListComponent implements OnInit {
       }
 
       // Process receivable payments (from invoices)
-      // Show all invoices with payments, and also show RaxsUp commission separately
+      // Show all invoices with payments, and also show carrier fee separately
       const invoiceList = invoices?.items || [];
       if (invoiceList.length > 0) {
         invoiceList.forEach((invoice: Invoice) => {
@@ -148,7 +148,7 @@ export class PaymentsListComponent implements OnInit {
             });
           }
           
-          // Show RaxsUp commission as a separate payment entry
+          // Show carrier fee as a separate payment entry
           if (invoice.raxUpCommission > 0) {
             this.allPayments.push({
               id: `invoice-commission-${invoice.invoiceId}`,
@@ -156,10 +156,10 @@ export class PaymentsListComponent implements OnInit {
               date: invoice.createdAt,
               amount: invoice.raxUpCommission,
               recipient: 'RaxsUp',
-              payer: 'RaxsUp Commission',
+              payer: 'Carrier Fee',
               reference: `${invoice.invoiceNumber} - Commission`,
               status: invoice.status === 'Paid' ? 'Paid' : 'Pending',
-              description: `RaxsUp Commission (15%) - Invoice ${invoice.invoiceNumber}`,
+              description: `Carrier Fee - Invoice ${invoice.invoiceNumber}`,
               details: invoice
             });
           }

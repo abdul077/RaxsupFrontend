@@ -79,6 +79,12 @@
               <td>{{ oo.phone || '-' }}</td>
               <td>
                 <span class="badge bg-secondary">{{ oo.driverCount || 0 }}</span>
+                <span
+                  *ngIf="authService.hasRole('Admin') && oo.hasCompletedMiniFleet"
+                  class="badge bg-success ms-2"
+                  title="Owner Operator completed 3 mini fleets">
+                  3 Mini Fleets Completed
+                </span>
               </td>
               <td>
                 <span class="badge" [class.bg-success]="oo.isActive" [class.bg-secondary]="!oo.isActive">
@@ -97,6 +103,13 @@
                     (click)="edit(oo.ownerOperatorId)" 
                     title="Edit">
                     <i class="fas fa-edit"></i>
+                  </button>
+                  <button
+                    *ngIf="authService.hasRole('Admin') && oo.hasCompletedMiniFleet"
+                    class="btn btn-outline-success"
+                    (click)="edit(oo.ownerOperatorId)"
+                    title="Take Admin Action">
+                    <i class="fas fa-check-double"></i>
                   </button>
                   <button 
                     *ngIf="authService.hasRole('Admin')"

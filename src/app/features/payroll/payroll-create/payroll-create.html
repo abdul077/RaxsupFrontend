@@ -17,14 +17,14 @@
                 <select class="form-select" [(ngModel)]="request.driverId" name="driverId" [disabled]="!!settlementId">
                   <option [value]="undefined">Select Driver</option>
                   <option *ngFor="let driver of drivers" [value]="driver.driverId">
-                    {{ driver.fullName }}
+                    RO{{ driver.driverId }} - {{ driver.fullName }}
                   </option>
                 </select>
               </div>
               <div class="col-md-6">
                 <label class="form-label">Owner Operator (if applicable)</label>
                 <input type="number" class="form-control" [(ngModel)]="request.ownerOperatorId" name="ownerOperatorId" 
-                       placeholder="Owner Operator ID" [disabled]="!!settlementId">
+                       placeholder="Owner Operator ID (RO...)" [disabled]="!!settlementId">
               </div>
             </div>
 

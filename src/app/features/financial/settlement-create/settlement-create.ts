@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Router, RouterModule } from '@angular/router';
+import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { FinancialService } from '../../../core/services/financial.service';
 import { ApiService } from '../../../core/services/api';
 import { DriverService } from '../../../core/services/driver.service';
@@ -25,6 +25,7 @@ export class SettlementCreateComponent implements OnInit {
   drivers: Driver[] = [];
   loads: Load[] = [];
   allLoads: Load[] = [];
+  private preselectedDriverId: number | null = null;
   
   formData: CreateSettlementRequest = {
     driverId: 0,
@@ -39,10 +40,16 @@ export class SettlementCreateComponent implements OnInit {
     private financialService: FinancialService,
     private apiService: ApiService,
     private driverService: DriverService,
+    private route: ActivatedRoute,
     private router: Router
   ) {}
 
   ngOnInit(): void {
+    const driverIdParam = this.route.snapshot.queryParamMap.get('driverId');
+    const parsedDriverId = Number(driverIdParam);
+    if (driverIdParam && Number.isFinite(parsedDriverId) && parsedDriverId > 0) {
+      this.preselectedDriverId = parsedDriverId;
+    }
     this.loadDrivers();
     this.initializePeriod();
   }
@@ -63,6 +70,13 @@ export class SettlementCreateComponent implements OnInit {
       next: (result) => {
         // Filter to show all drivers whose status is not 'Pending'
         this.drivers = (result?.items || []).filter(d => d.status !== 'Pending');
+        if (this.preselectedDriverId) {
+          const selectedDriver = this.drivers.find(d => d.driverId === this.preselectedDriverId);
+          if (selectedDriver) {
+            this.formData.driverId = this.preselectedDriverId;
+            this.onDriverChange();
+          }
+        }
       },
       error: (error) => {
         console.error('Error loading drivers:', error);

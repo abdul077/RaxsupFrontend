@@ -119,6 +119,99 @@ $white: #ffffff;
   }
 }
 
+.owner-operator-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.owner-operator-stat-card {
+  background: $white;
+  border: 1px solid $gray-border;
+  border-radius: 12px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+  overflow: hidden;
+  transition: box-shadow 0.2s;
+
+  &:hover {
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+  }
+
+  .stat-card-header {
+    padding: 0.9rem 1.1rem;
+    border-bottom: 1px solid $gray-border;
+    background: $gray-light;
+
+    h5 {
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: $gray-dark;
+
+      i {
+        color: $navy;
+      }
+    }
+  }
+
+  .stat-card-body {
+    padding: 1rem 1.1rem 1.1rem;
+  }
+
+  .main-stat {
+    margin-bottom: 0.9rem;
+  }
+
+  .main-stat-value {
+    font-size: 1.5rem;
+    font-weight: 700;
+    line-height: 1.2;
+    color: $gray-dark;
+  }
+
+  .main-stat-label {
+    margin-top: 0.25rem;
+    font-size: 0.82rem;
+    color: $gray-muted;
+  }
+
+  .sub-stats-row {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.6rem;
+  }
+
+  .sub-stat-item {
+    background: $gray-light;
+    border: 1px solid $gray-border;
+    border-radius: 8px;
+    padding: 0.55rem 0.6rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+  }
+
+  .sub-stat-label {
+    font-size: 0.73rem;
+    color: $gray-muted;
+    line-height: 1.2;
+  }
+
+  .sub-stat-value {
+    font-size: 1rem;
+    font-weight: 600;
+    color: $gray-dark;
+    line-height: 1.2;
+  }
+}
+
+.pulse-card .main-stat-value {
+  color: $navy;
+}
+
+.risk-card .main-stat-value {
+  color: #7a1f1f;
+}
+
 // Card - same as load-list
 .load-list-card-with-sticky {
   .load-list-card-body {
@@ -410,4 +503,22 @@ $white: #ffffff;
 
 .driver-list-modal .bulk-status-count {
   font-size: 0.9rem;
+}
+
+@media (max-width: 992px) {
+  .owner-operator-stats-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 576px) {
+  .owner-operator-stat-card {
+    .sub-stats-row {
+      grid-template-columns: 1fr;
+    }
+
+    .main-stat-value {
+      font-size: 1.3rem;
+    }
+  }
 }
