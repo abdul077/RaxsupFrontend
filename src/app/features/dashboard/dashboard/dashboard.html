@@ -217,7 +217,7 @@
         </div>
 
         <!-- Current Trips -->
-        <div class="tms-card" *ngIf="authService.hasAnyRole(['Admin','Dispatcher','FleetManager'])">
+        <div class="tms-card" *ngIf="authService.hasRole('Admin')">
             <div class="tms-card-header">
               <h5><i class="fas fa-list me-2"></i>Current Trips</h5>
               <a routerLink="/loads" class="btn btn-sm btn-tms-outline">View All</a>
@@ -406,13 +406,15 @@
               <table class="table table-hover mb-0 tms-table-dark">
                 <thead>
                   <tr>
+                    <th class="text-center">S/N</th>
                     <th>Truck</th>
                     <th class="text-end">Loads</th>
                     <th class="text-end">Gross Revenue</th>
                   </tr>
                 </thead>
                 <tbody>
-                  <tr *ngFor="let row of revenueByTruck">
+                  <tr *ngFor="let row of revenueByTruck; let index = index">
+                    <td class="text-center">{{ index + 1 }}</td>
                     <td>{{ row.truckLabel }}</td>
                     <td class="text-end">{{ row.loadCount }}</td>
                     <td class="text-end">{{ formatCurrency(row.grossRevenue) }}</td>

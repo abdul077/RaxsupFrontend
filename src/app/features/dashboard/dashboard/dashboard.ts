@@ -296,6 +296,8 @@ export class DashboardComponent implements OnInit, OnDestroy {
     }
     if (this.authService.hasAnyRole(['Admin', 'Dispatcher', 'FleetManager'])) {
       this.loadTopBrokers();
+    }
+    if (this.authService.hasRole('Admin')) {
       this.loadDispatcherLoads();
     }
     if (this.authService.hasRole('Driver')) {
@@ -322,6 +324,8 @@ export class DashboardComponent implements OnInit, OnDestroy {
           }
           if (this.authService.hasAnyRole(['Admin', 'Dispatcher', 'FleetManager'])) {
             this.loadTopBrokers();
+          }
+          if (this.authService.hasRole('Admin')) {
             this.loadDispatcherLoads();
           }
           if (this.authService.hasRole('Driver')) {

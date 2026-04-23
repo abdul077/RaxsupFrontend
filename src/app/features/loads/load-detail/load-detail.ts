@@ -1956,7 +1956,7 @@ export class LoadDetailComponent implements OnInit, AfterViewInit, OnDestroy {
     const n = typeof weight === 'number' ? weight : Number(weight);
     if (!Number.isFinite(n)) return '—';
     const formatted = n.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 3 });
-    return `${formatted} kg`;
+    return `${formatted} lb`;
   }
 
   getTotalAccessorials(): number {

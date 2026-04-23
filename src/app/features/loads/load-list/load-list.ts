@@ -398,7 +398,7 @@ export class LoadListComponent implements OnInit, OnDestroy {
         },
         {
           key: 'loadWeight',
-          label: 'Load weight (kg)',
+          label: 'Load weight (lb)',
           type: 'custom',
           sortable: true,
           width: '120px',
@@ -455,7 +455,7 @@ export class LoadListComponent implements OnInit, OnDestroy {
       { key: 'distanceKm', label: 'Distance' },
       { key: 'driverEquipment', label: 'Driver & Equipment' },
       { key: 'loadType', label: 'Load Type' },
-      { key: 'loadWeight', label: 'Load weight (kg)' },
+      { key: 'loadWeight', label: 'Load weight (lb)' },
       { key: 'materialName', label: 'Material name' },
       { key: 'totalRate', label: 'Rate' },
       { key: 'status', label: 'Status' },
@@ -1151,7 +1151,7 @@ export class LoadListComponent implements OnInit, OnDestroy {
     const n = typeof weight === 'number' ? weight : Number(weight);
     if (!Number.isFinite(n)) return '—';
     const formatted = n.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 3 });
-    return `${formatted} kg`;
+    return `${formatted} lb`;
   }
 
   formatCurrencyCompact(amount?: number, currency: string = 'USD'): string {
@@ -1174,7 +1174,7 @@ export class LoadListComponent implements OnInit, OnDestroy {
       5000
     ).subscribe({
       next: (res) => {
-        const headers = ['Load #', 'Broker', 'Origin', 'Destination', 'Driver', 'Equipment', 'Pickup', 'Delivery', 'Load weight (kg)', 'Material name', 'Rate', 'Status'];
+        const headers = ['Load #', 'Broker', 'Origin', 'Destination', 'Driver', 'Equipment', 'Pickup', 'Delivery', 'Load weight (lb)', 'Material name', 'Rate', 'Status'];
         const rows = (res.items || []).map((l: Load) => [
           l.loadNumber,
           l.customerName ?? '',
@@ -1267,7 +1267,7 @@ export class LoadListComponent implements OnInit, OnDestroy {
             </div>
           </div>
           <table>
-            <thead><tr><th>Load #</th><th>Broker</th><th>Route</th><th>Driver</th><th>Equipment</th><th>Load weight (kg)</th><th>Material name</th><th>Rate</th><th>Status</th></tr></thead>
+            <thead><tr><th>Load #</th><th>Broker</th><th>Route</th><th>Driver</th><th>Equipment</th><th>Load weight (lb)</th><th>Material name</th><th>Rate</th><th>Status</th></tr></thead>
             <tbody>${rows}</tbody>
           </table>
         </body>
