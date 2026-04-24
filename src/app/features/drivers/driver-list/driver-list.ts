@@ -341,6 +341,10 @@ export class DriverListComponent implements OnInit {
   }
 
   bulkUpdateStatus(): void {
+    if (this.authService.hasRole('Dispatcher')) {
+      return;
+    }
+
     if (this.selectedDrivers.size === 0) {
       alert('Please select at least one driver');
       return;

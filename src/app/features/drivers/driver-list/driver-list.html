@@ -127,7 +127,7 @@
     <div class="load-list-card-header">
       <h5><i class="fas fa-users me-2"></i>{{ inactiveOnlyPage ? 'Inactive Owner Operators' : 'Owner Operators' }}</h5>
       <div class="load-list-card-actions">
-        <ng-container *ngIf="selectedDrivers.size > 0">
+        <ng-container *ngIf="selectedDrivers.size > 0 && !authService.hasRole('Dispatcher')">
           <button type="button" class="btn btn-sm btn-tms-outline" (click)="bulkUpdateStatus()" title="Bulk Update Status">
             <i class="fas fa-sync-alt me-1"></i>Bulk Update ({{ selectedDrivers.size }})
           </button>
