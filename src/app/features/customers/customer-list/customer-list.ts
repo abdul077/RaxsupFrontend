@@ -393,25 +393,6 @@ export class CustomerListComponent implements OnInit, AfterViewInit {
     });
   }
 
-  toggleActive(customer: Customer): void {
-    const newActiveStatus = !customer.isActive;
-    
-    this.customerService.updateCustomer(customer.customerId, { isActive: newActiveStatus }).subscribe({
-      next: (response) => {
-        if (response.success) {
-          // Update the broker in the local array
-          customer.isActive = newActiveStatus;
-          // Trigger table refresh
-          this.refreshTrigger++;
-        }
-      },
-      error: (err) => {
-        console.error('Error updating broker status:', err);
-        alert(err.error?.message || 'Failed to update broker status');
-      }
-    });
-  }
-
   closeEditModal(): void {
     this.showEditModal = false;
     this.selectedCustomer = null;
