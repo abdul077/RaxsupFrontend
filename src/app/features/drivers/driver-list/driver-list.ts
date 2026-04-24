@@ -340,6 +340,10 @@ export class DriverListComponent implements OnInit {
     return this.authService.hasAnyRole(['Admin']);
   }
 
+  canAccessSettlements(): boolean {
+    return !this.authService.hasRole('Dispatcher');
+  }
+
   bulkUpdateStatus(): void {
     if (this.authService.hasRole('Dispatcher')) {
       return;
@@ -388,6 +392,9 @@ export class DriverListComponent implements OnInit {
         this.router.navigate(['/drivers', driver.driverId, 'loads']);
         break;
       case 'settlements':
+        if (!this.canAccessSettlements()) {
+          return;
+        }
         this.router.navigate(['/drivers', driver.driverId], { queryParams: { tab: 'settlements' } });
         break;
       case 'analytics':

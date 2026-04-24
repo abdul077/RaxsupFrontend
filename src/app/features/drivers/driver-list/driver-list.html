@@ -103,7 +103,7 @@
         <li><a class="dropdown-item" [routerLink]="['/drivers', driver.driverId]">View Details...</a></li>
         <li><a class="dropdown-item" href="javascript:void(0)" (click)="quickAction(driver, 'documents')">Documents</a></li>
         <li><a class="dropdown-item" href="javascript:void(0)" (click)="quickAction(driver, 'loads')">Loads</a></li>
-        <li><a class="dropdown-item" href="javascript:void(0)" (click)="quickAction(driver, 'settlements')">Settlements</a></li>
+        <li *ngIf="canAccessSettlements()"><a class="dropdown-item" href="javascript:void(0)" (click)="quickAction(driver, 'settlements')">Settlements</a></li>
         <li><a class="dropdown-item" href="javascript:void(0)" (click)="quickAction(driver, 'analytics')">Analytics</a></li>
         <li *ngIf="canEditDriver()"><hr class="dropdown-divider"></li>
         <li *ngIf="canEditDriver()"><a class="dropdown-item" [routerLink]="['/drivers', driver.driverId, 'edit']">Edit...</a></li>
