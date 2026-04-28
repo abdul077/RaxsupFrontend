@@ -1138,12 +1138,12 @@ export class LoadListComponent implements OnInit, OnDestroy {
     return name[0].toUpperCase();
   }
 
-  /** Table/drawer: show km from API (number or occasional string) without breaking the template. */
+  /** Table/drawer: show km from API exactly as provided (no rounding). */
   formatDistanceKm(km: number | string | null | undefined): string {
     if (km == null || km === '') return '— km';
     const n = typeof km === 'number' ? km : Number(km);
     if (!Number.isFinite(n)) return '— km';
-    return `${Math.round(n)} km`;
+    return `${n} km`;
   }
 
   formatLoadWeightKg(weight: number | string | null | undefined): string {

@@ -49,6 +49,7 @@ export class DataTableComponent<T = any> implements OnInit, OnChanges, OnDestroy
   // Debounced search
   private searchSubject = new Subject<string>();
   private destroy$ = new Subject<void>();
+  private initialized = false;
 
   constructor(private cdr: ChangeDetectorRef) {}
 
@@ -74,11 +75,20 @@ export class DataTableComponent<T = any> implements OnInit, OnChanges, OnDestroy
     if (this.config && typeof this.dataSource === 'function') {
       this.loadData();
     }
+
+    this.initialized = true;
   }
 
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['config'] || changes['dataSource']) {
       if (this.config && typeof this.dataSource === 'function') {
+        // Before first init run, only sync page-size defaults. Initial load happens in ngOnInit.
+        if (!this.initialized) {
+          if (this.config?.defaultPageSize) {
+            this.filterState.pageSize = this.config.defaultPageSize;
+          }
+          return;
+        }
         this.loadData();
       }
     }
