@@ -106,8 +106,73 @@
     </div>
   </div>
 
-  <!-- KPI Cards (7 cards from reference) -->
-    <div class="tms-kpi-row" *ngIf="!authService.hasRole('Driver')">
+  <!-- Dispatcher daily operations cards -->
+    <div class="tms-kpi-row tms-dispatcher-ops-row" *ngIf="showDispatcherOperationsCards()">
+      <div *ngIf="(statsLoading && !stats) || dispatcherOpsLoading" class="tms-kpi-row-loading">
+        <div class="spinner-border text-primary" role="status" aria-label="Loading dispatcher metrics"></div>
+      </div>
+      <ng-container *ngIf="stats && !dispatcherOpsLoading">
+        <div class="tms-kpi-card tms-kpi-blue">
+          <i class="fas fa-route tms-kpi-icon"></i>
+          <div class="tms-kpi-content">
+            <span class="tms-kpi-value">{{ stats.activeLoads ?? 0 }}</span>
+            <span class="tms-kpi-label">Active Loads / Trips</span>
+          </div>
+        </div>
+        <div class="tms-kpi-card tms-kpi-red">
+          <i class="fas fa-clock tms-kpi-icon"></i>
+          <div class="tms-kpi-content">
+            <span class="tms-kpi-value">{{ stats.delayedTrips ?? 0 }}</span>
+            <span class="tms-kpi-label">Delayed Loads</span>
+          </div>
+        </div>
+        <div class="tms-kpi-card tms-kpi-orange">
+          <i class="fas fa-user-check tms-kpi-icon"></i>
+          <div class="tms-kpi-content">
+            <span class="tms-kpi-value">{{ stats.driversOnDuty ?? 0 }}</span>
+            <span class="tms-kpi-label">Drivers On Duty</span>
+          </div>
+        </div>
+        <div class="tms-kpi-card tms-kpi-green">
+          <i class="fas fa-truck-moving tms-kpi-icon"></i>
+          <div class="tms-kpi-content">
+            <span class="tms-kpi-value">{{ stats.availableVehicles ?? 0 }}</span>
+            <span class="tms-kpi-label">Available Trucks</span>
+          </div>
+        </div>
+        <div class="tms-kpi-card tms-kpi-amber">
+          <i class="fas fa-clipboard-check tms-kpi-icon"></i>
+          <div class="tms-kpi-content">
+            <span class="tms-kpi-value">{{ dispatcherOps.loadsAssignedToday }}</span>
+            <span class="tms-kpi-label">Loads Assigned Today</span>
+          </div>
+        </div>
+        <div class="tms-kpi-card tms-kpi-gold">
+          <i class="fas fa-user-slash tms-kpi-icon"></i>
+          <div class="tms-kpi-content">
+            <span class="tms-kpi-value">{{ dispatcherOps.unassignedLoads }}</span>
+            <span class="tms-kpi-label">Unassigned Loads</span>
+          </div>
+        </div>
+        <div class="tms-kpi-card tms-kpi-blue">
+          <i class="fas fa-arrow-up tms-kpi-icon"></i>
+          <div class="tms-kpi-content">
+            <span class="tms-kpi-value">{{ dispatcherOps.pickupsToday }}</span>
+            <span class="tms-kpi-label">Pickups Today</span>
+          </div>
+        </div>
+        <div class="tms-kpi-card tms-kpi-green">
+          <i class="fas fa-arrow-down tms-kpi-icon"></i>
+          <div class="tms-kpi-content">
+            <span class="tms-kpi-value">{{ dispatcherOps.deliveriesToday }}</span>
+            <span class="tms-kpi-label">Deliveries Today</span>
+          </div>
+        </div>
+      </ng-container>
+    </div>
+
+  <!-- KPI Cards for non-dispatcher, non-driver users -->
+    <div class="tms-kpi-row" *ngIf="!authService.hasRole('Driver') && !showDispatcherOperationsCards()">
       <div *ngIf="statsLoading && !stats" class="tms-kpi-row-loading">
         <div class="spinner-border text-primary" role="status" aria-label="Loading metrics"></div>
       </div>

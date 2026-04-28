@@ -77,13 +77,39 @@ export class AuthService {
   }
 
   hasRole(role: string): boolean {
-    const user = this.getCurrentUser();
-    return user?.role === role;
+    const targetRole = this.normalizeRole(role);
+    if (!targetRole) {
+      return false;
+    }
+    return this.getCurrentUserRoles().includes(targetRole);
   }
 
   hasAnyRole(roles: string[]): boolean {
-    const user = this.getCurrentUser();
-    return user ? roles.includes(user.role) : false;
+    const normalizedRoles = roles
+      .map((role) => this.normalizeRole(role))
+      .filter((role): role is string => !!role);
+    if (normalizedRoles.length === 0) {
+      return false;
+    }
+
+    const userRoles = this.getCurrentUserRoles();
+    return normalizedRoles.some((role) => userRoles.includes(role));
+  }
+
+  private getCurrentUserRoles(): string[] {
+    const roleValue = this.getCurrentUser()?.role;
+    if (!roleValue) {
+      return [];
+    }
+
+    return roleValue
+      .split(/[;,|]/)
+      .map((role) => this.normalizeRole(role))
+      .filter((role): role is string => !!role);
+  }
+
+  private normalizeRole(role: string | undefined | null): string {
+    return (role ?? '').trim().toLowerCase();
   }
 
   registerDriver(registrationData: RegisterDriverRequest): Observable<RegisterDriverResponse> {

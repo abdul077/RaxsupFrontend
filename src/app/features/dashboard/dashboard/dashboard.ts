@@ -20,6 +20,8 @@ import {
   Subject,
   EMPTY,
   of,
+  forkJoin,
+  timer,
   filter,
   debounceTime,
   distinctUntilChanged,
@@ -146,6 +148,14 @@ interface DashboardStats {
   revenueExpenseByCategory?: RevenueExpenseCategory[];
 }
 
+interface DispatcherOperationsSnapshot {
+  loadsAssignedToday: number;
+  unassignedLoads: number;
+  pickupsToday: number;
+  deliveriesToday: number;
+  lastUpdated: Date | null;
+}
+
 @Component({
   selector: 'app-dashboard',
   imports: [CommonModule, FormsModule, RouterModule, BaseChartDirective, LiveFleetMapComponent],
@@ -230,6 +240,15 @@ export class DashboardComponent implements OnInit, OnDestroy {
   dispatcherSortDirection: DispatcherSortDirection = 'desc';
   dispatcherCustomStartDate = '';
   dispatcherCustomEndDate = '';
+  dispatcherOpsLoading = false;
+  dispatcherOps: DispatcherOperationsSnapshot = {
+    loadsAssignedToday: 0,
+    unassignedLoads: 0,
+    pickupsToday: 0,
+    deliveriesToday: 0,
+    lastUpdated: null
+  };
+  private dispatcherRealtimeSubscription?: Subscription;
 
   // TMS color palette - White, Gray, Navy Blue only
   private readonly tmsColors = {
@@ -300,6 +319,13 @@ export class DashboardComponent implements OnInit, OnDestroy {
     if (this.authService.hasRole('Admin')) {
       this.loadDispatcherLoads();
     }
+    if (this.showDispatcherOperationsCards()) {
+      this.loadDispatcherOperationsSnapshot();
+      this.dispatcherRealtimeSubscription = timer(60000, 60000).subscribe(() => {
+        this.loadDashboardStats();
+        this.loadDispatcherOperationsSnapshot();
+      });
+    }
     if (this.authService.hasRole('Driver')) {
       this.loadDriverIncidents();
     } else {
@@ -328,6 +354,9 @@ export class DashboardComponent implements OnInit, OnDestroy {
           if (this.authService.hasRole('Admin')) {
             this.loadDispatcherLoads();
           }
+          if (this.showDispatcherOperationsCards()) {
+            this.loadDispatcherOperationsSnapshot();
+          }
           if (this.authService.hasRole('Driver')) {
             this.loadDriverIncidents();
           } else {
@@ -343,8 +372,110 @@ export class DashboardComponent implements OnInit, OnDestroy {
   ngOnDestroy(): void {
     this.routerSubscription?.unsubscribe();
     this.notificationsSubscription?.unsubscribe();
+    this.dispatcherRealtimeSubscription?.unsubscribe();
     this.destroy$.next();
     this.destroy$.complete();
+  }
+
+  showDispatcherOperationsCards(): boolean {
+    return this.authService.hasAnyRole(['Dispatcher', 'Admin']);
+  }
+
+  private loadDispatcherOperationsSnapshot(): void {
+    this.dispatcherOpsLoading = true;
+    const { start, end } = this.getTodayIsoRange();
+    const baseHeaders = this.skipGlobalHttpLoading;
+
+    const createdToday$ = this.loadService.getLoads(
+      undefined,
+      undefined,
+      undefined,
+      1,
+      1,
+      undefined,
+      { createdFrom: start, createdTo: end },
+      baseHeaders
+    );
+    const unassignedToday$ = this.loadService.getLoads(
+      undefined,
+      undefined,
+      undefined,
+      1,
+      1,
+      undefined,
+      { createdFrom: start, createdTo: end, isUnassigned: true },
+      baseHeaders
+    );
+    const unassignedOverall$ = this.loadService.getLoads(
+      undefined,
+      undefined,
+      undefined,
+      1,
+      1,
+      undefined,
+      { isUnassigned: true },
+      baseHeaders
+    );
+    const pickupsToday$ = this.loadService.getLoads(
+      undefined,
+      undefined,
+      undefined,
+      1,
+      1,
+      undefined,
+      { pickupFrom: start, pickupTo: end },
+      baseHeaders
+    );
+    const deliveriesToday$ = this.loadService.getLoads(
+      undefined,
+      undefined,
+      undefined,
+      1,
+      1,
+      undefined,
+      { deliveryFrom: start, deliveryTo: end },
+      baseHeaders
+    );
+
+    forkJoin({
+      createdToday: createdToday$,
+      unassignedToday: unassignedToday$,
+      unassignedOverall: unassignedOverall$,
+      pickupsToday: pickupsToday$,
+      deliveriesToday: deliveriesToday$
+    }).subscribe({
+      next: (result) => {
+        const createdTodayCount = result.createdToday.totalCount ?? 0;
+        const unassignedTodayCount = result.unassignedToday.totalCount ?? 0;
+        this.dispatcherOps = {
+          loadsAssignedToday: Math.max(0, createdTodayCount - unassignedTodayCount),
+          unassignedLoads: result.unassignedOverall.totalCount ?? 0,
+          pickupsToday: result.pickupsToday.totalCount ?? 0,
+          deliveriesToday: result.deliveriesToday.totalCount ?? 0,
+          lastUpdated: new Date()
+        };
+        this.dispatcherOpsLoading = false;
+      },
+      error: () => {
+        this.dispatcherOps = {
+          loadsAssignedToday: 0,
+          unassignedLoads: 0,
+          pickupsToday: 0,
+          deliveriesToday: 0,
+          lastUpdated: new Date()
+        };
+        this.dispatcherOpsLoading = false;
+      }
+    });
+  }
+
+  private getTodayIsoRange(): { start: string; end: string } {
+    const now = new Date();
+    const start = new Date(now);
+    start.setHours(0, 0, 0, 0);
+    const end = new Date(now);
+    end.setHours(23, 59, 59, 999);
+    return { start: start.toISOString(), end: end.toISOString() };
   }
 
   canUseGlobalSearch(): boolean {

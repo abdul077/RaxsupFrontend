@@ -107,6 +107,16 @@
         </a>
       </li>
       <li class="nav-item">
+        <a class="nav-link" [class.active]="activeTab === 'accessorials'" (click)="activeTab = 'accessorials'">
+          Accessorials
+          <span
+            class="tab-badge"
+            [ngClass]="(load.accessorials?.length || 0) > 0 ? 'badge-success' : 'badge-default'">
+            {{ load.accessorials?.length || 0 }}
+          </span>
+        </a>
+      </li>
+      <li class="nav-item">
         <a class="nav-link" [class.active]="activeTab === 'activity'" (click)="activeTab = 'activity'; loadActivityLogs()">
           Activity Log
         </a>

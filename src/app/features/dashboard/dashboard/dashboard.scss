@@ -188,6 +188,13 @@ $white: #ffffff;
   margin-bottom: 1.5rem;
 }
 
+.tms-dispatcher-ops-row {
+  .tms-kpi-card {
+    flex: 1 1 170px;
+    max-width: 100%;
+  }
+}
+
 .tms-kpi-row-loading {
   flex: 1 1 100%;
   display: flex;
