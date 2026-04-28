@@ -168,10 +168,42 @@
             <span class="tms-kpi-label">Deliveries Today</span>
           </div>
         </div>
+
+        <div class="tms-kpi-card tms-kpi-red">
+          <i class="fas fa-clock tms-kpi-icon"></i>
+          <div class="tms-kpi-content">
+            <span class="tms-kpi-value">{{ dispatcherOps.latePickup }}</span>
+            <span class="tms-kpi-label">Late Pickup</span>
+          </div>
+        </div>
+
+        <div class="tms-kpi-card tms-kpi-red">
+          <i class="fas fa-hourglass-end tms-kpi-icon"></i>
+          <div class="tms-kpi-content">
+            <span class="tms-kpi-value">{{ dispatcherOps.lateDelivery }}</span>
+            <span class="tms-kpi-label">Late Delivery</span>
+          </div>
+        </div>
+
+        <div class="tms-kpi-card tms-kpi-orange">
+          <i class="fas fa-user-clock tms-kpi-icon"></i>
+          <div class="tms-kpi-content">
+            <span class="tms-kpi-value">{{ stats.driversNearHosLimit ?? 0 }}</span>
+            <span class="tms-kpi-label">Driver HOS Risk</span>
+          </div>
+        </div>
+
+        <div class="tms-kpi-card tms-kpi-red">
+          <i class="fas fa-tools tms-kpi-icon"></i>
+          <div class="tms-kpi-content">
+            <span class="tms-kpi-value">{{ stats.engineAlerts ?? 0 }}</span>
+            <span class="tms-kpi-label">Truck Breakdown</span>
+          </div>
+        </div>
       </ng-container>
     </div>
 
-  <!-- KPI Cards for non-dispatcher, non-driver users -->
+  <!-- KPI Cards (7 cards from reference) -->
     <div class="tms-kpi-row" *ngIf="!authService.hasRole('Driver') && !showDispatcherOperationsCards()">
       <div *ngIf="statsLoading && !stats" class="tms-kpi-row-loading">
         <div class="spinner-border text-primary" role="status" aria-label="Loading metrics"></div>
@@ -346,7 +378,7 @@
           </div>
 
         <!-- Dispatcher Loads Widget -->
-        <div class="tms-card" *ngIf="authService.hasAnyRole(['Admin','Dispatcher','FleetManager'])">
+        <div class="tms-card" *ngIf="authService.hasAnyRole(['Admin','FleetManager'])">
           <div class="tms-card-header dispatcher-loads-header">
             <h5><i class="fas fa-user-friends me-2"></i>Dispatcher Loads</h5>
             <div class="dispatcher-loads-controls">

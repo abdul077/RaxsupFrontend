@@ -189,9 +189,24 @@ $white: #ffffff;
 }
 
 .tms-dispatcher-ops-row {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(160px, 1fr));
+  gap: 1rem;
+
   .tms-kpi-card {
-    flex: 1 1 170px;
-    max-width: 100%;
+    max-width: none;
+  }
+
+  @media (max-width: 1200px) {
+    grid-template-columns: repeat(3, minmax(160px, 1fr));
+  }
+
+  @media (max-width: 992px) {
+    grid-template-columns: repeat(2, minmax(160px, 1fr));
+  }
+
+  @media (max-width: 576px) {
+    grid-template-columns: 1fr;
   }
 }
 

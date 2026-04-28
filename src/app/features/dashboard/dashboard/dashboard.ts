@@ -153,6 +153,8 @@ interface DispatcherOperationsSnapshot {
   unassignedLoads: number;
   pickupsToday: number;
   deliveriesToday: number;
+  latePickup: number;
+  lateDelivery: number;
   lastUpdated: Date | null;
 }
 
@@ -246,6 +248,8 @@ export class DashboardComponent implements OnInit, OnDestroy {
     unassignedLoads: 0,
     pickupsToday: 0,
     deliveriesToday: 0,
+    latePickup: 0,
+    lateDelivery: 0,
     lastUpdated: null
   };
   private dispatcherRealtimeSubscription?: Subscription;
@@ -378,12 +382,13 @@ export class DashboardComponent implements OnInit, OnDestroy {
   }
 
   showDispatcherOperationsCards(): boolean {
-    return this.authService.hasAnyRole(['Dispatcher', 'Admin']);
+    return this.authService.hasRole('Dispatcher');
   }
 
   private loadDispatcherOperationsSnapshot(): void {
     this.dispatcherOpsLoading = true;
     const { start, end } = this.getTodayIsoRange();
+    const nowIso = new Date().toISOString();
     const baseHeaders = this.skipGlobalHttpLoading;
 
     const createdToday$ = this.loadService.getLoads(
@@ -437,21 +442,113 @@ export class DashboardComponent implements OnInit, OnDestroy {
       baseHeaders
     );
 
+    // Late pickup: pickup time is in the past and load not yet picked up
+    const latePickupCreated$ = this.loadService.getLoads(
+      'Created',
+      undefined,
+      undefined,
+      1,
+      1,
+      undefined,
+      { pickupTo: nowIso },
+      baseHeaders
+    );
+    const latePickupAssigned$ = this.loadService.getLoads(
+      'Assigned',
+      undefined,
+      undefined,
+      1,
+      1,
+      undefined,
+      { pickupTo: nowIso },
+      baseHeaders
+    );
+    const latePickupDispatched$ = this.loadService.getLoads(
+      'Dispatched',
+      undefined,
+      undefined,
+      1,
+      1,
+      undefined,
+      { pickupTo: nowIso },
+      baseHeaders
+    );
+
+    // Late delivery: delivery time is in the past and load not yet delivered/completed
+    const lateDeliveryAssigned$ = this.loadService.getLoads(
+      'Assigned',
+      undefined,
+      undefined,
+      1,
+      1,
+      undefined,
+      { deliveryTo: nowIso },
+      baseHeaders
+    );
+    const lateDeliveryDispatched$ = this.loadService.getLoads(
+      'Dispatched',
+      undefined,
+      undefined,
+      1,
+      1,
+      undefined,
+      { deliveryTo: nowIso },
+      baseHeaders
+    );
+    const lateDeliveryPickedUp$ = this.loadService.getLoads(
+      'PickedUp',
+      undefined,
+      undefined,
+      1,
+      1,
+      undefined,
+      { deliveryTo: nowIso },
+      baseHeaders
+    );
+    const lateDeliveryInTransit$ = this.loadService.getLoads(
+      'InTransit',
+      undefined,
+      undefined,
+      1,
+      1,
+      undefined,
+      { deliveryTo: nowIso },
+      baseHeaders
+    );
+
     forkJoin({
       createdToday: createdToday$,
       unassignedToday: unassignedToday$,
       unassignedOverall: unassignedOverall$,
       pickupsToday: pickupsToday$,
-      deliveriesToday: deliveriesToday$
+      deliveriesToday: deliveriesToday$,
+      latePickupCreated: latePickupCreated$,
+      latePickupAssigned: latePickupAssigned$,
+      latePickupDispatched: latePickupDispatched$,
+      lateDeliveryAssigned: lateDeliveryAssigned$,
+      lateDeliveryDispatched: lateDeliveryDispatched$,
+      lateDeliveryPickedUp: lateDeliveryPickedUp$,
+      lateDeliveryInTransit: lateDeliveryInTransit$
     }).subscribe({
       next: (result) => {
         const createdTodayCount = result.createdToday.totalCount ?? 0;
         const unassignedTodayCount = result.unassignedToday.totalCount ?? 0;
+        const latePickup =
+          (result.latePickupCreated.totalCount ?? 0) +
+          (result.latePickupAssigned.totalCount ?? 0) +
+          (result.latePickupDispatched.totalCount ?? 0);
+        const lateDelivery =
+          (result.lateDeliveryAssigned.totalCount ?? 0) +
+          (result.lateDeliveryDispatched.totalCount ?? 0) +
+          (result.lateDeliveryPickedUp.totalCount ?? 0) +
+          (result.lateDeliveryInTransit.totalCount ?? 0);
         this.dispatcherOps = {
           loadsAssignedToday: Math.max(0, createdTodayCount - unassignedTodayCount),
           unassignedLoads: result.unassignedOverall.totalCount ?? 0,
           pickupsToday: result.pickupsToday.totalCount ?? 0,
           deliveriesToday: result.deliveriesToday.totalCount ?? 0,
+          latePickup,
+          lateDelivery,
           lastUpdated: new Date()
         };
         this.dispatcherOpsLoading = false;
@@ -462,6 +559,8 @@ export class DashboardComponent implements OnInit, OnDestroy {
           unassignedLoads: 0,
           pickupsToday: 0,
           deliveriesToday: 0,
+          latePickup: 0,
+          lateDelivery: 0,
           lastUpdated: new Date()
         };
         this.dispatcherOpsLoading = false;

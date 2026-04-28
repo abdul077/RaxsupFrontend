@@ -77,6 +77,7 @@ export class DriverListComponent implements OnInit {
   }
 
   initializeTableConfig(): void {
+    const isDispatcher = this.authService.hasRole('Dispatcher');
     this.tableConfig = {
       columns: [
         {
@@ -143,7 +144,8 @@ export class DriverListComponent implements OnInit {
           align: 'right'
         }
       ],
-      enableSelection: true,
+      // Dispatchers should have read-only list access (no select-all / row checkboxes).
+      enableSelection: !isDispatcher,
       enableGlobalSearch: true,
       enablePagination: true,
       defaultPageSize: 20,
