@@ -2308,7 +2308,7 @@ export class LoadCreateComponent implements OnInit, AfterViewInit, OnDestroy {
             return;
           }
 
-          this.totalDistanceKm = Number((totalMeters / 1000).toFixed(2));
+          this.totalDistanceKm = totalMeters / 1000;
           this.distanceError = '';
         });
       }

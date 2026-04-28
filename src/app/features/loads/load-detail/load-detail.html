@@ -42,10 +42,22 @@
           <i class="fas fa-map-marker-alt"></i>
           {{ load.stops.length }} Stop{{ load.stops.length !== 1 ? 's' : '' }}
         </span>
-        <span class="meta-chip" *ngIf="getAssignedDriver()">
-          <i class="fas fa-user-circle"></i>
-          {{ getAssignedDriver() }}
-        </span>
+        <div class="meta-assignee-pdf-group" [class.has-assignee]="!!getAssignedDriver()">
+          <span class="meta-chip" *ngIf="getAssignedDriver()">
+            <i class="fas fa-user-circle"></i>
+            {{ getAssignedDriver() }}
+          </span>
+          <button
+            type="button"
+            class="btn btn-outline-primary btn-sm load-export-pdf-btn"
+            (click)="downloadLoadPdf()"
+            [disabled]="loading || !load || pdfExporting"
+            title="Open print view to save as PDF">
+            <i class="fas fa-file-pdf" *ngIf="!pdfExporting"></i>
+            <i class="fas fa-spinner fa-spin" *ngIf="pdfExporting"></i>
+            <span class="ms-1">Export PDF</span>
+          </button>
+        </div>
       </div>
     </div>
 
@@ -311,7 +323,7 @@
               </span>
             </div>
             <div class="info-row">
-              <span class="info-label"><i class="fas fa-weight-hanging info-row-icon"></i> Load weight (kg)</span>
+              <span class="info-label"><i class="fas fa-weight-hanging info-row-icon"></i> Load weight (lb)</span>
               <span class="info-value">{{ formatLoadWeightKg(load.loadWeight) }}</span>
             </div>
             <div class="info-row">

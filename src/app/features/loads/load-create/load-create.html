@@ -111,7 +111,7 @@
                 </small>
               </div>
               <div class="col-md-6">
-                <label class="form-label">Load weight (kg)</label>
+                <label class="form-label">Load weight (lb)</label>
                 <input
                   type="number"
                   step="0.01"
@@ -315,7 +315,7 @@
           <div class="border-top pt-2 mt-2">
             <strong>Total KM:</strong>
             <span *ngIf="calculatingDistance" class="text-muted">Calculating...</span>
-            <span *ngIf="!calculatingDistance">{{ totalDistanceKm !== null ? (totalDistanceKm | number:'1.2-2') : '-' }}</span>
+            <span *ngIf="!calculatingDistance">{{ totalDistanceKm !== null ? totalDistanceKm : '-' }}</span>
           </div>
           <div *ngIf="distanceError" class="text-danger small mt-2">
             {{ distanceError }}

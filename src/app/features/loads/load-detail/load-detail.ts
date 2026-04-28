@@ -13,6 +13,9 @@ import { Customer } from '../../../core/models/customer.model';
 import { Equipment } from '../../../core/models/equipment.model';
 import { environment } from '../../../../environments/environment';
 import { ConfirmationModalComponent, ConfirmationModalData } from '../../../shared/components/confirmation-modal/confirmation-modal';
+import { of } from 'rxjs';
+import { catchError, finalize, map } from 'rxjs/operators';
+import { buildLoadPdfHtml, LoadPdfData } from '../../../core/utils/load-pdf-template.util';
 
 // Google Maps type declarations
 declare var google: any;
@@ -27,6 +30,7 @@ declare var google: any;
 export class LoadDetailComponent implements OnInit, AfterViewInit, OnDestroy {
   load: LoadDetail | null = null;
   loading = true;
+  pdfExporting = false;
   activeTab: 'overview' | 'stops' | 'assignments' | 'documents' | 'accessorials' | 'route' | 'activity' | 'billing' | 'tracking' = 'overview';
   
   // Data for dropdowns
@@ -2051,13 +2055,13 @@ export class LoadDetailComponent implements OnInit, AfterViewInit, OnDestroy {
     if (this.overviewRouteDistanceMeters != null && this.overviewRouteDistanceMeters > 0) {
       const km = this.overviewRouteDistanceMeters / 1000;
       const mi = this.overviewRouteDistanceMeters / 1609.344;
-      return `${mi.toFixed(1)} mi · ${km.toFixed(1)} km`;
+      return `${mi.toFixed(1)} mi · ${km} km`;
     }
 
     if (this.load.distanceKm != null && this.load.distanceKm > 0) {
       const km = this.load.distanceKm;
       const mi = km / 1.609344;
-      return `${mi.toFixed(1)} mi · ${km.toFixed(1)} km`;
+      return `${mi.toFixed(1)} mi · ${km} km`;
     }
 
     if (this.mapsApiLoaded && this.activeTab === 'overview' && !this.overviewMapError && !this.load.distanceKm) {
@@ -2087,6 +2091,133 @@ export class LoadDetailComponent implements OnInit, AfterViewInit, OnDestroy {
 
   getDriverCalculatedAmount(): number {
     return this.calculateTotalWithAccessorials() - this.getRaxsupCommission();
+  }
+
+  downloadLoadPdf(): void {
+    if (!this.load || this.loading) return;
+    const load = this.load;
+    const logoUrl = `${window.location.origin}/assets/logo.png`;
+    this.pdfExporting = true;
+    this.loadService
+      .getLoadTracking(load.loadId)
+      .pipe(
+        map((d) => ({ ok: true as const, data: d })),
+        catchError(() => of({ ok: false as const, data: null as LoadTracking | null })),
+        finalize(() => {
+          this.pdfExporting = false;
+          this.cdr.markForCheck();
+        })
+      )
+      .subscribe({
+        next: (trackingRes) => {
+          const pdfData = this.buildLoadPdfData(load, logoUrl, trackingRes);
+          const html = buildLoadPdfHtml(pdfData);
+          const blob = new Blob([html], { type: 'text/html' });
+          const blobUrl = URL.createObjectURL(blob);
+          const printWindow = window.open(blobUrl, '_blank', 'width=1024,height=768');
+          if (!printWindow) {
+            alert('Unable to open print window. Please allow pop-ups and try again.');
+            URL.revokeObjectURL(blobUrl);
+            return;
+          }
+          setTimeout(() => URL.revokeObjectURL(blobUrl), 30000);
+        },
+      });
+  }
+
+  private buildLoadPdfData(
+    load: LoadDetail,
+    logoUrl: string,
+    trackingRes: { ok: boolean; data: LoadTracking | null }
+  ): LoadPdfData {
+    const cur = load;
+    const exportedAt = new Date().toLocaleString();
+    const exportedBy = `Exported by: ${this.authService.getCurrentUser()?.fullName?.trim() || 'User'}`;
+
+    let trackingRows: LoadPdfData['tracking'] = null;
+    if (trackingRes.ok && trackingRes.data?.history?.length) {
+      trackingRows = trackingRes.data.history.map((ev) => ({
+        time: this.formatDate(ev.recordedAt),
+        event: ev.eventType || '—',
+        locationType: ev.locationType || '—',
+        coordinates:
+          ev.latitude != null && ev.longitude != null
+            ? `${Number(ev.latitude).toFixed(6)}, ${Number(ev.longitude).toFixed(6)}`
+            : '—',
+        notes: ev.notes || '—',
+      }));
+    }
+
+    const formulaLine = `${this.formatCurrency(
+      this.calculateTotalWithAccessorials(),
+      cur.currency
+    )} - ${this.formatCurrency(this.getRaxsupCommission(), cur.currency)} = ${this.formatCurrency(
+      this.getDriverCalculatedAmount(),
+      cur.currency
+    )}`;
+
+    const accessorialsList = (cur.accessorials || []).map((a) => ({
+      typeName: a.accessorialTypeName || '—',
+      amount: this.formatCurrency(a.amount, cur.currency),
+      notes: a.notes || '—',
+    }));
+
+    return {
+      loadNumber: cur.loadNumber,
+      statusDisplay: this.getStatusDisplayName(cur.status),
+      statusRaw: cur.status,
+      exportedAt,
+      exportedBy,
+      companyLogoUrl: logoUrl,
+      loadInformation: {
+        customerName: cur.customerName || '—',
+        loadType: cur.loadType || cur.equipmentType || '—',
+        loadWeight: this.formatLoadWeightKg(cur.loadWeight),
+        materialName: (cur.materialName && cur.materialName.trim()) || '—',
+        generalNotes: (cur.notes && cur.notes.trim()) || '',
+        createdAt: this.formatCreatedDate(cur.createdAt),
+        pickup: cur.pickupDateTime ? this.formatDate(cur.pickupDateTime) : '—',
+        delivery: cur.deliveryDateTime ? this.formatDate(cur.deliveryDateTime) : '—',
+      },
+      route: {
+        origin: cur.origin,
+        destination: cur.destination,
+        distanceText: this.getRouteDistance(),
+        transitText: this.getEstimatedTransitTime(),
+        deadheadOrigin: cur.deadheadOrigin || '',
+        deadheadDestination: cur.deadheadDestination || '',
+        showDeadhead: this.hasDeadheadRouteInfo(),
+      },
+      financial: {
+        baseRate: this.formatCurrency(cur.totalRate, cur.currency),
+        showDeadhead: cur.deadheadAmount != null,
+        deadhead: `+${this.formatCurrency(this.getDeadheadRevenue(), cur.currency)}`,
+        accessorials: `+${this.formatCurrency(this.getTotalAccessorials(), cur.currency)}`,
+        totalRevenue: this.formatCurrency(this.calculateTotalWithAccessorials(), cur.currency),
+        commission: `-${this.formatCurrency(this.getRaxsupCommission(), cur.currency)}`,
+        driverAmount: this.formatCurrency(this.getDriverCalculatedAmount(), cur.currency),
+        formulaLine,
+      },
+      stops: this.getSortedStops().map((s) => ({
+        sequenceNo: String(s.sequenceNo),
+        stopType: s.stopType,
+        location: s.location,
+        planned: s.plannedDateTime ? this.formatDateAsStored(s.plannedDateTime) : '—',
+        actual: s.actualDateTime ? this.formatDateAsStored(s.actualDateTime) : '—',
+        notes: s.notes || '—',
+      })),
+      assignments: (cur.assignments || []).map((a) => ({
+        status: a.status,
+        driverName: a.driverName || 'Not assigned',
+        equipment: a.equipmentPlateNumber || '—',
+        etd: this.formatDate(a.etd),
+        eta: this.formatDate(a.eta),
+        assignedAt: this.formatDate(a.assignedAt),
+        notes: a.notes || '—',
+      })),
+      accessorials: accessorialsList,
+      tracking: trackingRows,
+    };
   }
 
   activeNoteTab: 'internal' | 'driver' | 'customer' | 'public' = 'internal';
